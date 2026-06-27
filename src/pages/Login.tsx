@@ -1,12 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Mail, Lock, User } from 'lucide-react';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Mail, Lock, User, Loader2 } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
+import { supabase } from '../lib/supabase';
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [nome, setNome] = useState('');
+  
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const emailParam = searchParams.get('email');
@@ -14,6 +22,64 @@ export default function Login() {
       setEmail(emailParam);
     }
   }, [searchParams]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Botão clicado! isLogin:", isLogin);
+    setError('');
+    
+    if (!email || !password) {
+      setError('Por favor, preencha o e-mail e a senha.');
+      return;
+    }
+    
+    if (!isLogin && !nome) {
+      setError('Por favor, preencha o seu nome completo.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      console.log("Enviando para o Supabase...");
+      if (isLogin) {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (error) {
+          console.error("Erro no login:", error);
+          throw new Error('E-mail ou senha inválidos.');
+        }
+        console.log("Login com sucesso!");
+        navigate('/');
+      } else {
+        const { error, data } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              nome_completo: nome,
+            },
+          },
+        });
+        if (error) {
+          console.error("Erro no cadastro:", error);
+          if (error.message.includes('User already registered')) {
+            throw new Error('Este e-mail já está em uso.');
+          }
+          throw new Error(error.message);
+        }
+        console.log("Cadastro com sucesso!", data);
+        navigate('/');
+      }
+    } catch (err: any) {
+      console.error("Erro capturado no catch:", err);
+      setError(err.message || 'Ocorreu um erro inesperado.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-12 sm:px-6 lg:px-8 relative overflow-hidden transition-colors duration-300">
@@ -44,7 +110,13 @@ export default function Login() {
             </p>
           </div>
 
-          <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+          <form className="space-y-5" onSubmit={handleSubmit} noValidate>
+            {error && (
+              <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-medium rounded-lg text-center">
+                {error}
+              </div>
+            )}
+
             {!isLogin && (
               <div className="animate-fade-in">
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Nome completo</label>
@@ -52,7 +124,14 @@ export default function Login() {
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <User className="h-5 w-5 text-gray-400" />
                   </div>
-                  <input type="text" className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-vanta-blue focus:border-transparent transition-all outline-none" placeholder="João Silva" />
+                  <input 
+                    type="text" 
+                    value={nome}
+                    onChange={(e) => setNome(e.target.value)}
+                    required={!isLogin}
+                    className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-vanta-blue focus:border-transparent transition-all outline-none" 
+                    placeholder="João Silva" 
+                  />
                 </div>
               </div>
             )}
@@ -67,6 +146,7 @@ export default function Login() {
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  required
                   className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-vanta-blue focus:border-transparent transition-all outline-none" 
                   placeholder="voce@exemplo.com" 
                 />
@@ -84,12 +164,29 @@ export default function Login() {
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
-                <input type="password" className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-vanta-blue focus:border-transparent transition-all outline-none" placeholder="••••••••" />
+                <input 
+                  type="password" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-vanta-blue focus:border-transparent transition-all outline-none" 
+                  placeholder="••••••••" 
+                />
               </div>
             </div>
 
-            <button type="submit" className="w-full py-3.5 bg-vanta-blue text-white font-bold text-lg rounded-xl hover:bg-vanta-darkblue hover:-translate-y-0.5 shadow-[0_8px_20px_rgba(29,142,255,0.3)] transition-all duration-300 mt-2">
-              {isLogin ? 'Entrar' : 'Cadastrar'}
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="w-full py-3.5 bg-vanta-blue text-white font-bold text-lg rounded-xl hover:bg-vanta-darkblue hover:-translate-y-0.5 shadow-[0_8px_20px_rgba(29,142,255,0.3)] transition-all duration-300 mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <Loader2 className="w-6 h-6 animate-spin mx-auto" />
+              ) : isLogin ? (
+                'Entrar'
+              ) : (
+                'Cadastrar'
+              )}
             </button>
           </form>
 
@@ -104,7 +201,11 @@ export default function Login() {
             </div>
 
             <div className="mt-6">
-              <button className="w-full flex items-center justify-center py-3 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+              <button 
+                type="button"
+                onClick={() => supabase.auth.signInWithOAuth({ provider: 'google' })}
+                className="w-full flex items-center justify-center py-3 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+              >
                 <FcGoogle className="w-5 h-5 mr-2" />
                 <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">Continuar com Google</span>
               </button>
@@ -114,7 +215,13 @@ export default function Login() {
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {isLogin ? 'Ainda não tem uma conta?' : 'Já possui uma conta?'}
-              <button onClick={() => setIsLogin(!isLogin)} className="ml-1.5 font-bold text-vanta-blue hover:text-vanta-darkblue transition-colors">
+              <button 
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setError('');
+                }} 
+                className="ml-1.5 font-bold text-vanta-blue hover:text-vanta-darkblue transition-colors"
+              >
                 {isLogin ? 'Crie agora' : 'Faça login'}
               </button>
             </p>

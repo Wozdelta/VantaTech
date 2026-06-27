@@ -13,7 +13,7 @@ export default function ProductCard({ product }: { product: Product }) {
       {product.badge && (
         <div className="absolute top-3 left-3 z-10">
           <span className={`text-xs font-bold px-2 py-1 rounded-md text-white shadow-sm ${product.badge === 'Oferta' ? 'bg-vanta-orange' :
-              product.badge === 'Novo' ? 'bg-green-500' : 'bg-vanta-darkblue'
+            product.badge === 'Novo' ? 'bg-green-500' : 'bg-vanta-darkblue'
             }`}>
             {product.badge}
           </span>

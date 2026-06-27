@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search, Bell, ShoppingCart, User, Menu, X, Smartphone, Trash2, Moon, Sun } from 'lucide-react';
 import { FaWhatsapp, FaInstagram } from 'react-icons/fa6';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 const CATEGORIES = [
   'Apple',
@@ -20,6 +21,7 @@ export default function Navbar() {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isDark, setIsDark] = useState(false);
   const navRef = useRef<HTMLElement>(null);
+  const { user, perfil, signOut } = useAuth();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -130,16 +132,53 @@ export default function Navbar() {
   const UserContent = (
     <>
       <div className="p-2 border-b border-gray-100 dark:border-gray-800 mb-2">
-        <Link 
-          to="/login" 
-          onClick={() => setActiveDropdown(null)}
-          className="block w-full text-center py-2 bg-vanta-blue text-white text-sm font-bold rounded-lg hover:bg-vanta-darkblue transition-colors"
-        >
-          Fazer Login
-        </Link>
+        {user ? (
+          <div className="text-center py-2">
+            <p className="text-sm font-bold text-gray-900 dark:text-white">
+              Olá, {perfil?.nome_completo?.split(' ')[0] || user.user_metadata?.nome_completo?.split(' ')[0] || user.user_metadata?.full_name?.split(' ')[0] || user.user_metadata?.name?.split(' ')[0] || 'Usuário'}
+            </p>
+            {perfil?.cargo === 'Admin' && (
+              <span className="inline-block mt-1 px-2 py-0.5 bg-vanta-orange/10 text-vanta-orange text-[10px] font-bold rounded uppercase">
+                Admin
+              </span>
+            )}
+            <button 
+              onClick={() => {
+                signOut();
+                setActiveDropdown(null);
+              }}
+              className="block w-full mt-3 text-center py-2 bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 text-sm font-bold rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+            >
+              Sair
+            </button>
+          </div>
+        ) : (
+          <Link 
+            to="/login" 
+            onClick={() => setActiveDropdown(null)}
+            className="block w-full text-center py-2 bg-vanta-blue text-white text-sm font-bold rounded-lg hover:bg-vanta-darkblue transition-colors"
+          >
+            Fazer Login
+          </Link>
+        )}
       </div>
-      <div className="flex flex-col gap-1">
-        <Link to="/ajuda" className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors">Ajuda</Link>
+      <div className="flex flex-col gap-1 px-1">
+        <Link to="/perfil" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium">Configurar Perfil</Link>
+        <Link to="/pedidos" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium">Meus Pedidos</Link>
+        {perfil?.cargo === 'Admin' ? (
+          <Link to="/fidelidade" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-orange rounded-md transition-colors font-medium">Programa de Fidelidade</Link>
+        ) : (
+          <div className="px-3 py-2 text-sm text-gray-400 dark:text-gray-600 rounded-md font-medium flex items-center justify-between cursor-not-allowed select-none">
+            <span>Programa de Fidelidade</span>
+            <span className="text-[9px] font-bold bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-500 uppercase">Em breve</span>
+          </div>
+        )}
+        {perfil?.cargo === 'Admin' && (
+          <Link to="/admin" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-vanta-orange hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-md transition-colors font-semibold mt-1">
+            Dashboard
+          </Link>
+        )}
+        <Link to="/ajuda" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium mt-1 border-t border-gray-100 dark:border-gray-800 pt-3">Ajuda</Link>
       </div>
       <div className="mt-2 pt-3 border-t border-gray-100 dark:border-gray-800 flex flex-col items-center">
          <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Contato</p>
