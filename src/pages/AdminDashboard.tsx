@@ -1,9 +1,14 @@
+import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
-import { Users, ShoppingBag, DollarSign, Activity } from 'lucide-react';
+import { Users, ShoppingBag, DollarSign, Activity, ListOrdered, BellRing } from 'lucide-react';
+import AdminProducts from '../components/admin/AdminProducts';
+import AdminCategories from '../components/admin/AdminCategories';
+import AdminNotifications from '../components/admin/AdminNotifications';
 
 export default function AdminDashboard() {
   const { user, perfil, loading } = useAuth();
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'categories' | 'notifications'>('overview');
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
@@ -24,67 +29,120 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Painel de Administração</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Visão geral da VantaTech. Os dados reais serão conectados ao banco de dados em breve.
-          </p>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-          {stats.map((item) => {
-            const Icon = item.icon;
-            return (
-              <div key={item.name} className="bg-white dark:bg-gray-800 overflow-hidden shadow-soft rounded-xl">
-                <div className="p-5">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <Icon className="h-6 w-6 text-gray-400" aria-hidden="true" />
-                    </div>
-                    <div className="ml-5 w-0 flex-1">
-                      <dl>
-                        <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{item.name}</dt>
-                        <dd>
-                          <div className="text-lg font-bold text-gray-900 dark:text-white">{item.value}</div>
-                        </dd>
-                      </dl>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-gray-50 dark:bg-gray-900/50 px-5 py-3">
-                  <div className="text-sm">
-                    <span className={`font-medium ${
-                      item.changeType === 'positive' ? 'text-green-600 dark:text-green-400' : 'text-gray-500'
-                    }`}>
-                      {item.change}
-                    </span>
-                    <span className="text-gray-500 dark:text-gray-400 ml-2">desde ontem</span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Placeholder para tabelas */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-white dark:bg-gray-800 shadow-soft rounded-xl p-6">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Últimos Pedidos</h2>
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <ShoppingBag className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3" />
-              <p className="text-sm text-gray-500">Nenhum pedido recente.</p>
-            </div>
+        <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Painel de Administração</h1>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Gerencie seus produtos, menu, clientes e notificações.
+            </p>
           </div>
           
-          <div className="bg-white dark:bg-gray-800 shadow-soft rounded-xl p-6">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Últimos Cadastros</h2>
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Users className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3" />
-              <p className="text-sm text-gray-500">A tabela de usuários será implementada aqui.</p>
-            </div>
+          <div className="flex overflow-x-auto bg-white dark:bg-gray-800 rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-700 no-scrollbar">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'overview' 
+                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' 
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+              }`}
+            >
+              Visão Geral
+            </button>
+            <button
+              onClick={() => setActiveTab('products')}
+              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors ${
+                activeTab === 'products' 
+                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' 
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+              }`}
+            >
+              Produtos
+            </button>
+            <button
+              onClick={() => setActiveTab('categories')}
+              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
+                activeTab === 'categories' 
+                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' 
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+              }`}
+            >
+              <ListOrdered className="w-4 h-4" /> Menu do Site
+            </button>
+            <button
+              onClick={() => setActiveTab('notifications')}
+              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
+                activeTab === 'notifications' 
+                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' 
+                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+              }`}
+            >
+              <BellRing className="w-4 h-4" /> Disparar Avisos
+            </button>
           </div>
         </div>
+
+        {activeTab === 'overview' && (
+          <>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+              {stats.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.name} className="bg-white dark:bg-gray-800 overflow-hidden shadow-soft rounded-xl">
+                    <div className="p-5">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0">
+                          <Icon className="h-6 w-6 text-gray-400" aria-hidden="true" />
+                        </div>
+                        <div className="ml-5 w-0 flex-1">
+                          <dl>
+                            <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{item.name}</dt>
+                            <dd>
+                              <div className="text-lg font-bold text-gray-900 dark:text-white">{item.value}</div>
+                            </dd>
+                          </dl>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-gray-900/50 px-5 py-3">
+                      <div className="text-sm">
+                        <span className={`font-medium ${
+                          item.changeType === 'positive' ? 'text-green-600 dark:text-green-400' : 'text-gray-500'
+                        }`}>
+                          {item.change}
+                        </span>
+                        <span className="text-gray-500 dark:text-gray-400 ml-2">desde ontem</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Placeholder para tabelas */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="bg-white dark:bg-gray-800 shadow-soft rounded-xl p-6">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Últimos Pedidos</h2>
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <ShoppingBag className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3" />
+                  <p className="text-sm text-gray-500">Nenhum pedido recente.</p>
+                </div>
+              </div>
+              
+              <div className="bg-white dark:bg-gray-800 shadow-soft rounded-xl p-6">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Últimos Cadastros</h2>
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Users className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3" />
+                  <p className="text-sm text-gray-500">A tabela de usuários será implementada aqui.</p>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {activeTab === 'products' && <AdminProducts />}
+        {activeTab === 'categories' && <AdminCategories />}
+        {activeTab === 'notifications' && <AdminNotifications />}
       </div>
     </div>
   );

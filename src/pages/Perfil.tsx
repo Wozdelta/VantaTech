@@ -1,15 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { User, Mail, Shield, MapPin, Loader2, Check } from 'lucide-react';
+import { User, Mail, Shield, MapPin, Loader2, Check, Camera, Edit2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function Perfil() {
-  const { user, perfil } = useAuth();
+  const { user, perfil, refreshPerfil } = useAuth();
   const userName = perfil?.nome_completo || user?.user_metadata?.nome_completo || user?.user_metadata?.full_name || user?.user_metadata?.name || 'Usuário';
+  const userAvatar = perfil?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
 
+  // Estados de endereço
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [loadingAddress, setLoadingAddress] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Estados de perfil (nome e foto)
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editName, setEditName] = useState(userName);
+  const [editAvatar, setEditAvatar] = useState(userAvatar);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Mensagens
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -23,7 +34,7 @@ export default function Perfil() {
     estado: ''
   });
 
-  // Preenche o formulário com os dados do perfil quando carrega
+  // Atualiza os inputs quando os dados carregam
   useEffect(() => {
     if (perfil) {
       setEndereco({
@@ -35,12 +46,74 @@ export default function Perfil() {
         cidade: perfil.cidade || '',
         estado: perfil.estado || ''
       });
+      setEditName(perfil.nome_completo || userName);
+      setEditAvatar(perfil.avatar_url || userAvatar);
     }
-  }, [perfil]);
+  }, [perfil, userName, userAvatar]);
 
-  // Busca o CEP na BrasilAPI
+  const showSuccess = (msg: string) => {
+    setSuccessMsg(msg);
+    setTimeout(() => setSuccessMsg(''), 3000);
+  };
+
+  // ----- FUNÇÕES DE PERFIL (NOME E FOTO) -----
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Verifica tamanho (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        setErrorMsg('A imagem deve ter no máximo 2MB.');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditAvatar(reader.result as string);
+        setIsEditingProfile(true); // Ativa o modo de edição para mostrar o botão salvar
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    setSavingProfile(true);
+    setErrorMsg('');
+    
+    try {
+      const { error } = await supabase
+        .from('perfis')
+        .update({
+          nome_completo: editName,
+          avatar_url: editAvatar
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      showSuccess('Perfil atualizado com sucesso!');
+      setIsEditingProfile(false);
+      await refreshPerfil();
+      
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Erro ao atualizar perfil.');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const cancelProfileEdit = () => {
+    setEditName(userName);
+    setEditAvatar(userAvatar);
+    setIsEditingProfile(false);
+    setErrorMsg('');
+  };
+
+  // ----- FUNÇÕES DE ENDEREÇO -----
+
   const handleCepChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    let cep = e.target.value.replace(/\D/g, ''); // Remove tudo que não for número
+    let cep = e.target.value.replace(/\D/g, ''); 
     if (cep.length > 8) cep = cep.slice(0, 8);
     
     setEndereco(prev => ({ ...prev, cep }));
@@ -75,7 +148,6 @@ export default function Perfil() {
     
     setSaving(true);
     setErrorMsg('');
-    setSuccessMsg('');
 
     try {
       const { error } = await supabase
@@ -93,11 +165,9 @@ export default function Perfil() {
 
       if (error) throw error;
 
-      setSuccessMsg('Endereço salvo com sucesso!');
+      showSuccess('Endereço salvo com sucesso!');
       setIsEditingAddress(false);
-      
-      // Limpa a mensagem de sucesso depois de 3 segundos
-      setTimeout(() => setSuccessMsg(''), 3000);
+      await refreshPerfil();
       
     } catch (err: any) {
       setErrorMsg(err.message || 'Erro ao salvar o endereço.');
@@ -120,38 +190,124 @@ export default function Perfil() {
     <div className="max-w-4xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">Configurar Perfil</h1>
       
+      {successMsg && (
+        <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm font-medium rounded-xl flex items-center shadow-sm">
+          <Check className="w-5 h-5 mr-3" />
+          {successMsg}
+        </div>
+      )}
+      
+      {errorMsg && (
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-medium rounded-xl shadow-sm">
+          {errorMsg}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Coluna da Foto */}
         <div className="md:col-span-1">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-soft">
-            <div className="w-24 h-24 bg-vanta-blue/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <User className="w-12 h-12 text-vanta-blue" />
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-soft text-center">
+            <div className="relative inline-block mb-4">
+              <div className="w-32 h-32 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto overflow-hidden border-4 border-white dark:border-gray-800 shadow-md">
+                {editAvatar ? (
+                  <img src={editAvatar} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-16 h-16 text-gray-400" />
+                )}
+              </div>
+              <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute bottom-0 right-2 w-10 h-10 bg-vanta-blue text-white rounded-full flex items-center justify-center hover:bg-vanta-darkblue transition-colors shadow-lg border-2 border-white dark:border-gray-800"
+                title="Mudar foto"
+              >
+                <Camera className="w-5 h-5" />
+              </button>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/jpeg,image/png,image/webp" 
+                onChange={handleImageUpload}
+              />
             </div>
-            <h2 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-1">{userName}</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-4">{perfil?.cargo || 'Cliente'}</p>
+            
+            {!isEditingProfile ? (
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1 px-2 truncate" title={userName}>{userName}</h2>
+            ) : (
+              <div className="text-sm text-vanta-orange font-medium mb-1">Editando perfil...</div>
+            )}
+            
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{perfil?.cargo || 'Cliente'}</p>
           </div>
         </div>
         
+        {/* Coluna dos Formulários */}
         <div className="md:col-span-2 space-y-6">
+          
+          {/* Dados da Conta */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-soft">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-              <Shield className="w-5 h-5 mr-2 text-vanta-blue" />
-              Dados da Conta
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
+                <Shield className="w-5 h-5 mr-2 text-vanta-blue" />
+                Dados da Conta
+              </h3>
+              {!isEditingProfile && (
+                <button 
+                  onClick={() => setIsEditingProfile(true)}
+                  className="text-sm font-medium text-vanta-blue hover:text-vanta-darkblue transition-colors flex items-center"
+                >
+                  <Edit2 className="w-4 h-4 mr-1" />
+                  Editar
+                </button>
+              )}
+            </div>
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome Completo</label>
-                <input type="text" value={userName} readOnly className="w-full px-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-500 cursor-not-allowed" />
+                <input 
+                  type="text" 
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  readOnly={!isEditingProfile}
+                  className={`w-full px-4 py-2 bg-gray-50 dark:bg-gray-900 border rounded-lg text-gray-900 dark:text-white outline-none transition-all ${
+                    isEditingProfile 
+                    ? 'border-gray-300 dark:border-gray-600 focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20' 
+                    : 'border-transparent text-gray-600 dark:text-gray-400 cursor-not-allowed'
+                  }`} 
+                />
               </div>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">E-mail</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">E-mail <span className="text-gray-400 font-normal">(Não editável)</span></label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input type="email" value={user.email || ''} readOnly className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-500 cursor-not-allowed" />
+                  <input type="email" value={user.email || ''} readOnly className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-lg text-gray-500 cursor-not-allowed" />
                 </div>
               </div>
+
+              {isEditingProfile && (
+                <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-gray-700 mt-4">
+                  <button 
+                    onClick={handleSaveProfile}
+                    disabled={savingProfile || !editName.trim()}
+                    className="flex-1 py-2.5 bg-vanta-blue text-white text-sm font-bold rounded-lg hover:bg-vanta-darkblue transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center"
+                  >
+                    {savingProfile ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Salvar Alterações'}
+                  </button>
+                  <button 
+                    onClick={cancelProfileEdit}
+                    disabled={savingProfile}
+                    className="px-6 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-bold rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              )}
             </div>
           </div>
           
+          {/* Endereço de Entrega */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-soft">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
@@ -161,48 +317,43 @@ export default function Perfil() {
               {hasAddress && !isEditingAddress && (
                 <button 
                   onClick={() => setIsEditingAddress(true)}
-                  className="text-sm font-medium text-vanta-blue hover:text-vanta-darkblue transition-colors"
+                  className="text-sm font-medium text-vanta-blue hover:text-vanta-darkblue transition-colors flex items-center"
                 >
+                  <Edit2 className="w-4 h-4 mr-1" />
                   Editar
                 </button>
               )}
             </div>
 
-            {successMsg && (
-              <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm font-medium rounded-lg flex items-center">
-                <Check className="w-4 h-4 mr-2" />
-                {successMsg}
-              </div>
-            )}
-            
-            {errorMsg && (
-              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-medium rounded-lg">
-                {errorMsg}
-              </div>
-            )}
-
             {!isEditingAddress ? (
               hasAddress ? (
-                <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
-                  <p className="text-gray-900 dark:text-white font-medium">{perfil?.rua}, {perfil?.numero}</p>
-                  {perfil?.complemento && <p className="text-gray-500 dark:text-gray-400 text-sm">{perfil?.complemento}</p>}
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">{perfil?.bairro}</p>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">{perfil?.cidade} - {perfil?.estado}</p>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">CEP: {perfil?.cep?.replace(/^(\d{5})(\d{3})$/, '$1-$2')}</p>
+                <div className="bg-gray-50 dark:bg-gray-900/50 p-5 rounded-xl border border-gray-100 dark:border-gray-700 transition-all hover:border-vanta-orange/30">
+                  <div className="flex items-start">
+                    <MapPin className="w-5 h-5 text-gray-400 mt-0.5 mr-3 shrink-0" />
+                    <div>
+                      <p className="text-gray-900 dark:text-white font-medium text-base">{perfil?.rua}, {perfil?.numero}</p>
+                      {perfil?.complemento && <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">{perfil?.complemento}</p>}
+                      <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">{perfil?.bairro}</p>
+                      <p className="text-gray-600 dark:text-gray-400 text-sm">{perfil?.cidade} - {perfil?.estado}</p>
+                      <p className="text-gray-500 dark:text-gray-500 text-sm mt-2 font-mono bg-gray-200 dark:bg-gray-800 inline-block px-2 py-0.5 rounded">CEP: {perfil?.cep?.replace(/^(\d{5})(\d{3})$/, '$1-$2')}</p>
+                    </div>
+                  </div>
                 </div>
               ) : (
-                <div className="text-center py-6">
+                <div className="text-center py-8 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
+                  <MapPin className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Nenhum endereço cadastrado ainda.</p>
                   <button 
                     onClick={() => setIsEditingAddress(true)}
-                    className="px-6 py-2.5 bg-vanta-blue text-white text-sm font-bold rounded-lg hover:bg-vanta-darkblue transition-colors hover:-translate-y-0.5 shadow-sm"
+                    className="px-6 py-2.5 bg-vanta-blue text-white text-sm font-bold rounded-lg hover:bg-vanta-darkblue transition-colors hover:-translate-y-0.5 shadow-sm inline-flex items-center"
                   >
+                    <MapPin className="w-4 h-4 mr-2" />
                     Adicionar Endereço
                   </button>
                 </div>
               )
             ) : (
-              <form onSubmit={handleSaveAddress} className="space-y-4">
+              <form onSubmit={handleSaveAddress} className="space-y-4 bg-gray-50 dark:bg-gray-900/50 p-5 rounded-xl border border-gray-200 dark:border-gray-700">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">CEP</label>
@@ -214,7 +365,7 @@ export default function Perfil() {
                         value={endereco.cep}
                         onChange={handleCepChange}
                         placeholder="Apenas números"
-                        className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 outline-none transition-all"
+                        className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 outline-none transition-all"
                       />
                       {loadingAddress && (
                         <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -231,7 +382,7 @@ export default function Perfil() {
                       required
                       value={endereco.rua}
                       onChange={(e) => setEndereco({...endereco, rua: e.target.value})}
-                      className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 outline-none transition-all"
+                      className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 outline-none transition-all"
                     />
                   </div>
 
@@ -242,7 +393,7 @@ export default function Perfil() {
                       required
                       value={endereco.numero}
                       onChange={(e) => setEndereco({...endereco, numero: e.target.value})}
-                      className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 outline-none transition-all"
+                      className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 outline-none transition-all"
                     />
                   </div>
 
@@ -253,7 +404,7 @@ export default function Perfil() {
                       value={endereco.complemento}
                       onChange={(e) => setEndereco({...endereco, complemento: e.target.value})}
                       placeholder="Apto, Bloco, etc."
-                      className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 outline-none transition-all"
+                      className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 outline-none transition-all"
                     />
                   </div>
 
@@ -264,7 +415,7 @@ export default function Perfil() {
                       required
                       value={endereco.bairro}
                       onChange={(e) => setEndereco({...endereco, bairro: e.target.value})}
-                      className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 outline-none transition-all"
+                      className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 outline-none transition-all"
                     />
                   </div>
 
@@ -275,7 +426,7 @@ export default function Perfil() {
                       required
                       value={endereco.cidade}
                       onChange={(e) => setEndereco({...endereco, cidade: e.target.value})}
-                      className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 outline-none transition-all"
+                      className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 outline-none transition-all"
                     />
                   </div>
 
@@ -287,12 +438,12 @@ export default function Perfil() {
                       maxLength={2}
                       value={endereco.estado}
                       onChange={(e) => setEndereco({...endereco, estado: e.target.value.toUpperCase()})}
-                      className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 outline-none transition-all"
+                      className="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 outline-none transition-all"
                     />
                   </div>
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-4">
                   <button 
                     type="submit" 
                     disabled={saving}
@@ -307,7 +458,7 @@ export default function Perfil() {
                       setErrorMsg('');
                     }}
                     disabled={saving}
-                    className="px-6 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-bold rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="px-6 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-bold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     Cancelar
                   </button>

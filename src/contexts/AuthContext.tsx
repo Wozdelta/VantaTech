@@ -14,6 +14,7 @@ interface Perfil {
   bairro?: string;
   cidade?: string;
   estado?: string;
+  avatar_url?: string;
 }
 
 interface AuthContextType {
@@ -21,6 +22,7 @@ interface AuthContextType {
   perfil: Perfil | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  refreshPerfil: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -28,6 +30,7 @@ const AuthContext = createContext<AuthContextType>({
   perfil: null,
   loading: true,
   signOut: async () => {},
+  refreshPerfil: async () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -79,12 +82,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const refreshPerfil = async () => {
+    if (user) {
+      await fetchPerfil(user.id);
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
 
   return (
-    <AuthContext.Provider value={{ user, perfil, loading, signOut }}>
+    <AuthContext.Provider value={{ user, perfil, loading, signOut, refreshPerfil }}>
       {children}
     </AuthContext.Provider>
   );
