@@ -4,15 +4,20 @@ import { Search, Bell, ShoppingCart, User, Menu, X, Smartphone, Trash2, Moon, Su
 import { FaWhatsapp, FaInstagram } from 'react-icons/fa6';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from '@/contexts/CartContext';
 import { supabase } from '@/lib/supabase';
+import { useAlert } from '@/contexts/AlertContext';
+import CartDrawer from './CartDrawer';
 
 export default function Navbar() {
+  const { showAlert } = useAlert();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isDark, setIsDark] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
   const navRef = useRef<HTMLElement>(null);
   const { user, perfil, signOut } = useAuth();
+  const { cartCount, setIsCartOpen } = useCart();
 
   useEffect(() => {
     fetchCategories();
@@ -127,20 +132,16 @@ export default function Navbar() {
       setNotifications([]);
     } catch (error) {
       console.error('Erro ao limpar notificações:', error);
-      alert('Não foi possível limpar as notificações.');
+      showAlert({
+        title: 'Erro',
+        message: 'Não foi possível limpar as notificações.',
+        type: 'error'
+      });
     }
   }
 
-  const [cartItems, setCartItems] = useState([
-    { id: 1, name: 'iPhone 14 Pro Max', price: 'R$ 6.499,00' }
-  ]);
-
   const toggleDropdown = (name: string) => {
     setActiveDropdown(activeDropdown === name ? null : name);
-  };
-
-  const removeCartItem = (id: number) => {
-    setCartItems(cartItems.filter(item => item.id !== id));
   };
 
   const unreadCount = notifications.filter(n => !n.lida).length;
@@ -160,7 +161,7 @@ export default function Navbar() {
              </button>
            )}
            {unreadCount > 0 && (
-             <span className="text-xs font-bold bg-vanta-orange text-white px-2 py-1 rounded-full">
+             <span className="text-[11px] font-bold bg-vanta-orange text-white px-2.5 py-1 rounded-full whitespace-nowrap">
                {unreadCount} nova{unreadCount !== 1 && 's'}
              </span>
            )}
@@ -223,44 +224,6 @@ export default function Navbar() {
           )}
         </div>
       )}
-    </>
-  );
-
-  const CartContent = (
-    <>
-      <h4 className="font-bold text-gray-800 dark:text-white mb-2 border-b border-gray-100 dark:border-gray-800 pb-2 text-left">Seu Carrinho</h4>
-      
-      <div className="max-h-[300px] overflow-y-auto text-left">
-        {cartItems.length === 0 ? (
-          <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">Seu carrinho está vazio.</p>
-        ) : (
-          cartItems.map(item => (
-            <div key={item.id} className="flex items-center gap-3 py-2 border-b border-gray-50 dark:border-gray-800">
-              <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-md flex items-center justify-center">
-                <span className="text-[8px] font-bold text-gray-400 dark:text-gray-500">FOTO</span>
-              </div>
-              <div className="flex-1">
-                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100 line-clamp-1">{item.name}</p>
-                 <p className="text-xs text-vanta-darkblue dark:text-blue-400 font-bold">{item.price}</p>
-              </div>
-              <button 
-                onClick={() => removeCartItem(item.id)}
-                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md transition-colors"
-                title="Remover"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          ))
-        )}
-      </div>
-      
-      <button 
-        className="w-full mt-3 py-2 bg-vanta-blue text-white text-sm font-bold rounded-lg hover:bg-vanta-darkblue transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        disabled={cartItems.length === 0}
-      >
-        Finalizar Compra
-      </button>
     </>
   );
 
@@ -386,12 +349,9 @@ export default function Navbar() {
             <ActionIcon 
               icon={ShoppingCart} 
               label="Carrinho" 
-              badge={cartItems.length}
-              isOpen={activeDropdown === 'carrinho'}
-              onClick={() => toggleDropdown('carrinho')}
-            >
-              {CartContent}
-            </ActionIcon>
+              badge={cartCount}
+              onClick={() => setIsCartOpen(true)}
+            />
 
             {/* User Login */}
             <ActionIcon 
@@ -462,15 +422,15 @@ export default function Navbar() {
              <ActionIcon icon={Bell} label="Notificações" badge={unreadCount} isOpen={activeDropdown === 'notificacoes_mobile'} onClick={() => toggleDropdown('notificacoes_mobile')} align="left">
                {NotificationsContent}
              </ActionIcon>
-             <ActionIcon icon={ShoppingCart} label="Carrinho" badge={cartItems.length} isOpen={activeDropdown === 'carrinho_mobile'} onClick={() => toggleDropdown('carrinho_mobile')} align="center">
-               {CartContent}
-             </ActionIcon>
+             <ActionIcon icon={ShoppingCart} label="Carrinho" badge={cartCount} onClick={() => setIsCartOpen(true)} align="center" />
              <ActionIcon icon={User} label="Minha Conta" avatarUrl={perfil?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture} isOpen={activeDropdown === 'user_mobile'} onClick={() => toggleDropdown('user_mobile')} align="right">
                {UserContent}
              </ActionIcon>
           </div>
         </div>
       </div>
+      
+      <CartDrawer />
     </header>
   );
 }

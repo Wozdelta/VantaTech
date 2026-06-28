@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { useAlert } from '../../contexts/AlertContext';
 import { Send, Loader2, BellRing, CheckCircle2 } from 'lucide-react';
 
 export default function AdminNotifications() {
+  const { showAlert } = useAlert();
   const [titulo, setTitulo] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [sending, setSending] = useState(false);
@@ -28,7 +30,7 @@ export default function AdminNotifications() {
       if (perfisError) throw perfisError;
 
       if (!perfis || perfis.length === 0) {
-        alert('Nenhum usuário encontrado para notificar.');
+        showAlert({ title: 'Atenção', message: 'Nenhum usuário encontrado para notificar.', type: 'warning' });
         setSending(false);
         return;
       }
@@ -51,13 +53,14 @@ export default function AdminNotifications() {
       setSuccess(true);
       setTitulo('');
       setMensagem('');
+      showAlert({ title: 'Sucesso', message: 'Notificações enviadas com sucesso para todos os usuários!', type: 'success' });
       
       // Remove a mensagem de sucesso após 5 segundos
       setTimeout(() => setSuccess(false), 5000);
 
     } catch (error) {
       console.error('Erro ao enviar notificações:', error);
-      alert('Ocorreu um erro ao enviar as notificações.');
+      showAlert({ title: 'Erro', message: 'Ocorreu um erro ao enviar as notificações.', type: 'error' });
     } finally {
       setSending(false);
     }

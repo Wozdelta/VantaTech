@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { useAlert } from '../../contexts/AlertContext';
 import { Plus, Trash2, Edit2, Loader2, X, MoveUp, MoveDown } from 'lucide-react';
 
 type Categoria = {
@@ -10,6 +11,7 @@ type Categoria = {
 };
 
 export default function AdminCategories() {
+  const { showAlert } = useAlert();
   const [categories, setCategories] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -46,7 +48,7 @@ export default function AdminCategories() {
       fetchCategories();
     } catch (error) {
       console.error('Erro ao excluir:', error);
-      alert('Erro ao excluir categoria.');
+      showAlert({ title: 'Erro', message: 'Erro ao excluir categoria.', type: 'error' });
     }
   }
 
@@ -82,7 +84,7 @@ export default function AdminCategories() {
       
     } catch (error) {
       console.error('Erro ao salvar:', error);
-      alert('Erro ao salvar categoria.');
+      showAlert({ title: 'Erro', message: 'Erro ao salvar categoria.', type: 'error' });
     } finally {
       setSaving(false);
     }
