@@ -84,7 +84,7 @@ export default function AdminDashboard() {
             </p>
           </div>
           
-          <div className="flex overflow-x-auto bg-white dark:bg-gray-800 rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-700 no-scrollbar w-full">
+          <div className="flex overflow-x-auto justify-start md:justify-center bg-white dark:bg-gray-800 rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-700 no-scrollbar w-full">
             <button
               onClick={() => setActiveTab('overview')}
               className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors ${
