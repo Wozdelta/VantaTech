@@ -36,7 +36,7 @@ export default function AdminSalesHistory() {
           id, numero, criado_em, status,
           itens_pedido (id, produto_id, produto_nome, produto_preco, quantidade)
         `)
-        .eq('status', 'Pago')
+        .in('status', ['Pago', 'Enviado', 'Entregue'])
         .order('criado_em', { ascending: false });
 
       if (pedidosError) throw pedidosError;
@@ -94,6 +94,24 @@ export default function AdminSalesHistory() {
     }
   }
 
+  useEffect(() => {
+    // Assinar mudanças na tabela pedidos para atualizar em tempo real
+    const channel = supabase
+      .channel('pedidos-history')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'pedidos' },
+        () => {
+          fetchHistory();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const handleDeleteItem = async (pedidoId: string) => {
     const confirmed = window.confirm('Deseja realmente apagar este registro? Isso excluirá o pedido correspondente.');
     if (!confirmed) return;
@@ -126,11 +144,8 @@ export default function AdminSalesHistory() {
           <div>
             <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <History className="w-5 h-5 text-vanta-blue" />
-              Histórico de Vendas (Status: Pago)
+              Histórico de Vendas
             </h3>
-            <p className="text-sm text-gray-500 mt-1">
-              Registro de todas as saídas e lucros gerados por pedidos confirmados.
-            </p>
           </div>
           <div className="relative w-full md:w-64">
             <input

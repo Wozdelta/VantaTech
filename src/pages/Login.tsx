@@ -39,6 +39,10 @@ export default function Login() {
         if (!email || !password) throw new Error('Preencha o e-mail e a senha.');
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw new Error('E-mail ou senha inválidos.');
+        
+        // Se a pessoa já tinha conta e fez login, não deve dar pontos para afiliado
+        localStorage.removeItem('afiliado_id');
+        
         navigate('/');
 
       } else if (view === 'register') {

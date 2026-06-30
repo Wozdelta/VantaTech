@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Loader2, Search } from 'lucide-react';
 import SidebarFilters from '@/components/home/SidebarFilters';
@@ -19,10 +20,52 @@ type DatabaseProduct = {
 };
 
 export default function Produtos() {
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const initialCategory = searchParams.get('categoria');
+
   const [products, setProducts] = useState<DatabaseProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeFilters, setActiveFilters] = useState<Record<string, any>>({});
+  const [activeFilters, setActiveFilters] = useState<Record<string, any>>({
+    Categorias: [],
+    Marca: [],
+    Condição: [],
+    Memória: [],
+    PrecoMin: '',
+    PrecoMax: ''
+  });
   const [searchTerm, setSearchTerm] = useState('');
+
+  const [dbMarcas, setDbMarcas] = useState<string[]>([]);
+  const [dbCategorias, setDbCategorias] = useState<string[]>([]);
+
+  useEffect(() => {
+    async function fetchFilterLists() {
+      const [marcasRes, categoriasRes] = await Promise.all([
+        supabase.from('marcas').select('nome').order('nome'),
+        supabase.from('categorias').select('nome').order('nome')
+      ]);
+      setDbMarcas(marcasRes.data?.map(m => m.nome) || []);
+      setDbCategorias(categoriasRes.data?.map(c => c.nome) || []);
+    }
+    fetchFilterLists();
+  }, []);
+
+  // Atualiza os filtros descobrindo se a palavra é Marca ou Categoria
+  useEffect(() => {
+    const cat = searchParams.get('categoria');
+    if (cat && (dbMarcas.length > 0 || dbCategorias.length > 0)) {
+      const isMarca = dbMarcas.some(m => m.toLowerCase() === cat.toLowerCase());
+      if (isMarca) {
+        setActiveFilters(prev => ({ ...prev, Marca: [cat], Categorias: [] }));
+      } else {
+        setActiveFilters(prev => ({ ...prev, Categorias: [cat], Marca: [] }));
+      }
+    } else if (!cat) {
+      // Se tiraram a categoria da URL, limpar
+      setActiveFilters(prev => ({ ...prev, Categorias: [], Marca: [] }));
+    }
+  }, [location.search, dbMarcas, dbCategorias]);
 
   useEffect(() => {
     fetchProducts();
@@ -50,16 +93,20 @@ export default function Produtos() {
     // Busca por texto (nome ou marca)
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      if (!product.nome.toLowerCase().includes(term) && !product.marca.toLowerCase().includes(term)) {
+      if (!product.nome?.toLowerCase().includes(term) && 
+          !product.marca?.toLowerCase().includes(term) &&
+          !product.categoria?.toLowerCase().includes(term)) {
         return false;
       }
     }
 
     if (activeFilters.Categorias?.length > 0) {
-      if (!activeFilters.Categorias.includes(product.categoria)) return false;
+      const match = activeFilters.Categorias.some((c: string) => c.toLowerCase() === product.categoria?.toLowerCase());
+      if (!match) return false;
     }
     if (activeFilters.Marca?.length > 0) {
-      if (!activeFilters.Marca.includes(product.marca)) return false;
+      const match = activeFilters.Marca.some((m: string) => m.toLowerCase() === product.marca?.toLowerCase());
+      if (!match) return false;
     }
     if (activeFilters.Condição?.length > 0) {
       const match = activeFilters.Condição.some((c: string) => c.toLowerCase() === product.condicao?.toLowerCase());
@@ -103,7 +150,12 @@ export default function Produtos() {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
-          <SidebarFilters onFilterChange={setActiveFilters} />
+          <SidebarFilters 
+            activeFilters={activeFilters} 
+            onFilterChange={setActiveFilters} 
+            marcas={dbMarcas}
+            categorias={dbCategorias}
+          />
           
           <div className="flex-1">
             <div className="flex items-center justify-between mb-6">

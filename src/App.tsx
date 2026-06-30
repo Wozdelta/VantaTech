@@ -1,4 +1,6 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useAuth } from './contexts/AuthContext';
 import Layout from './components/layout/Layout';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -11,6 +13,18 @@ import Produtos from './pages/Produtos';
 import { AlertProvider } from './contexts/AlertContext';
 
 export default function App() {
+  const location = useLocation();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const ref = searchParams.get('ref');
+    // Só salva o afiliado se o usuário for novo (não estiver logado)
+    if (ref && !user) {
+      localStorage.setItem('afiliado_id', ref);
+    }
+  }, [location.search, user]);
+
   return (
     <AlertProvider>
       <Routes>

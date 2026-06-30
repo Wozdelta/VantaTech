@@ -302,12 +302,16 @@ export default function CartDrawer() {
 
     if (user) {
       try {
+        const afiliado_id = localStorage.getItem('afiliado_id');
+        const idParaSalvar = (afiliado_id && afiliado_id !== user.id) ? afiliado_id : null;
+
         const { data: pedido, error: errorPedido } = await supabase
           .from('pedidos')
           .insert({
             user_id: user.id,
             total: finalTotal,
-            status: 'Pendente'
+            status: 'Pendente',
+            afiliado_id: idParaSalvar
           })
           .select()
           .single();
@@ -315,6 +319,10 @@ export default function CartDrawer() {
         if (errorPedido) throw errorPedido;
 
         if (pedido) {
+          if (idParaSalvar) {
+            localStorage.removeItem('afiliado_id');
+          }
+
           const itensToInsert = items.map(item => {
             let nomeDetalhado = item.name;
             if (item.color) nomeDetalhado += ` - Cor: ${item.color}`;

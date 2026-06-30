@@ -382,7 +382,7 @@ export default function Navbar() {
           {categories.map((category) => (
             <Link
               key={category}
-              to={`/categoria/${category.toLowerCase()}`}
+              to={`/produtos?categoria=${encodeURIComponent(category.toLowerCase())}`}
               className="relative text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-vanta-darkblue dark:hover:text-white transition-colors duration-300 group py-3"
             >
               {category}
@@ -410,7 +410,7 @@ export default function Navbar() {
             {categories.map((category) => (
               <Link
                 key={category}
-                to={`/categoria/${category.toLowerCase()}`}
+                to={`/produtos?categoria=${encodeURIComponent(category.toLowerCase())}`}
                 className="flex items-center p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 <Smartphone className="w-4 h-4 mr-2 text-vanta-blue" />

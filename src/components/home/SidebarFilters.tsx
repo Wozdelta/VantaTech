@@ -26,7 +26,7 @@ function FilterSection({ title, options, selectedOptions, onChange }: FilterSect
       {isOpen && (
         <div className="mt-4 space-y-3 animate-fade-in">
           {options.map((option, idx) => {
-            const isChecked = selectedOptions.includes(option);
+            const isChecked = selectedOptions.some(item => item.toLowerCase() === option.toLowerCase());
             return (
               <label key={idx} className="flex items-center gap-3 cursor-pointer group">
                 <div className="relative flex items-center justify-center w-5 h-5 border border-gray-300 dark:border-gray-600 rounded-[4px] group-hover:border-vanta-blue transition-colors">
@@ -116,56 +116,37 @@ function PriceFilterSection({ min, max, onChange }: { min: string, max: string, 
 }
 
 type SidebarFiltersProps = {
+  activeFilters: Record<string, any>;
   onFilterChange: (filters: Record<string, any>) => void;
+  marcas: string[];
+  categorias: string[];
 };
 
-export default function SidebarFilters({ onFilterChange }: SidebarFiltersProps) {
-  const [marcas, setMarcas] = useState<string[]>([]);
-  const [categorias, setCategorias] = useState<string[]>([]);
+export default function SidebarFilters({ activeFilters, onFilterChange, marcas, categorias }: SidebarFiltersProps) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  const [activeFilters, setActiveFilters] = useState<Record<string, any>>({
-    Categorias: [],
-    Marca: [],
-    Condição: [],
-    Memória: [],
-    PrecoMin: '',
-    PrecoMax: ''
-  });
-
-  useEffect(() => {
-    async function fetchFilters() {
-      const [marcasRes, categoriasRes] = await Promise.all([
-        supabase.from('marcas').select('nome').order('nome'),
-        supabase.from('categorias').select('nome').order('nome')
-      ]);
-      if (marcasRes.data) setMarcas(marcasRes.data.map(m => m.nome));
-      if (categoriasRes.data) setCategorias(categoriasRes.data.map(c => c.nome));
-    }
-    fetchFilters();
-  }, []);
-
   const handleFilterToggle = (category: string, option: string) => {
-    setActiveFilters(prev => {
-      const categoryFilters = prev[category] || [];
-      const newCategoryFilters = categoryFilters.includes(option)
-        ? categoryFilters.filter((item: string) => item !== option)
-        : [...categoryFilters, option];
+    // Garante que o array existe (tratamento para case insensitive que faremos no Produtos)
+    const categoryName = Object.keys(activeFilters).find(k => k.toLowerCase() === category.toLowerCase()) || category;
+    
+    // Procura a opção ignorando maiúsculas e minúsculas
+    const categoryFilters = activeFilters[categoryName] || [];
+    const isSelected = categoryFilters.some((item: string) => item.toLowerCase() === option.toLowerCase());
+    
+    let newCategoryFilters;
+    if (isSelected) {
+      newCategoryFilters = categoryFilters.filter((item: string) => item.toLowerCase() !== option.toLowerCase());
+    } else {
+      newCategoryFilters = [...categoryFilters, option];
+    }
 
-      const newFilters = { ...prev, [category]: newCategoryFilters };
-      
-      onFilterChange(newFilters);
-      
-      return newFilters;
-    });
+    const newFilters = { ...activeFilters, [categoryName]: newCategoryFilters };
+    onFilterChange(newFilters);
   };
 
   const handlePriceChange = (min: string, max: string) => {
-    setActiveFilters(prev => {
-      const newFilters = { ...prev, PrecoMin: min, PrecoMax: max };
-      onFilterChange(newFilters);
-      return newFilters;
-    });
+    const newFilters = { ...activeFilters, PrecoMin: min, PrecoMax: max };
+    onFilterChange(newFilters);
   };
 
   return (
@@ -204,7 +185,7 @@ export default function SidebarFilters({ onFilterChange }: SidebarFiltersProps) 
           <FilterSection 
             title="Categorias" 
             options={categorias} 
-            selectedOptions={activeFilters.Categorias}
+            selectedOptions={activeFilters.Categorias || []}
             onChange={(option) => handleFilterToggle('Categorias', option)}
           />
         )}
@@ -213,7 +194,7 @@ export default function SidebarFilters({ onFilterChange }: SidebarFiltersProps) 
           <FilterSection 
             title="Marca" 
             options={marcas} 
-            selectedOptions={activeFilters.Marca}
+            selectedOptions={activeFilters.Marca || []}
             onChange={(option) => handleFilterToggle('Marca', option)}
           />
         )}
@@ -221,20 +202,20 @@ export default function SidebarFilters({ onFilterChange }: SidebarFiltersProps) 
         <FilterSection 
           title="Condição" 
           options={['Novo', 'Lacrado', 'Seminovo', 'Usado']} 
-          selectedOptions={activeFilters.Condição}
+          selectedOptions={activeFilters.Condição || []}
           onChange={(option) => handleFilterToggle('Condição', option)}
         />
 
         <PriceFilterSection 
-          min={activeFilters.PrecoMin} 
-          max={activeFilters.PrecoMax} 
+          min={activeFilters.PrecoMin || ''} 
+          max={activeFilters.PrecoMax || ''} 
           onChange={handlePriceChange} 
         />
 
         <FilterSection 
           title="Memória" 
           options={['64GB', '128GB', '256GB', '512GB', '1TB']} 
-          selectedOptions={activeFilters.Memória}
+          selectedOptions={activeFilters.Memória || []}
           onChange={(option) => handleFilterToggle('Memória', option)}
         />
         

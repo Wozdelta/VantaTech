@@ -34,9 +34,9 @@ export default function ProductCard({ product }: { product: DatabaseProduct }) {
       )}
 
       {/* Image */}
-      <div className="relative w-full aspect-[4/5] bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800 flex flex-col items-center justify-center p-6 overflow-hidden">
+      <div className="relative w-full h-56 sm:h-64 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800 flex flex-col items-center justify-center p-2 overflow-hidden">
         {product.imagem_url ? (
-          <img src={product.imagem_url} alt={product.nome} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
+          <img src={product.imagem_url} alt={product.nome} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal group-hover:scale-105 transition-transform duration-500" />
         ) : (
           <div className="w-24 h-32 bg-gray-200 dark:bg-gray-700 rounded-lg shadow-inner flex items-center justify-center group-hover:scale-105 transition-transform duration-500">
             <span className="text-gray-400 dark:text-gray-500 font-bold text-sm rotate-[-45deg]">FOTO</span>

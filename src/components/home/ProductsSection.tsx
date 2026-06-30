@@ -33,7 +33,7 @@ export default function ProductsSection() {
         .select('*')
         .eq('ativo', true)
         .order('criado_em', { ascending: false })
-        .limit(8);
+        .limit(6);
 
       if (error) throw error;
       setProducts(data || []);
@@ -58,7 +58,7 @@ export default function ProductsSection() {
               <Loader2 className="w-8 h-8 animate-spin text-vanta-blue" />
             </div>
           ) : products.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {products.map(product => (
                 <ProductCard key={product.id} product={product} />
               ))}

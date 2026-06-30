@@ -19,6 +19,7 @@ interface Pedido {
   total: number;
   status: string;
   criado_em: string;
+  afiliado_id?: string;
   itens_pedido: ItemPedido[];
 }
 
@@ -51,7 +52,7 @@ export default function AdminOrders() {
     }
   }
 
-  const updateOrderStatus = async (pedidoId: string, newStatus: string, itens: ItemPedido[], userId: string) => {
+  const updateOrderStatus = async (pedidoId: string, newStatus: string, oldStatus: string, itens: ItemPedido[], userId: string, afiliadoId?: string, total?: number) => {
     setUpdating(pedidoId);
     try {
       const { error } = await supabase
@@ -61,7 +62,34 @@ export default function AdminOrders() {
 
       if (error) throw error;
 
-      // Enviar notificação para o usuário
+      // Se virou Pago e antes não era, damos os pontos para o afiliado (se existir)
+      const wasAlreadyPaid = ['Pago', 'Enviado', 'Entregue'].includes(oldStatus);
+      const isNowPaid = ['Pago', 'Enviado', 'Entregue'].includes(newStatus);
+      
+      if (!wasAlreadyPaid && isNowPaid && afiliadoId && total) {
+        const { data: perfilAfiliado } = await supabase
+          .from('perfis')
+          .select('pontos')
+          .eq('id', afiliadoId)
+          .single();
+        
+        const pontosAtuais = perfilAfiliado?.pontos || 0;
+        const pontosGanhos = Math.floor(total);
+
+        await supabase
+          .from('perfis')
+          .update({ pontos: pontosAtuais + pontosGanhos })
+          .eq('id', afiliadoId);
+
+        await supabase.from('notificacoes').insert({
+          usuario_id: afiliadoId,
+          titulo: `Você ganhou VantaCoins! 🎉`,
+          mensagem: `Alguém comprou através do seu link de indicação. Você recebeu ${pontosGanhos} VantaCoins!`,
+          lida: false
+        });
+      }
+
+      // Enviar notificação para o comprador
       if (userId) {
         await supabase.from('notificacoes').insert({
           usuario_id: userId,
@@ -242,7 +270,7 @@ export default function AdminOrders() {
                       ) : (
                         <select
                           value={pedido.status}
-                          onChange={(e) => updateOrderStatus(pedido.id, e.target.value, pedido.itens_pedido, pedido.user_id)}
+                          onChange={(e) => updateOrderStatus(pedido.id, e.target.value, pedido.status, pedido.itens_pedido, pedido.user_id, pedido.afiliado_id, pedido.total)}
                           disabled={updating === pedido.id}
                           className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-vanta-blue dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600 transition-colors"
                         >

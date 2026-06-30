@@ -15,6 +15,11 @@ export default function AdminDashboard() {
   const { user, perfil, loading } = useAuth();
   const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'products' | 'categories' | 'notifications' | 'attributes' | 'sales_history'>('overview');
   const [receitaMensal, setReceitaMensal] = useState(0);
+  const [margemLucro, setMargemLucro] = useState(0);
+  const [totalPedidos, setTotalPedidos] = useState(0);
+  const [crescimentoPedidos, setCrescimentoPedidos] = useState(0);
+  const [totalClientes, setTotalClientes] = useState(0);
+  const [crescimentoClientes, setCrescimentoClientes] = useState(0);
 
   useEffect(() => {
     async function fetchReceita() {
@@ -22,12 +27,13 @@ export default function AdminDashboard() {
         const { data: pedidos } = await supabase
           .from('pedidos')
           .select(`itens_pedido (produto_id, produto_nome, produto_preco, quantidade)`)
-          .eq('status', 'Pago');
+          .in('status', ['Pago', 'Enviado', 'Entregue']);
 
         const { data: produtos } = await supabase.from('produtos').select('id, galeria');
 
         if (pedidos && produtos) {
           let totalLucro = 0;
+          let totalVendas = 0;
           pedidos.forEach(pedido => {
             pedido.itens_pedido?.forEach((item: any) => {
               let custo = 0;
@@ -42,10 +48,63 @@ export default function AdminDashboard() {
                   }
                 }
               }
+              const vendaItem = item.produto_preco * item.quantidade;
+              totalVendas += vendaItem;
               totalLucro += (item.produto_preco - custo) * item.quantidade;
             });
           });
           setReceitaMensal(totalLucro);
+          setMargemLucro(totalVendas > 0 ? (totalLucro / totalVendas) * 100 : 0);
+        }
+
+        // Buscar todos os pedidos para contar total e calcular crescimento
+        const { data: todosPedidos } = await supabase.from('pedidos').select('criado_em');
+        if (todosPedidos) {
+          setTotalPedidos(todosPedidos.length);
+          
+          const hoje = new Date();
+          const ontem = new Date();
+          ontem.setDate(hoje.getDate() - 1);
+          
+          const inicioHoje = new Date(hoje.setHours(0,0,0,0)).getTime();
+
+          const totalPedidosHoje = todosPedidos.length;
+          const totalPedidosAteOntem = todosPedidos.filter(p => new Date(p.criado_em).getTime() < inicioHoje).length;
+
+          if (totalPedidosAteOntem > 0) {
+            setCrescimentoPedidos(((totalPedidosHoje - totalPedidosAteOntem) / totalPedidosAteOntem) * 100);
+          } else if (totalPedidosHoje > 0) {
+            setCrescimentoPedidos(100);
+          } else {
+            setCrescimentoPedidos(0);
+          }
+        }
+
+        // Buscar total de clientes cadastrados (perfis)
+        const { data: todosClientes } = await supabase.from('perfis').select('*');
+        if (todosClientes) {
+          setTotalClientes(todosClientes.length);
+          
+          const hoje = new Date();
+          const ontem = new Date();
+          ontem.setDate(hoje.getDate() - 1);
+          
+          const inicioHoje = new Date(hoje.setHours(0,0,0,0)).getTime();
+
+          const totalClientesHoje = todosClientes.length;
+          const totalClientesAteOntem = todosClientes.filter(c => {
+            const dataStr = c.created_at || c.criado_em;
+            if (!dataStr) return true; // Se não tem data, assume que é antigo
+            return new Date(dataStr).getTime() < inicioHoje;
+          }).length;
+
+          if (totalClientesAteOntem > 0) {
+            setCrescimentoClientes(((totalClientesHoje - totalClientesAteOntem) / totalClientesAteOntem) * 100);
+          } else if (totalClientesHoje > 0) {
+            setCrescimentoClientes(100);
+          } else {
+            setCrescimentoClientes(0);
+          }
         }
       } catch (err) {
         console.error('Erro ao buscar receita:', err);
@@ -55,6 +114,33 @@ export default function AdminDashboard() {
     if (activeTab === 'overview') {
       fetchReceita();
     }
+
+    // Assinar mudanças no banco de dados para atualizar em tempo real
+    const channel = supabase
+      .channel('dashboard-updates')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'pedidos' },
+        () => {
+          if (activeTab === 'overview') {
+            fetchReceita();
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'perfis' },
+        () => {
+          if (activeTab === 'overview') {
+            fetchReceita();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [activeTab]);
 
   if (loading) {
@@ -67,9 +153,9 @@ export default function AdminDashboard() {
   }
 
   const stats = [
-    { name: 'Total de Clientes', value: '0', icon: Users, change: '+0%', changeType: 'positive' },
-    { name: 'Pedidos Hoje', value: '0', icon: ShoppingBag, change: '+0%', changeType: 'positive' },
-    { name: 'Receita Mensal', value: `R$ ${receitaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: DollarSign, change: 'Baseado no Lucro', changeType: 'positive' },
+    { name: 'Total de Clientes', value: totalClientes.toString(), icon: Users, change: `${crescimentoClientes > 0 ? '+' : ''}${crescimentoClientes.toFixed(0)}%`, changeType: crescimentoClientes >= 0 ? 'positive' : 'negative' },
+    { name: 'Total de pedidos', value: totalPedidos.toString(), icon: ShoppingBag, change: `${crescimentoPedidos > 0 ? '+' : ''}${crescimentoPedidos.toFixed(0)}%`, changeType: crescimentoPedidos >= 0 ? 'positive' : 'negative' },
+    { name: 'Receita Total', value: `R$ ${receitaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: DollarSign, change: `${margemLucro.toFixed(0)}%`, changeType: 'positive' },
     { name: 'Acessos Ativos', value: '1', icon: Activity, change: 'Agora', changeType: 'neutral' },
   ];
 
