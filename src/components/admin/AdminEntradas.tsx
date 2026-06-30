@@ -1,0 +1,270 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
+import { useAlert } from '../../contexts/AlertContext';
+import { Loader2, Save, Search, TrendingUp, DollarSign } from 'lucide-react';
+
+type Product = {
+  id: string;
+  nome: string;
+  preco: number;
+  galeria: any[];
+};
+
+type EntryItem = {
+  productId: string;
+  variantIndex: number;
+  nome: string;
+  cor: string;
+  armazenamento: string;
+  bateria: string;
+  precoVenda: number;
+  precoCusto: number;
+  lucro: number;
+  isSaving: boolean;
+};
+
+export default function AdminEntradas() {
+  const [items, setItems] = useState<EntryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const { showAlert } = useAlert();
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  async function fetchProducts() {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('produtos')
+        .select('id, nome, preco, galeria')
+        .order('nome');
+
+      if (error) throw error;
+
+      const entryItems: EntryItem[] = [];
+
+      data?.forEach((product: Product) => {
+        if (!product.galeria || product.galeria.length === 0) return;
+
+        // Verificar se tem variações (fotos com cor preenchida)
+        const hasVariants = product.galeria.some(g => g.cor || g.preco);
+
+        if (hasVariants) {
+          product.galeria.forEach((g, index) => {
+            if (g.cor || g.preco) {
+              const precoVenda = g.preco ? parseFloat(g.preco) : product.preco;
+              const precoCusto = g.preco_custo ? parseFloat(g.preco_custo) : 0;
+              
+              entryItems.push({
+                productId: product.id,
+                variantIndex: index,
+                nome: product.nome,
+                cor: g.cor || 'Única',
+                armazenamento: g.memoria || '',
+                bateria: g.bateria || '',
+                precoVenda,
+                precoCusto,
+                lucro: precoVenda - precoCusto,
+                isSaving: false
+              });
+            }
+          });
+        } else {
+          // Se não tem variações explícitas, pegar o produto base pela primeira imagem
+          const precoVenda = product.preco;
+          const precoCusto = product.galeria[0].preco_custo ? parseFloat(product.galeria[0].preco_custo) : 0;
+          
+          entryItems.push({
+            productId: product.id,
+            variantIndex: 0, // salvar no json da primeira imagem
+            nome: product.nome,
+            cor: 'Única',
+            armazenamento: '',
+            bateria: '',
+            precoVenda,
+            precoCusto,
+            lucro: precoVenda - precoCusto,
+            isSaving: false
+          });
+        }
+      });
+
+      setItems(entryItems);
+    } catch (error) {
+      console.error('Erro ao buscar produtos:', error);
+      showAlert({ title: 'Erro', message: 'Falha ao carregar lista de entradas.', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleCustoChange = (index: number, value: string) => {
+    const newItems = [...items];
+    const newCusto = parseFloat(value) || 0;
+    newItems[index].precoCusto = newCusto;
+    newItems[index].lucro = newItems[index].precoVenda - newCusto;
+    setItems(newItems);
+  };
+
+  const handleSave = async (index: number) => {
+    const item = items[index];
+    
+    // Atualiza estado de carregamento do botão
+    const newItems = [...items];
+    newItems[index].isSaving = true;
+    setItems(newItems);
+
+    try {
+      // 1. Busca o produto completo para atualizar o array da galeria
+      const { data: productData, error: fetchError } = await supabase
+        .from('produtos')
+        .select('galeria')
+        .eq('id', item.productId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const updatedGaleria = [...productData.galeria];
+      
+      // 2. Atualiza apenas o preco_custo da variação específica
+      if (updatedGaleria[item.variantIndex]) {
+        updatedGaleria[item.variantIndex] = {
+          ...updatedGaleria[item.variantIndex],
+          preco_custo: item.precoCusto.toString()
+        };
+      }
+
+      // 3. Salva de volta no banco
+      const { error: updateError } = await supabase
+        .from('produtos')
+        .update({ galeria: updatedGaleria })
+        .eq('id', item.productId);
+
+      if (updateError) throw updateError;
+
+      showAlert({ title: 'Sucesso', message: 'Valor pago atualizado!', type: 'success' });
+    } catch (error) {
+      console.error('Erro ao salvar custo:', error);
+      showAlert({ title: 'Erro', message: 'Falha ao salvar o valor.', type: 'error' });
+    } finally {
+      const resetItems = [...items];
+      resetItems[index].isSaving = false;
+      setItems(resetItems);
+    }
+  };
+
+  const filteredItems = items.filter(i => 
+    i.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    i.cor.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mt-8">
+      <div className="p-6 border-b border-gray-100 dark:border-gray-700">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-green-500" />
+              Entrada de Produtos (Lucro)
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Preencha o valor pago (custo) em cada aparelho para visualizar sua margem de lucro.
+            </p>
+          </div>
+          <div className="relative w-full md:w-64">
+            <input
+              type="text"
+              placeholder="Buscar modelo..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:border-vanta-blue"
+            />
+            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+          </div>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="p-12 flex justify-center">
+          <Loader2 className="w-8 h-8 text-vanta-blue animate-spin" />
+        </div>
+      ) : filteredItems.length === 0 ? (
+        <div className="p-12 text-center text-gray-500">
+          Nenhum produto encontrado.
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aparelho</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Detalhes</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Valor Venda</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Valor Pago (Custo)</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Lucro</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Ação</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+              {filteredItems.map((item, index) => (
+                <tr key={`${item.productId}-${item.variantIndex}`} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">{item.nome}</span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Cor: <span className="font-medium">{item.cor}</span></span>
+                      {(item.armazenamento || item.bateria) && (
+                        <span className="text-xs text-gray-500">
+                          {item.armazenamento} {item.armazenamento && item.bateria && ' | '} {item.bateria && `${item.bateria}% Bat.`}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">
+                      R$ {item.precoVenda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="relative w-32">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <DollarSign className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item.precoCusto || ''}
+                        onChange={(e) => handleCustoChange(index, e.target.value)}
+                        className="w-full pl-9 pr-3 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:border-vanta-blue focus:ring-1 focus:ring-vanta-blue font-medium transition-colors"
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                    <span className={`text-sm font-bold ${item.lucro > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`}>
+                      R$ {item.lucro.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <button
+                      onClick={() => handleSave(index)}
+                      disabled={item.isSaving}
+                      className="inline-flex items-center justify-center p-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors disabled:opacity-50"
+                      title="Salvar"
+                    >
+                      {item.isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
