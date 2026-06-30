@@ -74,16 +74,11 @@ export default function AdminOrders() {
       // Automação do Estoque
       for (const item of itens) {
         if (item.produto_id) {
+          // O anúncio em si (produto pai) nunca é desativado automaticamente,
+          // pois as variações (cores/armazenamentos) são controladas dinamicamente.
           const updates: any = {};
-          if (newStatus === 'Enviado') {
-            updates.badge = 'Pendente';
-          } else if (newStatus === 'Entregue') {
-            updates.ativo = false;
-          } else {
-            // Se voltar para Pendente, Pago ou Cancelado, remove a badge e reativa
-            updates.badge = null;
-            updates.ativo = true;
-          }
+          updates.ativo = true;
+          updates.badge = null;
           
           await supabase
             .from('produtos')
@@ -159,6 +154,7 @@ export default function AdminOrders() {
       case 'Entregue':
         return <CheckCircle className="w-3.5 h-3.5 mr-1" />;
       case 'Cancelado':
+      case 'Cancelado pelo cliente':
         return <XCircle className="w-3.5 h-3.5 mr-1" />;
       case 'Enviado':
         return <Truck className="w-3.5 h-3.5 mr-1" />;
@@ -250,7 +246,7 @@ export default function AdminOrders() {
                           disabled={updating === pedido.id}
                           className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-vanta-blue dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600 transition-colors"
                         >
-                          {['Pendente', 'Pago', 'Enviado', 'Entregue', 'Cancelado'].map((status) => (
+                          {['Pendente', 'Pago', 'Enviado', 'Entregue', 'Cancelado', 'Cancelado pelo cliente'].map((status) => (
                             <option key={status} value={status}>
                               {status}
                             </option>

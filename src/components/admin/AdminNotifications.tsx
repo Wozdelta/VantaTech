@@ -14,7 +14,16 @@ export default function AdminNotifications() {
     e.preventDefault();
     if (!titulo || !mensagem) return;
 
-    if (!window.confirm('Tem certeza que deseja enviar esta notificação para TODOS os usuários cadastrados?')) {
+    const confirmed = await showAlert({
+      title: 'Atenção',
+      message: 'Tem certeza que deseja enviar esta notificação para TODOS os usuários cadastrados?',
+      type: 'warning',
+      showConfirm: true,
+      confirmText: 'Sim, enviar',
+      cancelText: 'Cancelar'
+    });
+
+    if (!confirmed) {
       return;
     }
 

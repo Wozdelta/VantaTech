@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { Package, Clock, ShoppingBag, Loader2 } from 'lucide-react';
+import { useAlert } from '../contexts/AlertContext';
+import { Package, Clock, ShoppingBag, Loader2, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
@@ -23,6 +24,7 @@ interface Pedido {
 
 export default function Pedidos() {
   const { user } = useAuth();
+  const { showAlert } = useAlert();
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -65,6 +67,7 @@ export default function Pedidos() {
       case 'Entregue':
         return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
       case 'Cancelado':
+      case 'Cancelado pelo cliente':
         return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
       case 'Enviado':
         return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
@@ -72,6 +75,35 @@ export default function Pedidos() {
         return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
       default: // Pendente
         return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
+    }
+  };
+
+  const handleCancelarPedido = async (pedidoId: string) => {
+    const confirmed = await showAlert({
+      title: 'Cancelar Pedido',
+      message: 'Tem certeza que deseja cancelar este pedido? Essa ação não pode ser desfeita.',
+      type: 'warning',
+      showConfirm: true,
+      confirmText: 'Sim, cancelar',
+      cancelText: 'Voltar'
+    });
+    
+    if (!confirmed) return;
+    
+    try {
+      const { error } = await supabase
+        .from('pedidos')
+        .update({ status: 'Cancelado pelo cliente' })
+        .eq('id', pedidoId);
+
+      if (error) throw error;
+      
+      // Atualizar lista local
+      setPedidos(pedidos.map(p => p.id === pedidoId ? { ...p, status: 'Cancelado pelo cliente' } : p));
+      showAlert({ title: 'Sucesso', message: 'Pedido cancelado com sucesso.', type: 'success' });
+    } catch (err) {
+      console.error('Erro ao cancelar pedido:', err);
+      showAlert({ title: 'Erro', message: 'Erro ao cancelar o pedido. Tente novamente mais tarde.', type: 'error' });
     }
   };
 
@@ -117,11 +149,20 @@ export default function Pedidos() {
                 </div>
                 <div className="flex flex-col items-end">
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(pedido.status)}`}>
-                    {pedido.status}
+                    {pedido.status === 'Cancelado pelo cliente' ? 'Cancelado' : pedido.status}
                   </span>
                   <span className="text-sm font-bold text-vanta-blue mt-2">
                     Total: R$ {Number(pedido.total).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
+                  {(pedido.status === 'Pendente' || pedido.status === 'Pago') && (
+                    <button 
+                      onClick={() => handleCancelarPedido(pedido.id)}
+                      className="mt-3 text-xs flex items-center text-red-500 hover:text-red-600 transition-colors font-medium border border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-900/20 px-3 py-1.5 rounded-lg"
+                    >
+                      <XCircle className="w-3.5 h-3.5 mr-1" />
+                      Cancelar Pedido
+                    </button>
+                  )}
                 </div>
               </div>
               
@@ -140,9 +181,6 @@ export default function Pedidos() {
                       <div className="flex items-center gap-3 mt-1">
                         <span className="text-sm font-semibold text-vanta-blue">
                           R$ {Number(item.produto_preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </span>
-                        <span className="text-xs text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full font-medium">
-                          Qtd: {item.quantidade}
                         </span>
                       </div>
                     </div>

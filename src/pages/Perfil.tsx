@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { User, Mail, Shield, MapPin, Loader2, Check, Camera, Edit2 } from 'lucide-react';
+import { User, Mail, Shield, MapPin, Loader2, Check, Camera, Edit2, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { useAlert } from '../contexts/AlertContext';
 
 export default function Perfil() {
   const { user, perfil, refreshPerfil } = useAuth();
+  const { showAlert } = useAlert();
   const userName = perfil?.nome_completo || user?.user_metadata?.nome_completo || user?.user_metadata?.full_name || user?.user_metadata?.name || 'Usuário';
   const userAvatar = perfil?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
 
@@ -139,6 +141,46 @@ export default function Perfil() {
       } finally {
         setLoadingAddress(false);
       }
+    }
+  };
+
+  const handleDeleteAddress = async () => {
+    if (!user) return;
+    
+    const confirmed = await showAlert({
+      title: 'Atenção',
+      message: 'Tem certeza que deseja apagar seu endereço?',
+      type: 'warning',
+      showConfirm: true
+    });
+    
+    if (!confirmed) return;
+
+    setSaving(true);
+    setErrorMsg('');
+
+    try {
+      const { error } = await supabase
+        .from('perfis')
+        .update({
+          cep: null,
+          rua: null,
+          numero: null,
+          complemento: null,
+          bairro: null,
+          cidade: null,
+          estado: null
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+      
+      setEndereco({ cep: '', rua: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '' });
+      await refreshPerfil();
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Erro ao apagar endereço.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -315,13 +357,23 @@ export default function Perfil() {
                 Endereço de Entrega
               </h3>
               {hasAddress && !isEditingAddress && (
-                <button 
-                  onClick={() => setIsEditingAddress(true)}
-                  className="text-sm font-medium text-vanta-blue hover:text-vanta-darkblue transition-colors flex items-center"
-                >
-                  <Edit2 className="w-4 h-4 mr-1" />
-                  Editar
-                </button>
+                <div className="flex gap-4 items-center">
+                  <button 
+                    onClick={() => setIsEditingAddress(true)}
+                    className="text-sm font-medium text-vanta-blue hover:text-vanta-darkblue transition-colors flex items-center"
+                  >
+                    <Edit2 className="w-4 h-4 mr-1" />
+                    Editar
+                  </button>
+                  <button 
+                    onClick={handleDeleteAddress}
+                    className="text-sm font-medium text-red-500 hover:text-red-700 transition-colors flex items-center"
+                    disabled={saving}
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Apagar
+                  </button>
+                </div>
               )}
             </div>
 

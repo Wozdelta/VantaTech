@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useCart } from '@/contexts/CartContext';
 import { useAlert } from '../contexts/AlertContext';
-import { Loader2, ArrowLeft, ShieldCheck, Truck, ArrowRight, ShoppingCart } from 'lucide-react';
+import { Loader2, ArrowLeft, ShieldCheck, Truck, ArrowRight, ShoppingCart, Battery } from 'lucide-react';
 
 type GaleriaImage = {
   url: string;
@@ -18,7 +18,7 @@ export default function ProductDetails() {
   
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [soldColors, setSoldColors] = useState<string[]>([]);
+  const [soldVariants, setSoldVariants] = useState<{cor: string, storage: string, status: string}[]>([]);
   const [isProductCompletelySold, setIsProductCompletelySold] = useState(false);
   
   const [selectedColor, setSelectedColor] = useState('');
@@ -34,6 +34,31 @@ export default function ProductDetails() {
       fetchProductAndVariants();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (!product) return;
+    
+    let images: string[] = [];
+    if (product.galeria && product.galeria.length > 0) {
+      images = product.galeria.map((g: any) => g.url);
+    } else {
+      images = [product.imagem_url];
+    }
+    
+    if (images.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setMainImage(current => {
+        const currentIndex = images.indexOf(current);
+        if (currentIndex === -1 || currentIndex === images.length - 1) {
+          return images[0];
+        }
+        return images[currentIndex + 1];
+      });
+    }, 8000); // Troca a cada 8 segundos
+
+    return () => clearInterval(interval);
+  }, [product]);
 
   async function fetchProductAndVariants() {
     setLoading(true);
@@ -68,32 +93,55 @@ export default function ProductDetails() {
           pedidos!inner(status)
         `)
         .eq('produto_id', id)
-        .in('pedidos.status', ['Pago', 'Enviado', 'Entregue']);
+        .in('pedidos.status', ['Enviado', 'Entregue']);
 
       if (itemsSold) {
-        const colorsSold: string[] = [];
+        const sold: {cor: string, storage: string, status: string}[] = [];
         let fullySold = false;
         
         itemsSold.forEach(item => {
-          const match = item.produto_nome.match(/Cor:\s*([^-]+)/i);
-          if (match && match[1]) {
-            colorsSold.push(match[1].trim().toLowerCase());
+          const corMatch = item.produto_nome.match(/Cor:\s*([^-]+)/i);
+          const storageMatch = item.produto_nome.match(/Cor:\s*[^-]+\s*-\s*(.+)$/i);
+          
+          if (corMatch && corMatch[1]) {
+            const cor = corMatch[1].trim().toLowerCase();
+            const storage = storageMatch && storageMatch[1] ? storageMatch[1].trim().toLowerCase() : '';
+            sold.push({ cor, storage, status: item.pedidos.status });
           } else {
-            // Produto vendido sem especificação de cor (vendeu inteiro)
-            fullySold = true;
+            // Produto vendido inteiro
+            sold.push({ cor: 'INTEIRO', storage: '', status: item.pedidos.status });
+            if (item.pedidos.status === 'Enviado') {
+              fullySold = true;
+            }
           }
         });
         
-        setSoldColors(colorsSold);
+        setSoldVariants(sold);
         setIsProductCompletelySold(fullySold);
+
+        // Mágica: Remove do produto os itens "Entregues" para que sumam completamente da página
+        if (mainProduct.galeria) {
+          mainProduct.galeria = mainProduct.galeria.filter((g: any) => {
+            const isEntregue = sold.some(sv => 
+              sv.status === 'Entregue' && 
+              ((sv.cor === g.cor?.toLowerCase().trim() && sv.storage === (g.memoria?.toLowerCase().trim() || '')) || sv.cor === 'INTEIRO')
+            );
+            return !isEntregue;
+          });
+          
+          // Se esvaziou a galeria por causa de entregas, limpamos o legado também
+          if (mainProduct.galeria.length === 0 && sold.some(sv => sv.status === 'Entregue')) {
+            mainProduct.cor = '';
+            mainProduct.memoria = '';
+            fullySold = true; // Força como esgotado se não tem mais nada
+          }
+        }
       }
 
-      // Parseia as opções do produto (novo sistema: vírgulas)
-      const firstColor = mainProduct.cor?.split(',')[0]?.trim() || '';
-      const firstStorage = mainProduct.memoria?.split(',')[0]?.trim() || '';
-      
-      setSelectedColor(firstColor);
-      setSelectedStorage(firstStorage);
+      // Parseia as opções do produto (apenas para compatibilidade com sistema legado se precisar,
+      // mas não pré-seleciona nada, obrigando o cliente a escolher)
+      setSelectedColor('');
+      setSelectedStorage('');
       
       // Define imagem principal inicial
       setMainImage(mainProduct.imagem_url);
@@ -112,9 +160,15 @@ export default function ProductDetails() {
     // Se o produto tiver galeria
     if (product.galeria && product.galeria.length > 0) {
       // Procura na galeria uma imagem vinculada à cor selecionada
-      const matchingImage = product.galeria.find((img: GaleriaImage) => 
-        img.cor && img.cor.toLowerCase().trim() === selectedColor.toLowerCase().trim()
+      let matchingImage = product.galeria.find((img: any) => 
+        img.cor && img.cor.toLowerCase().trim() === selectedColor.toLowerCase().trim() &&
+        img.memoria && selectedStorage && img.memoria.toLowerCase().trim() === selectedStorage.toLowerCase().trim()
       );
+      if (!matchingImage) {
+        matchingImage = product.galeria.find((img: any) => 
+          img.cor && img.cor.toLowerCase().trim() === selectedColor.toLowerCase().trim()
+        );
+      }
       
       if (matchingImage) {
         setMainImage(matchingImage.url);
@@ -148,9 +202,74 @@ export default function ProductDetails() {
     } else {
       availableStorages = Array.from(new Set(variants.map(v => v.memoria?.trim()))).filter(Boolean) as string[];
     }
+
+    // Sobrescreve e cruza as informações se existirem na galeria
+    if (product.galeria && product.galeria.length > 0) {
+      // Cores NUNCA somem - exibe todas as cores da galeria sempre
+      const allColorsFromGallery = Array.from(new Set(product.galeria.map((g: any) => g.cor?.trim()).filter(Boolean))) as string[];
+      if (allColorsFromGallery.length > 0) {
+        availableColors = allColorsFromGallery;
+      }
+
+      // Filtrar Memórias baseado na Cor selecionada
+      if (selectedColor) {
+        const matchingImages = product.galeria.filter((g: any) => g.cor?.toLowerCase().trim() === selectedColor.toLowerCase().trim());
+        const storagesFromGallery = Array.from(new Set(matchingImages.map((g: any) => g.memoria?.trim()).filter(Boolean))) as string[];
+        if (storagesFromGallery.length > 0) {
+          availableStorages = storagesFromGallery;
+        }
+      } else {
+        const allStoragesFromGallery = Array.from(new Set(product.galeria.map((g: any) => g.memoria?.trim()).filter(Boolean))) as string[];
+        if (allStoragesFromGallery.length > 0) {
+          availableStorages = allStoragesFromGallery;
+        }
+      }
+    }
   }
 
-  // O mapeamento agora é dinâmico, baseado na tabela cores!
+  // Identifica a imagem exata para extrair bateria e preço
+  let exactImage: any = null;
+  if (product?.galeria && product.galeria.length > 0 && selectedColor) {
+    exactImage = product.galeria.find((g: any) => 
+      g.cor?.toLowerCase().trim() === selectedColor.toLowerCase().trim() && 
+      (!selectedStorage || !g.memoria || g.memoria.toLowerCase().trim() === selectedStorage.toLowerCase().trim())
+    );
+  }
+
+  let displayPreco = product?.preco;
+  let displayPrecoAntigo = product?.preco_antigo;
+  
+  if (exactImage && exactImage.preco) {
+    displayPreco = Number(exactImage.preco);
+    displayPrecoAntigo = exactImage.preco_antigo ? Number(exactImage.preco_antigo) : null;
+  }
+
+  // Verifica se uma cor está totalmente esgotada
+  const checkColorSold = (cor: string) => {
+    if (product?.galeria && product.galeria.length > 0) {
+      const imagesOfColor = product.galeria.filter((g: any) => g.cor?.toLowerCase().trim() === cor.toLowerCase());
+      if (imagesOfColor.length === 0) return false;
+      return imagesOfColor.every((g: any) => 
+        soldVariants.some(sv => sv.cor === g.cor?.toLowerCase().trim() && sv.storage === (g.memoria?.toLowerCase().trim() || ''))
+      );
+    }
+    return soldVariants.some(sv => sv.cor === cor.toLowerCase());
+  };
+
+  // Verifica se um armazenamento está totalmente esgotado
+  const checkStorageSold = (mem: string) => {
+    if (selectedColor) {
+      return soldVariants.some(sv => sv.cor === selectedColor.toLowerCase() && sv.storage === mem.toLowerCase());
+    }
+    if (product?.galeria && product.galeria.length > 0) {
+      const imagesOfStorage = product.galeria.filter((g: any) => g.memoria?.toLowerCase().trim() === mem.toLowerCase());
+      if (imagesOfStorage.length === 0) return false;
+      return imagesOfStorage.every((g: any) => 
+        soldVariants.some(sv => sv.cor === (g.cor?.toLowerCase().trim() || '') && sv.storage === g.memoria?.toLowerCase().trim())
+      );
+    }
+    return false;
+  };
 
   const handleAddToCart = () => {
     if (availableColors.length > 0 && !selectedColor) {
@@ -165,8 +284,8 @@ export default function ProductDetails() {
     addToCart({
       productId: product.id,
       name: product.nome,
-      price: product.preco,
-      image: mainImage,
+      price: displayPreco || product.preco,
+      image: exactImage?.url || mainImage,
       color: selectedColor || undefined,
       storage: selectedStorage || undefined,
       quantity: 1
@@ -210,8 +329,8 @@ export default function ProductDetails() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-24">
           
           {/* Lado Esquerdo - Imagem Gigante e Galeria */}
-          <div className="flex flex-col gap-4">
-            <div className="relative lg:sticky top-32 h-[40vh] md:h-[50vh] lg:h-[65vh] w-full bg-gray-50 dark:bg-gray-900 rounded-[32px] lg:rounded-[40px] flex items-center justify-center p-6 lg:p-8 overflow-hidden">
+          <div className="flex flex-col gap-4 relative lg:sticky lg:top-32 h-fit">
+            <div className="relative h-[40vh] md:h-[50vh] lg:h-[65vh] w-full bg-gray-50 dark:bg-gray-900 rounded-[32px] lg:rounded-[40px] flex items-center justify-center p-6 lg:p-8 overflow-hidden">
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-vanta-blue/10 dark:bg-vanta-blue/5 rounded-full blur-[80px] lg:blur-[100px] pointer-events-none"></div>
               
               <img 
@@ -254,24 +373,30 @@ export default function ProductDetails() {
               {product.nome}
             </h1>
 
-            <div className="flex items-center gap-3 mb-8">
+            <div className="flex flex-wrap items-center gap-3 mb-8">
                <span className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-3 py-1 rounded-full text-sm font-semibold">
                  {product.condicao?.replace(/premium/i, '').trim() || product.condicao}
                </span>
                <span className="bg-blue-50 dark:bg-blue-900/30 text-vanta-blue px-3 py-1 rounded-full text-sm font-semibold">
                  Em Estoque
                </span>
+               {exactImage?.mostrar_bateria && exactImage?.bateria && (
+                 <span className="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 px-4 py-1.5 rounded-full text-sm font-bold flex items-center gap-2 shadow-sm transition-all hover:scale-105">
+                   <Battery className="w-4 h-4" /> 
+                   <span>Saúde da Bateria: <span className="text-emerald-700 dark:text-emerald-300 font-black">{exactImage.bateria}%</span></span>
+                 </span>
+               )}
             </div>
 
             <div className="mb-8 lg:mb-10">
               <div className="flex items-baseline gap-4">
                 <span className="text-4xl lg:text-5xl font-black text-gray-900 dark:text-white">
-                  R$ {product.preco.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {displayPreco?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>
               </div>
-              {product.preco_antigo && (
+              {displayPrecoAntigo && (
                 <span className="text-base lg:text-lg text-gray-400 line-through mt-2 block">
-                  R$ {product.preco_antigo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {displayPrecoAntigo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>
               )}
               <p className="text-sm text-gray-500 mt-2">Em até 18x com juros no cartão de crédito.</p>
@@ -285,7 +410,7 @@ export default function ProductDetails() {
                 </h3>
                 <div className="flex flex-wrap gap-4">
                   {availableColors.map(cor => {
-                    const isColorSold = soldColors.includes(cor.toLowerCase());
+                    const isColorSold = checkColorSold(cor);
                     const galleryItem = product?.galeria?.find((g: any) => g.cor?.toLowerCase() === cor.toLowerCase());
                     const isImage = galleryItem?.cor_tipo === 'image';
                     const bgStyle = isImage && galleryItem?.cor_valor ? 
@@ -295,7 +420,25 @@ export default function ProductDetails() {
                     return (
                       <button
                         key={cor}
-                        onClick={() => !isColorSold && setSelectedColor(cor)}
+                        onClick={() => {
+                          if (!isColorSold) {
+                            if (selectedColor === cor) {
+                              setSelectedColor('');
+                              setSelectedStorage('');
+                            } else {
+                              setSelectedColor(cor);
+                              if (product.galeria && product.galeria.length > 0) {
+                                const matchingImages = product.galeria.filter((g: any) => g.cor?.toLowerCase().trim() === cor.toLowerCase());
+                                const storages = Array.from(new Set(matchingImages.map((g: any) => g.memoria?.trim()).filter(Boolean))) as string[];
+                                if (storages.length === 1) {
+                                  setSelectedStorage(storages[0]);
+                                } else if (selectedStorage && !storages.some(s => s.toLowerCase() === selectedStorage.toLowerCase())) {
+                                  setSelectedStorage('');
+                                }
+                              }
+                            }
+                          }
+                        }}
                         disabled={isColorSold}
                         className={`relative w-12 h-12 rounded-full overflow-hidden flex items-center justify-center transition-all shadow-sm ${
                           isColorSold ? 'opacity-30 cursor-not-allowed grayscale' :
@@ -325,13 +468,36 @@ export default function ProductDetails() {
                   {availableStorages.map(mem => (
                     <button
                       key={mem}
-                      onClick={() => setSelectedStorage(mem)}
-                      className={`py-4 rounded-2xl border-2 transition-all font-bold text-sm ${
-                        selectedStorage.toLowerCase() === mem.toLowerCase() 
-                          ? 'border-vanta-blue bg-blue-50 dark:bg-blue-900/20 text-vanta-blue' 
-                          : 'border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-700'
+                      onClick={() => {
+                        if (selectedStorage === mem) {
+                          setSelectedStorage('');
+                          setSelectedColor('');
+                        } else {
+                          setSelectedStorage(mem);
+                          if (product.galeria && product.galeria.length > 0) {
+                            const matchingImages = product.galeria.filter((g: any) => g.memoria?.toLowerCase().trim() === mem.toLowerCase());
+                            const colors = Array.from(new Set(matchingImages.map((g: any) => g.cor?.trim()).filter(Boolean))) as string[];
+                            if (colors.length === 1) {
+                              setSelectedColor(colors[0]);
+                            } else if (selectedColor && !colors.some(c => c.toLowerCase() === selectedColor.toLowerCase())) {
+                              setSelectedColor('');
+                            }
+                          }
+                        }
+                      }}
+                      disabled={checkStorageSold(mem)}
+                      className={`relative py-4 rounded-2xl border-2 transition-all font-bold text-sm overflow-hidden ${
+                        checkStorageSold(mem) 
+                          ? 'opacity-30 cursor-not-allowed border-gray-200 dark:border-gray-800 text-gray-400 bg-gray-50 dark:bg-gray-900/50 grayscale' 
+                          : selectedStorage.toLowerCase() === mem.toLowerCase() 
+                            ? 'border-vanta-blue bg-blue-50 dark:bg-blue-900/20 text-vanta-blue' 
+                            : 'border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-700'
                       }`}
+                      title={checkStorageSold(mem) ? `${mem} (Indisponível)` : mem}
                     >
+                      {checkStorageSold(mem) && (
+                        <div className="absolute w-[150%] h-[2px] bg-red-600 rotate-[20deg] left-[-25%] top-1/2" />
+                      )}
                       {mem}
                     </button>
                   ))}
@@ -344,9 +510,10 @@ export default function ProductDetails() {
               <div className="mb-10">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Sobre o Aparelho</h3>
                 <div className={`relative transition-all duration-300 ${!showFullDescription ? 'max-h-24 overflow-hidden' : ''}`}>
-                  <p className="text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-wrap">
-                    {product.descricao}
-                  </p>
+                  <div 
+                    className="text-gray-600 dark:text-gray-400 leading-relaxed [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_b]:font-black [&_i]:italic [&_u]:underline whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{ __html: product.descricao }}
+                  />
                   {!showFullDescription && product.descricao.length > 200 && (
                     <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white dark:from-gray-950 to-transparent pointer-events-none"></div>
                   )}
@@ -366,11 +533,11 @@ export default function ProductDetails() {
             <div className="mt-auto">
               <button 
                 onClick={handleAddToCart}
-                disabled={isProductCompletelySold || (selectedColor && soldColors.includes(selectedColor.toLowerCase()))}
+                disabled={isProductCompletelySold || (selectedColor && checkColorSold(selectedColor)) || (selectedStorage && checkStorageSold(selectedStorage))}
                 className="w-full bg-vanta-blue hover:bg-blue-600 text-white py-5 rounded-2xl font-extrabold text-xl shadow-[0_15px_30px_rgba(29,142,255,0.3)] hover:shadow-[0_20px_40px_rgba(29,142,255,0.4)] transition-all hover:-translate-y-1 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:shadow-none"
               >
                 <ShoppingCart className="w-6 h-6" />
-                {isProductCompletelySold || (selectedColor && soldColors.includes(selectedColor.toLowerCase())) 
+                {isProductCompletelySold || (selectedColor && checkColorSold(selectedColor)) || (selectedStorage && checkStorageSold(selectedStorage))
                   ? 'Indisponível / Pendente' 
                   : 'Adicionar ao Carrinho'}
               </button>

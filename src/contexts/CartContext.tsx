@@ -51,13 +51,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const existingItemIndex = currentItems.findIndex(item => item.id === compositeId);
       
       if (existingItemIndex >= 0) {
-        // Increment quantity if exact same config already exists
-        const updated = [...currentItems];
-        updated[existingItemIndex].quantity += newItem.quantity;
-        return updated;
+        // Se o produto já está no carrinho, não fazemos nada (apenas abrimos o carrinho)
+        return currentItems;
       }
 
-      return [...currentItems, { ...newItem, id: compositeId }];
+      return [...currentItems, { ...newItem, id: compositeId, quantity: 1 }];
     });
     
     // Auto open cart when adding

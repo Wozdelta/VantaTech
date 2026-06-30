@@ -45,7 +45,7 @@ function deg2rad(deg: number) {
 
 export default function CartDrawer() {
   const { isCartOpen, setIsCartOpen, items, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
-  const { user, perfil } = useAuth();
+  const { user, perfil, refreshPerfil } = useAuth();
   const { showAlert } = useAlert();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -60,6 +60,7 @@ export default function CartDrawer() {
     cep: '',
     rua: '',
     numero: '',
+    complemento: '',
     bairro: '',
     cidade: '',
     estado: ''
@@ -148,8 +149,11 @@ export default function CartDrawer() {
   };
 
   const calculateShippingAndProceed = async () => {
-    if (!endereco.rua || !endereco.cidade || !endereco.estado) {
-      setFreteError('Preencha pelo menos a rua, cidade e estado.');
+    const { cep, rua, numero, bairro, cidade, estado } = endereco;
+    
+    // Validar se todos os campos (exceto complemento) estão preenchidos
+    if (!cep || !rua || !numero || !bairro || !cidade || !estado) {
+      showAlert({ title: 'Atenção', message: 'Preencha todos os campos obrigatórios do endereço para continuar.', type: 'warning' });
       return;
     }
 
@@ -157,7 +161,7 @@ export default function CartDrawer() {
     setFreteError('');
 
     try {
-      const query = encodeURIComponent(`${endereco.rua}, ${endereco.cidade}, ${endereco.estado}, Brasil`);
+      const query = encodeURIComponent(`${rua}, ${cidade}, ${estado}, Brasil`);
       const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`);
       const data = await response.json();
 
@@ -177,6 +181,29 @@ export default function CartDrawer() {
           return;
         }
 
+        // Se o usuário está logado e não tem endereço salvo, perguntar se quer salvar
+        if (user && perfil && !perfil.cep) {
+          const querSalvar = await showAlert({
+            title: 'Salvar Endereço?',
+            message: 'Você ainda não tem um endereço salvo. Deseja salvar este endereço no seu perfil para as próximas compras?',
+            type: 'info',
+            showConfirm: true,
+            confirmText: 'Sim, salvar',
+            cancelText: 'Não, apenas continuar'
+          });
+
+          if (querSalvar) {
+            try {
+              await supabase.from('perfis').update({
+                cep, rua, numero, complemento: endereco.complemento, bairro, cidade, estado
+              }).eq('id', user.id);
+              await refreshPerfil();
+            } catch (error) {
+              console.error("Erro ao salvar endereço:", error);
+            }
+          }
+        }
+
         // Sucesso
         setStep(3);
       } else {
@@ -194,7 +221,6 @@ export default function CartDrawer() {
     if (isSubmitting) return;
     setIsSubmitting(true);
     
-    // 1. Verificar pedidos duplicados (último minuto)
     if (user) {
       try {
         const umMinutoAtras = new Date(Date.now() - 60000).toISOString();
@@ -215,12 +241,65 @@ export default function CartDrawer() {
           setIsSubmitting(false);
           return;
         }
+
+        const productIds = items.map(i => i.productId);
+        const { data: soldItems } = await supabase
+          .from('itens_pedido')
+          .select(`
+            produto_id,
+            produto_nome,
+            pedidos!inner(status, user_id)
+          `)
+          .in('produto_id', productIds)
+          .in('pedidos.status', ['Pendente', 'Pago', 'Enviado', 'Entregue']);
+
+        if (soldItems && soldItems.length > 0) {
+          const unavailableItems = items.filter(item => {
+             return soldItems.some(soldItem => {
+               if (soldItem.produto_id !== item.productId) return false;
+               
+               const status = (soldItem.pedidos as any).status;
+               const orderUserId = (soldItem.pedidos as any).user_id;
+               
+               const isBlockedGlobally = status === 'Enviado' || status === 'Entregue';
+               const isBlockedForUser = orderUserId === user.id;
+
+               if (!isBlockedGlobally && !isBlockedForUser) return false;
+
+               const corMatch = soldItem.produto_nome.match(/Cor:\s*([^-]+)/i);
+               const storageMatch = soldItem.produto_nome.match(/Cor:\s*[^-]+\s*-\s*(.+)$/i);
+               
+               const soldColor = corMatch && corMatch[1] ? corMatch[1].trim().toLowerCase() : '';
+               const soldStorage = storageMatch && storageMatch[1] ? storageMatch[1].trim().toLowerCase() : '';
+
+               const itemColor = (item.color || '').toLowerCase();
+               const itemStorage = (item.storage || '').toLowerCase();
+
+               if (soldColor && soldStorage) {
+                 return soldColor === itemColor && soldStorage === itemStorage;
+               } else if (soldColor) {
+                 return soldColor === itemColor;
+               }
+               
+               return true;
+             });
+          });
+
+          if (unavailableItems.length > 0) {
+            showAlert({
+              title: 'Produto Indisponível',
+              message: `Você já tem um pedido para: ${unavailableItems[0].name}, ou ele esgotou. Por favor, remova-o.`,
+              type: 'error'
+            });
+            setIsSubmitting(false);
+            return;
+          }
+        }
       } catch (err) {
-        console.error("Erro ao verificar pedidos duplicados:", err);
+        console.error("Erro ao verificar dados antes do checkout:", err);
       }
     }
 
-    // 2. Salvar no Supabase (se logado)
     if (user) {
       try {
         const { data: pedido, error: errorPedido } = await supabase
@@ -246,7 +325,7 @@ export default function CartDrawer() {
               produto_id: item.productId,
               produto_nome: nomeDetalhado,
               produto_preco: item.price,
-              quantidade: item.quantity,
+              quantidade: 1,
               imagem_url: item.image
             };
           });
@@ -263,7 +342,7 @@ export default function CartDrawer() {
     }
 
     const text = items.map(item => 
-      `*${item.quantity}x ${item.name}*\n     Cor: ${item.color || 'Padrão'} | Armazenamento: ${item.storage || 'Padrão'}\n     Valor: ${formatPrice(item.price * item.quantity)}`
+      `*1x ${item.name}*\n     Cor: ${item.color || 'Padrão'} | Armazenamento: ${item.storage || 'Padrão'}\n     Valor: ${formatPrice(item.price)}`
     ).join('\n\n');
     
     let message = `*NOVO PEDIDO - VANTATECH*\n\n`;
@@ -299,7 +378,6 @@ export default function CartDrawer() {
 
     message += `\n*TOTAL FINAL: ${formatPrice(finalTotal)}*`;
 
-    // Limpar o carrinho e abrir whatsapp
     clearCart();
     const url = `https://wa.me/5516997700430?text=${encodeURIComponent(message)}`;
     
@@ -309,16 +387,13 @@ export default function CartDrawer() {
 
   return (
     <>
-      {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] transition-opacity animate-in fade-in duration-300"
         onClick={() => setIsCartOpen(false)}
       />
 
-      {/* Drawer */}
       <div className="fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-gray-900 z-[70] shadow-2xl flex flex-col animate-in slide-in-from-right duration-300 border-l border-gray-100 dark:border-gray-800">
         
-        {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800 shrink-0">
           <div className="flex items-center gap-3 text-vanta-darkblue dark:text-white">
             {step === 1 ? (
@@ -349,14 +424,12 @@ export default function CartDrawer() {
           </button>
         </div>
 
-        {/* Progress Bar */}
         {items.length > 0 && (
           <div className="flex bg-gray-100 dark:bg-gray-800 h-1">
             <div className={`bg-vanta-blue h-full transition-all duration-300 ${step === 1 ? 'w-1/3' : step === 2 ? 'w-2/3' : 'w-full'}`}></div>
           </div>
         )}
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
           {items.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
@@ -376,7 +449,6 @@ export default function CartDrawer() {
             </div>
           ) : (
             <div className="h-full">
-              {/* STEP 1: ITENS */}
               {step === 1 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-left-4 duration-300">
                   <div className="flex items-center justify-center gap-1.5 p-3 rounded-lg bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/30 text-[11px] sm:text-xs font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wide mb-2">
@@ -418,23 +490,32 @@ export default function CartDrawer() {
                 </div>
               )}
 
-              {/* STEP 2: ENDEREÇO */}
               {step === 2 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-5 border border-gray-100 dark:border-gray-800">
-                    <div className="flex items-center gap-2 text-gray-900 dark:text-white mb-2">
-                      <MapPin className="w-5 h-5 text-vanta-blue" />
-                      <h3 className="font-bold text-base">Onde deseja receber?</h3>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2 text-gray-900 dark:text-white">
+                        <MapPin className="w-5 h-5 text-vanta-blue" />
+                        <h3 className="font-bold text-base">Onde deseja receber?</h3>
+                      </div>
+                      {(endereco.cep || endereco.rua) && (
+                        <button
+                          onClick={() => setEndereco({ cep: '', rua: '', numero: '', complemento: '', bairro: '', cidade: '', estado: '' })}
+                          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors flex items-center gap-1.5 text-[10px] font-bold uppercase"
+                          title="Limpar endereço"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Limpar
+                        </button>
+                      )}
                     </div>
-                    <p className="text-[12px] text-gray-500 mb-5 leading-snug">
-                      Vamos calcular o frete com base na distância até a VantaTech.
-                    </p>
-                    
                     <div className="space-y-4">
                       <div className="grid grid-cols-3 gap-3">
                         <div className="col-span-1">
                           <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">CEP</label>
                           <input 
+                            id="cep"
+                            name="cep"
                             type="text" 
                             value={endereco.cep} 
                             onChange={e => handleCepChange(e.target.value)}
@@ -445,6 +526,8 @@ export default function CartDrawer() {
                         <div className="col-span-2">
                           <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Rua</label>
                           <input 
+                            id="rua"
+                            name="rua"
                             type="text" 
                             value={endereco.rua} 
                             onChange={e => setEndereco({...endereco, rua: e.target.value})}
@@ -456,6 +539,8 @@ export default function CartDrawer() {
                         <div className="col-span-1">
                           <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Número</label>
                           <input 
+                            id="numero"
+                            name="numero"
                             type="text" 
                             value={endereco.numero} 
                             onChange={e => setEndereco({...endereco, numero: e.target.value})}
@@ -465,6 +550,8 @@ export default function CartDrawer() {
                         <div className="col-span-2">
                           <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Bairro</label>
                           <input 
+                            id="bairro"
+                            name="bairro"
                             type="text" 
                             value={endereco.bairro} 
                             onChange={e => setEndereco({...endereco, bairro: e.target.value})}
@@ -476,6 +563,8 @@ export default function CartDrawer() {
                         <div className="col-span-2">
                           <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Cidade</label>
                           <input 
+                            id="cidade"
+                            name="cidade"
                             type="text" 
                             value={endereco.cidade} 
                             onChange={e => setEndereco({...endereco, cidade: e.target.value})}
@@ -485,6 +574,8 @@ export default function CartDrawer() {
                         <div className="col-span-1">
                           <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Estado</label>
                           <input 
+                            id="estado"
+                            name="estado"
                             type="text" 
                             value={endereco.estado} 
                             onChange={e => setEndereco({...endereco, estado: e.target.value})}
@@ -495,39 +586,17 @@ export default function CartDrawer() {
                       </div>
                     </div>
                   </div>
-
-                  {freteError && (
-                    <div className="p-4 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 text-sm text-red-600 dark:text-red-400 font-medium animate-in fade-in zoom-in-95">
-                      <AlertCircle className="w-5 h-5 mb-2" />
-                      {freteError}
-                    </div>
-                  )}
-
                 </div>
               )}
 
-              {/* STEP 3: PAGAMENTO */}
               {step === 3 && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                  
-                  {/* Frete Resumo */}
-                  <div className="bg-vanta-blue/5 border border-vanta-blue/10 rounded-xl p-4 flex items-center justify-between">
-                    <div>
-                      <h4 className="text-sm font-bold text-gray-900 dark:text-white">Entrega via Motoboy</h4>
-                      <p className="text-xs text-gray-500 mt-0.5">Distância calculada: {distanciaKm.toFixed(1)} km</p>
-                    </div>
-                    <div className="text-base font-black text-vanta-blue">
-                      {frete === 0 ? 'Grátis' : formatPrice(frete)}
-                    </div>
-                  </div>
-
                   <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-5 border border-gray-100 dark:border-gray-800 relative z-50">
                     <div className="flex items-center gap-2 text-gray-900 dark:text-white mb-5">
                       <CreditCard className="w-5 h-5 text-vanta-blue" />
                       <h3 className="font-bold text-base">Forma de Pagamento</h3>
                     </div>
                     
-                    {/* Payment Method Custom Dropdown */}
                     <div className="relative mb-5">
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Selecione uma opção</label>
                       <button 
@@ -563,7 +632,6 @@ export default function CartDrawer() {
                       )}
                     </div>
 
-                    {/* Installments Custom Dropdown */}
                     {pagamento === 'Cartão de Crédito' && (
                       <div className="relative animate-in fade-in duration-300">
                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Quantidade de Parcelas</label>
@@ -606,69 +674,50 @@ export default function CartDrawer() {
                       </div>
                     )}
                   </div>
-                  
                 </div>
               )}
-
             </div>
           )}
         </div>
 
-        {/* Footer */}
         {items.length > 0 && (
           <div className="p-5 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 shrink-0 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)] relative z-40">
-            
-            {/* Step 3: Resumo Final */}
             {step === 3 && (
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-gray-500 font-medium text-sm">Produtos</span>
-                  <span className="text-sm font-bold text-gray-500">
-                    {formatPrice(cartTotal)}
-                  </span>
+                  <span className="text-sm font-bold text-gray-500">{formatPrice(cartTotal)}</span>
                 </div>
-
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-gray-500 font-medium text-sm">Frete</span>
-                  <span className="text-sm font-bold text-gray-500">
-                    {frete === 0 ? 'Grátis' : `+ ${formatPrice(frete)}`}
-                  </span>
+                  <span className="text-sm font-bold text-gray-500">{frete === 0 ? 'Grátis' : `+ ${formatPrice(frete)}`}</span>
                 </div>
                 
                 {pagamento === 'Cartão de Crédito' && parcelas > 1 && (
                   <div className="flex items-center justify-between mb-2 text-orange-500 animate-in slide-in-from-top-1 duration-300">
                     <span className="font-medium text-xs">Juros de Parcelamento (MP)</span>
-                    <span className="text-xs font-bold">
-                      + {formatPrice(interestValue)}
-                    </span>
+                    <span className="text-xs font-bold">+ {formatPrice(interestValue)}</span>
                   </div>
                 )}
                 
                 {pagamento === 'PIX' && (
                   <div className="flex items-center justify-between mb-2 text-green-500 animate-in slide-in-from-top-1 duration-300">
                     <span className="font-medium text-xs">Desconto PIX (5% nos produtos)</span>
-                    <span className="text-xs font-bold">
-                      - {formatPrice(pixDiscount)}
-                    </span>
+                    <span className="text-xs font-bold">- {formatPrice(pixDiscount)}</span>
                   </div>
                 )}
                 
                 <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-800">
                   <span className="text-gray-700 dark:text-gray-300 font-black text-lg">Total</span>
-                  <span className="text-2xl font-black text-vanta-blue">
-                    {formatPrice(finalTotal)}
-                  </span>
+                  <span className="text-2xl font-black text-vanta-blue">{formatPrice(finalTotal)}</span>
                 </div>
               </div>
             )}
 
-            {/* Step 1 & 2: Subtotal Simples */}
             {step !== 3 && (
               <div className="flex items-center justify-between mb-4">
                 <span className="text-gray-500 font-medium text-sm">Subtotal</span>
-                <span className="text-xl font-black text-gray-900 dark:text-white">
-                  {formatPrice(cartTotal)}
-                </span>
+                <span className="text-xl font-black text-gray-900 dark:text-white">{formatPrice(cartTotal)}</span>
               </div>
             )}
             

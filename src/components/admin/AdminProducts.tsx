@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
 import { Plus, Trash2, Image as ImageIcon, Loader2, X, Edit, UploadCloud, Palette } from 'lucide-react';
+import RichTextEditor from '../ui/RichTextEditor';
 
 type Product = {
   id: string;
@@ -17,15 +18,21 @@ type Product = {
   imagem_url: string;
   ativo: boolean;
   descricao: string | null;
-  galeria: { url: string; cor: string; cor_tipo?: string; cor_valor?: string }[];
+  galeria: { url: string; cor: string; cor_tipo?: string; cor_valor?: string; memoria?: string; bateria?: string; mostrar_bateria?: boolean; preco?: string; preco_antigo?: string }[];
 };
 
 type ImageUploadItem = {
   id: string;
   file?: File;
   preview: string;
+  isVariant?: boolean;
   color: string;
   existingUrl?: string;
+  storage?: string;
+  battery?: string;
+  showBattery?: boolean;
+  preco?: string;
+  preco_antigo?: string;
 };
 
 type ProductColor = {
@@ -155,11 +162,17 @@ export default function AdminProducts() {
       });
       setProductColors(extractedColors);
 
-      setImages(product.galeria.map((g, idx) => ({
+      setImages(product.galeria.map((g: any, idx) => ({
         id: `existing-${idx}`,
         preview: g.url,
+        isVariant: !!(g.cor || g.memoria || g.bateria || g.preco || g.preco_antigo),
         color: g.cor || '',
-        existingUrl: g.url
+        existingUrl: g.url,
+        storage: g.memoria || '',
+        battery: g.bateria || '',
+        showBattery: g.mostrar_bateria || false,
+        preco: g.preco || '',
+        preco_antigo: g.preco_antigo || ''
       })));
     } else if (product.imagem_url) {
       setImages([{
@@ -212,6 +225,7 @@ export default function AdminProducts() {
         id: Math.random().toString(36).substr(2, 9),
         file,
         preview: URL.createObjectURL(file),
+        isVariant: false,
         color: ''
       }));
       setImages([...images, ...newImages]);
@@ -220,6 +234,10 @@ export default function AdminProducts() {
 
   function handleUpdateImageColor(id: string, color: string) {
     setImages(images.map(img => img.id === id ? { ...img, color } : img));
+  }
+
+  function handleUpdateImageField(id: string, field: keyof ImageUploadItem, value: any) {
+    setImages(images.map(img => img.id === id ? { ...img, [field]: value } : img));
   }
 
   function handleRemoveImage(id: string) {
@@ -260,7 +278,17 @@ export default function AdminProducts() {
         const cor_valor = colorInfo?.valor || null;
 
         if (img.existingUrl) {
-          uploadedGallery.push({ url: img.existingUrl, cor: img.color, cor_tipo, cor_valor });
+          uploadedGallery.push({ 
+            url: img.existingUrl, 
+            cor: img.isVariant ? img.color : undefined, 
+            cor_tipo: img.isVariant ? cor_tipo : undefined, 
+            cor_valor: img.isVariant ? cor_valor : undefined, 
+            memoria: img.isVariant ? img.storage : undefined, 
+            bateria: img.isVariant ? img.battery : undefined, 
+            mostrar_bateria: img.isVariant ? img.showBattery : undefined, 
+            preco: img.isVariant ? img.preco : undefined, 
+            preco_antigo: img.isVariant ? img.preco_antigo : undefined 
+          });
         } else if (img.file) {
           const fileExt = img.file.name.split('.').pop();
           const fileName = `${Math.random()}.${fileExt}`;
@@ -274,21 +302,31 @@ export default function AdminProducts() {
             .from('produtos_imagens')
             .getPublicUrl(fileName);
             
-          uploadedGallery.push({ url: publicUrlData.publicUrl, cor: img.color, cor_tipo, cor_valor });
+          uploadedGallery.push({ 
+            url: publicUrlData.publicUrl, 
+            cor: img.isVariant ? img.color : undefined, 
+            cor_tipo: img.isVariant ? cor_tipo : undefined, 
+            cor_valor: img.isVariant ? cor_valor : undefined, 
+            memoria: img.isVariant ? img.storage : undefined, 
+            bateria: img.isVariant ? img.battery : undefined, 
+            mostrar_bateria: img.isVariant ? img.showBattery : undefined, 
+            preco: img.isVariant ? img.preco : undefined, 
+            preco_antigo: img.isVariant ? img.preco_antigo : undefined 
+          });
         }
       }
 
       const mainImageUrl = uploadedGallery.length > 0 ? uploadedGallery[0].url : '';
       
       const uniqueColors = Array.from(new Set(uploadedGallery.filter(g => g.cor).map(g => g.cor))).join(', ');
-
+      
       const productData = {
         nome: formData.nome,
         marca: formData.marca,
         condicao: formData.condicao,
         memoria: formData.memoria,
         cor: uniqueColors,
-        preco: parseFloat(formData.preco),
+        preco: parseFloat(formData.preco || '0'),
         preco_antigo: temDesconto && formData.preco_antigo ? parseFloat(formData.preco_antigo) : null,
         badge: formData.badge || null,
         categoria: formData.categoria,
@@ -413,7 +451,7 @@ export default function AdminProducts() {
           {/* Backdrop blur */}
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
           
-          <div className="relative bg-white dark:bg-gray-900 rounded-[32px] shadow-2xl w-[95vw] sm:w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col transform transition-all">
+          <div className="relative bg-white dark:bg-gray-900 rounded-[32px] shadow-2xl w-[95vw] sm:w-full max-w-4xl max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden flex flex-col transform transition-all">
             
             {/* Header fixo */}
             <div className="sticky top-0 z-20 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 p-4 sm:p-6 sm:px-10 flex justify-between items-center">
@@ -516,21 +554,73 @@ export default function AdminProducts() {
                   
                   <div className="flex flex-wrap gap-4">
                     {images.map((img, index) => (
-                      <div key={img.id} className="relative bg-white dark:bg-gray-900 p-3 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm w-36 flex flex-col group">
+                      <div key={img.id} className="relative bg-white dark:bg-gray-900 p-3 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm w-56 flex flex-col group gap-2">
                         <button type="button" onClick={() => handleRemoveImage(img.id)} className="absolute -top-3 -right-3 bg-red-500 text-white p-1.5 rounded-full shadow hover:bg-red-600 z-10 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-4 h-4" /></button>
-                        <div className="h-28 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-xl mb-3 overflow-hidden border border-gray-100 dark:border-gray-800">
+                        <div className="h-28 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800">
                           <img src={img.preview} alt="" className="max-h-full max-w-full object-contain" />
                         </div>
-                        <select
-                          value={img.color}
-                          onChange={(e) => handleUpdateImageColor(img.id, e.target.value)}
-                          className="text-xs w-full p-2 border border-gray-200 dark:border-gray-700 rounded-lg text-center dark:bg-gray-800 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all font-medium appearance-none" 
-                        >
-                          <option value="">Sem Cor</option>
-                          {productColors.map(c => (
-                            <option key={c.id} value={c.nome}>{c.nome}</option>
-                          ))}
-                        </select>
+                        <div className="flex items-center gap-2 mt-1">
+                          <label className="flex items-center justify-center gap-2 cursor-pointer w-full p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:border-vanta-blue transition-colors">
+                            <input type="checkbox" checked={img.isVariant || false} onChange={(e) => handleUpdateImageField(img.id, 'isVariant', e.target.checked)} className="w-4 h-4 text-vanta-blue rounded border-gray-300 dark:border-gray-600 focus:ring-vanta-blue cursor-pointer transition-colors" />
+                            <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Variação / Produto</span>
+                          </label>
+                        </div>
+                        {img.isVariant && (
+                          <>
+                            <select
+                              value={img.color}
+                              onChange={(e) => handleUpdateImageColor(img.id, e.target.value)}
+                              className="text-xs w-full p-2 border border-gray-200 dark:border-gray-700 rounded-lg dark:bg-gray-800 outline-none focus:border-vanta-blue transition-all font-medium appearance-none" 
+                            >
+                              <option value="">Sem Cor</option>
+                              {productColors.map(c => (
+                                <option key={c.id} value={c.nome}>{c.nome}</option>
+                              ))}
+                            </select>
+                            <input
+                              type="text"
+                              placeholder="Armazenamento (ex: 256GB)"
+                              value={img.storage || ''}
+                              onChange={(e) => handleUpdateImageField(img.id, 'storage', e.target.value)}
+                              className="text-xs w-full p-2 border border-gray-200 dark:border-gray-700 rounded-lg dark:bg-gray-800 outline-none focus:border-vanta-blue transition-all font-medium"
+                            />
+                            <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-1.5 rounded-lg border border-gray-100 dark:border-gray-700">
+                              <label className="flex items-center gap-1.5 cursor-pointer flex-1">
+                                <input
+                                  type="checkbox"
+                                  checked={img.showBattery || false}
+                                  onChange={(e) => handleUpdateImageField(img.id, 'showBattery', e.target.checked)}
+                                  className="w-3 h-3 text-vanta-blue rounded border-gray-300 dark:border-gray-600 dark:bg-gray-800 cursor-pointer"
+                                />
+                                <span className="text-[10px] font-bold text-gray-500">Exibir Bat.</span>
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="%"
+                                value={img.battery || ''}
+                                onChange={(e) => handleUpdateImageField(img.id, 'battery', e.target.value)}
+                                className="text-xs w-12 p-1 border border-gray-200 dark:border-gray-700 rounded-md dark:bg-gray-800 outline-none focus:border-vanta-blue transition-all font-medium text-center"
+                                disabled={!img.showBattery}
+                              />
+                            </div>
+                            <div className="flex gap-2">
+                              <input
+                                type="number"
+                                placeholder="Preço"
+                                value={img.preco || ''}
+                                onChange={(e) => handleUpdateImageField(img.id, 'preco', e.target.value)}
+                                className="text-xs w-full p-2 border border-gray-200 dark:border-gray-700 rounded-lg dark:bg-gray-800 outline-none focus:border-vanta-blue transition-all font-medium"
+                              />
+                              <input
+                                type="number"
+                                placeholder="Antigo"
+                                value={img.preco_antigo || ''}
+                                onChange={(e) => handleUpdateImageField(img.id, 'preco_antigo', e.target.value)}
+                                className="text-xs w-full p-2 border border-gray-200 dark:border-gray-700 rounded-lg dark:bg-gray-800 outline-none focus:border-vanta-blue transition-all font-medium text-gray-400"
+                              />
+                            </div>
+                          </>
+                        )}
                       </div>
                     ))}
 
@@ -593,14 +683,11 @@ export default function AdminProducts() {
 
                 {/* Seção: Variações e Preço */}
                 <div>
-                  <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Variações e Valores</h4>
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Preço Principal</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Memórias Disponíveis (separadas por vírgula)</label>
-                      <input type="text" value={formData.memoria} onChange={e => setFormData({...formData, memoria: e.target.value})} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-sm font-medium" placeholder="Ex: 128GB, 256GB" />
-                    </div>
+
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Preço Atual (R$)</label>
+                      <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Preço Base (R$)</label>
                       <input required type="number" step="0.01" value={formData.preco} onChange={e => setFormData({...formData, preco: e.target.value})} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-sm font-medium" placeholder="Ex: 5999.00" />
                     </div>
                     <div>
@@ -616,13 +703,18 @@ export default function AdminProducts() {
                       )}
                     </div>
                   </div>
+                  <p className="text-xs text-gray-500 mt-3">Se uma imagem da galeria tiver um preço preenchido, ele vai substituir este preço base quando a cor for selecionada.</p>
                 </div>
 
                 {/* Seção: Descrição */}
                 <div>
                   <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Detalhes do Produto</h4>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Descrição Completa</label>
-                  <textarea rows={5} value={formData.descricao} onChange={e => setFormData({...formData, descricao: e.target.value})} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-sm font-medium resize-none" placeholder="Escreva os detalhes, garantia, câmeras, estado de conservação, itens inclusos..." />
+                  <RichTextEditor 
+                    value={formData.descricao || ''} 
+                    onChange={val => setFormData({...formData, descricao: val})} 
+                    placeholder="Escreva os detalhes, garantia, câmeras, estado de conservação, itens inclusos..." 
+                  />
                 </div>
 
               {/* Rodapé Fixo */}

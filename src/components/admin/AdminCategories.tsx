@@ -40,7 +40,16 @@ export default function AdminCategories() {
   }
 
   async function handleDelete(id: string) {
-    if (!window.confirm('Tem certeza que deseja excluir esta categoria do menu?')) return;
+    const confirmed = await showAlert({
+      title: 'Atenção',
+      message: 'Tem certeza que deseja excluir esta categoria do menu?',
+      type: 'warning',
+      showConfirm: true,
+      confirmText: 'Sim, excluir',
+      cancelText: 'Cancelar'
+    });
+    
+    if (!confirmed) return;
     
     try {
       const { error } = await supabase.from('categorias_menu').delete().eq('id', id);
