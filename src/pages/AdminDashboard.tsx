@@ -76,7 +76,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="mb-8 flex flex-col gap-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Painel de Administração</h1>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -84,7 +84,7 @@ export default function AdminDashboard() {
             </p>
           </div>
           
-          <div className="flex overflow-x-auto bg-white dark:bg-gray-800 rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-700 no-scrollbar">
+          <div className="flex overflow-x-auto bg-white dark:bg-gray-800 rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-700 no-scrollbar w-full">
             <button
               onClick={() => setActiveTab('overview')}
               className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors ${
