@@ -73,12 +73,28 @@ export default function AdminOrders() {
           .eq('id', afiliadoId)
           .single();
         
+        const { data: niveis } = await supabase
+          .from('niveis_fidelidade')
+          .select('*')
+          .order('pontos_minimos', { ascending: true });
+
         const pontosAtuais = perfilAfiliado?.pontos || 0;
         const pontosGanhos = Math.floor(total);
+        const novosPontos = pontosAtuais + pontosGanhos;
+
+        let nivelAntigo = niveis?.[0];
+        let nivelNovo = niveis?.[0];
+
+        if (niveis && niveis.length > 0) {
+          for (const n of niveis) {
+            if (pontosAtuais >= n.pontos_minimos) nivelAntigo = n;
+            if (novosPontos >= n.pontos_minimos) nivelNovo = n;
+          }
+        }
 
         await supabase
           .from('perfis')
-          .update({ pontos: pontosAtuais + pontosGanhos })
+          .update({ pontos: novosPontos })
           .eq('id', afiliadoId);
 
         await supabase.from('notificacoes').insert({
@@ -87,6 +103,15 @@ export default function AdminOrders() {
           mensagem: `Alguém comprou através do seu link de indicação. Você recebeu ${pontosGanhos} VantaCoins!`,
           lida: false
         });
+
+        if (nivelNovo && nivelAntigo && nivelNovo.pontos_minimos > nivelAntigo.pontos_minimos) {
+          await supabase.from('notificacoes').insert({
+            usuario_id: afiliadoId,
+            titulo: `Novo Nível Alcançado! 🏆`,
+            mensagem: `Parabéns! Você acabou de atingir o nível ${nivelNovo.nome} no VantaClub!`,
+            lida: false
+          });
+        }
       }
 
       // Enviar notificação para o comprador

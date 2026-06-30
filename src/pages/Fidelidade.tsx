@@ -1,11 +1,65 @@
 import { useAuth } from '../contexts/AuthContext';
-import { Award, Star, Gift, TrendingUp, Copy, CheckCircle2, Share2 } from 'lucide-react';
-import { useState } from 'react';
+import { Award, Star, Gift, TrendingUp, Copy, CheckCircle2, Share2, Loader2, Lock, LayoutGrid, List } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
+
+type Nivel = {
+  id: string;
+  nome: string;
+  pontos_minimos: number;
+  cor_hex: string;
+};
+
+type Recompensa = {
+  id: string;
+  nome: string;
+  pontos: number;
+  badge: string | null;
+  imagem_url: string;
+  ativo: boolean;
+  nivel_id: string | null;
+};
 
 export default function Fidelidade() {
   const { user, perfil } = useAuth();
   const [copied, setCopied] = useState(false);
+  const [niveis, setNiveis] = useState<Nivel[]>([]);
+  const [recompensas, setRecompensas] = useState<Recompensa[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'detailed' | 'minimal'>('detailed');
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const { data: niveisData, error: niveisError } = await supabase
+          .from('niveis_fidelidade')
+          .select('*')
+          .order('pontos_minimos', { ascending: true });
+          
+        if (niveisError) throw niveisError;
+        setNiveis(niveisData || []);
+
+        const { data: recData, error: recError } = await supabase
+          .from('recompensas')
+          .select('*')
+          .eq('ativo', true)
+          .order('pontos', { ascending: true });
+        
+        if (recError) throw recError;
+        setRecompensas(recData || []);
+      } catch (error) {
+        console.error('Erro ao carregar dados de fidelidade:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (user) {
+      fetchData();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
   if (!user) {
     return (
@@ -15,10 +69,33 @@ export default function Fidelidade() {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Loader2 className="w-10 h-10 text-vanta-blue animate-spin" />
+      </div>
+    );
+  }
+
   const pontosAtuais = perfil?.pontos || 0;
-  const pontosProximoNivel = 1000;
   
-  const affiliateLink = `${window.location.origin}/?ref=${user.id}`;
+  let nivelAtual = niveis.length > 0 ? niveis[0] : null;
+  let proximoNivel = null;
+  
+  if (niveis.length > 0) {
+    for (let i = 0; i < niveis.length; i++) {
+      if (pontosAtuais >= niveis[i].pontos_minimos) {
+        nivelAtual = niveis[i];
+        proximoNivel = niveis[i + 1] || null;
+      }
+    }
+  }
+
+  const nivelNome = nivelAtual?.nome || 'Bronze';
+  const isMaxLevel = !proximoNivel;
+  const progressPercentage = isMaxLevel ? 100 : Math.min(100, (pontosAtuais / (proximoNivel?.pontos_minimos || 1)) * 100);
+  
+  const affiliateLink = `https://vantatech-one.vercel.app/?ref=${user.id}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(affiliateLink);
@@ -56,13 +133,17 @@ export default function Fidelidade() {
             
             <div className="mb-4 mt-auto">
               <div className="flex justify-between text-sm font-medium mb-2">
-                <span className="text-gray-300">Nível Bronze</span>
-                <span className="text-gray-300">Faltam {pontosProximoNivel - pontosAtuais} pts para Prata</span>
+                <span className="text-gray-300">Nível {nivelNome}</span>
+                {isMaxLevel ? (
+                  <span className="text-vanta-orange font-bold">Nível Máximo Atingido!</span>
+                ) : (
+                  <span className="text-gray-300">Faltam {proximoNivel.pontos_minimos - pontosAtuais} pts para {proximoNivel.nome}</span>
+                )}
               </div>
               <div className="h-3 w-full bg-white/20 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-vanta-orange rounded-full" 
-                  style={{ width: `${(pontosAtuais / pontosProximoNivel) * 100}%` }}
+                  className="h-full bg-vanta-orange rounded-full transition-all duration-1000 ease-out" 
+                  style={{ width: `${progressPercentage}%` }}
                 ></div>
               </div>
             </div>
@@ -99,9 +180,9 @@ export default function Fidelidade() {
         </div>
       </div>
 
-      {/* Grid Inferior: Como Funciona e Recompensas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-        <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-soft h-full">
+      {/* Grid Inferior: Como Funciona */}
+      <div className="mb-12">
+        <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-soft">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
               <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -112,19 +193,133 @@ export default function Fidelidade() {
             A cada R$ 1,00 gasto na loja, você ou quem comprar pelo seu link acumula 1 VantaCoin. 
           </p>
         </div>
-        
-        <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-soft h-full">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
-              <Gift className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+      </div>
+
+      {/* Vitrine de Recompensas */}
+      <div className="mb-12">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
+          <div className="flex items-center gap-3">
+            <div className="p-4 bg-gradient-to-br from-vanta-orange to-orange-500 rounded-full shadow-lg shadow-orange-500/30">
+              <Gift className="w-8 h-8 text-white" />
             </div>
-            <h3 className="font-bold text-xl text-gray-900 dark:text-white">Recompensas</h3>
+            <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Vitrine de Recompensas</h2>
           </div>
-          <ul className="text-gray-600 dark:text-gray-400 space-y-4 text-lg">
-            <li className="flex items-center gap-3"><span className="text-vanta-orange font-bold">•</span> 1.000 pts = Capinha Grátis</li>
-            <li className="flex items-center gap-3"><span className="text-vanta-orange font-bold">•</span> 2.500 pts = Película Premium</li>
-            <li className="flex items-center gap-3"><span className="text-vanta-orange font-bold">•</span> 5.000 pts = R$ 150 de Desconto</li>
-          </ul>
+
+          <div className="flex items-center bg-gray-100 dark:bg-gray-800 p-1.5 rounded-xl shadow-inner border border-gray-200 dark:border-gray-700">
+            <button 
+              onClick={() => setViewMode('detailed')}
+              className={`p-2.5 px-4 rounded-lg flex items-center gap-2 text-sm font-bold transition-all ${viewMode === 'detailed' ? 'bg-white dark:bg-gray-700 text-vanta-blue shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+            >
+              <LayoutGrid className="w-4 h-4" /> Detalhada
+            </button>
+            <button 
+              onClick={() => setViewMode('minimal')}
+              className={`p-2.5 px-4 rounded-lg flex items-center gap-2 text-sm font-bold transition-all ${viewMode === 'minimal' ? 'bg-white dark:bg-gray-700 text-vanta-blue shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+            >
+              <List className="w-4 h-4" /> Minimalista
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-16">
+          {niveis.map(nivel => {
+            const recsNivel = recompensas.filter(r => r.nivel_id === nivel.id || (!r.nivel_id && nivel.pontos_minimos === 0));
+            if (recsNivel.length === 0) return null;
+            
+            const isLocked = nivel.pontos_minimos > (nivelAtual?.pontos_minimos || 0);
+
+            return (
+              <div key={nivel.id} className="relative">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800"></div>
+                  <h4 className={`text-2xl font-black flex items-center gap-3 ${isLocked ? 'text-gray-400' : 'text-gray-900 dark:text-white'}`}>
+                    <span style={{ color: isLocked ? undefined : nivel.cor_hex }}>Nível {nivel.nome}</span>
+                    {isLocked && <Lock className="w-5 h-5 opacity-70" />}
+                    {isLocked && <span className="text-xs font-bold uppercase tracking-wider text-gray-500 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full border border-gray-200 dark:border-gray-700">Bloqueado</span>}
+                  </h4>
+                  <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800"></div>
+                </div>
+                
+                {viewMode === 'detailed' ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    {recsNivel.map(rec => (
+                      <div key={rec.id} className={`group bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-3xl overflow-hidden shadow-soft transition-all ${isLocked ? 'opacity-60 grayscale' : 'hover:-translate-y-2 hover:shadow-2xl hover:border-vanta-orange/30'}`}>
+                        <div className="aspect-square relative bg-gray-50 dark:bg-gray-900 overflow-hidden">
+                          {rec.badge && (
+                            <span className={`absolute top-4 left-4 z-10 px-3 py-1 text-[11px] uppercase tracking-wider font-bold rounded-lg shadow-sm backdrop-blur-md border border-white/20 ${isLocked ? 'bg-gray-300/80 text-gray-700' : 'bg-vanta-orange/90 text-white'}`}>
+                              {rec.badge}
+                            </span>
+                          )}
+                          <img src={rec.imagem_url} alt={rec.nome} className={`w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal transition-transform duration-500 ${!isLocked && 'group-hover:scale-110'}`} />
+                          {isLocked && (
+                            <div className="absolute inset-0 bg-white/30 dark:bg-black/40 backdrop-blur-[3px] flex items-center justify-center">
+                              <div className="bg-white/90 dark:bg-gray-800/90 p-4 rounded-full shadow-xl border border-gray-200 dark:border-gray-700 backdrop-blur-md">
+                                <Lock className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-6 relative bg-white dark:bg-gray-800">
+                          <h3 className={`font-bold text-lg mb-4 line-clamp-2 leading-tight ${isLocked ? 'text-gray-500' : 'text-gray-900 dark:text-white group-hover:text-vanta-orange transition-colors'}`}>
+                            {rec.nome}
+                          </h3>
+                          <div className="flex items-center gap-2 mt-auto">
+                            <Star className={`w-6 h-6 ${isLocked ? 'text-gray-400' : 'text-vanta-orange fill-vanta-orange drop-shadow-sm'}`} />
+                            <span className={`font-black text-2xl ${isLocked ? 'text-gray-400' : 'text-vanta-orange'}`}>
+                              {rec.pontos.toLocaleString('pt-BR')} <span className="text-sm font-bold opacity-70">pts</span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {recsNivel.map(rec => (
+                      <div key={rec.id} className={`flex items-center gap-4 p-4 bg-white dark:bg-gray-800 rounded-2xl border ${isLocked ? 'border-gray-200 dark:border-gray-700 opacity-60 grayscale' : 'border-gray-100 dark:border-gray-700 hover:border-vanta-orange/40 hover:shadow-lg transition-all group cursor-default'}`}>
+                        <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-900 flex-shrink-0 border border-gray-100 dark:border-gray-800">
+                          <img src={rec.imagem_url} alt={rec.nome} className={`w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal transition-transform duration-500 ${!isLocked && 'group-hover:scale-110'}`} />
+                          {isLocked && (
+                             <div className="absolute inset-0 bg-white/40 dark:bg-black/50 backdrop-blur-[2px] flex items-center justify-center">
+                               <Lock className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                             </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <h3 className={`font-bold text-lg truncate ${isLocked ? 'text-gray-500' : 'text-gray-900 dark:text-white group-hover:text-vanta-orange transition-colors'}`}>
+                              {rec.nome}
+                            </h3>
+                            {rec.badge && (
+                              <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md uppercase whitespace-nowrap border ${isLocked ? 'bg-gray-100 text-gray-500 border-gray-200' : 'bg-vanta-orange/10 text-vanta-orange border-vanta-orange/20'}`}>
+                                {rec.badge}
+                              </span>
+                            )}
+                          </div>
+                          {isLocked && <p className="text-xs font-medium text-gray-400 mt-0.5">Desbloqueia no Nível {nivel.nome}</p>}
+                        </div>
+                        <div className={`flex flex-col items-end flex-shrink-0 pl-4 border-l ${isLocked ? 'border-gray-200 dark:border-gray-700' : 'border-gray-100 dark:border-gray-700'}`}>
+                          <div className="flex items-center gap-1.5">
+                            <Star className={`w-5 h-5 ${isLocked ? 'text-gray-400' : 'text-vanta-orange fill-vanta-orange'}`} />
+                            <span className={`font-black text-xl ${isLocked ? 'text-gray-400' : 'text-vanta-orange'}`}>{rec.pontos.toLocaleString('pt-BR')}</span>
+                          </div>
+                          <span className={`text-[11px] font-bold uppercase tracking-wider ${isLocked ? 'text-gray-400' : 'text-gray-500 dark:text-gray-400'}`}>VantaCoins</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          
+          {recompensas.length === 0 && (
+            <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-3xl shadow-soft">
+              <Gift className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+              <p className="text-gray-500 text-xl font-medium">Nenhuma recompensa disponível no momento.</p>
+              <p className="text-gray-400 mt-2">Em breve teremos novidades exclusivas!</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
