@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Trash2, ShoppingBag, MapPin, ChevronDown, AlertCircle, ArrowLeft, CreditCard, Loader2 } from 'lucide-react';
+import { X, Trash2, ShoppingBag, MapPin, ChevronDown, AlertCircle, ArrowLeft, CreditCard, Loader2, Tag } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAlert } from '@/contexts/AlertContext';
@@ -74,6 +74,12 @@ export default function CartDrawer() {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Cupom State
+  const [cupomCode, setCupomCode] = useState('');
+  const [cupomAplicado, setCupomAplicado] = useState<any>(null);
+  const [isApplyingCupom, setIsApplyingCupom] = useState(false);
+  const [cupomMessage, setCupomMessage] = useState<{text: string, type: 'error' | 'success'} | null>(null);
+
   useEffect(() => {
     if (perfil) {
       setEndereco({
@@ -104,20 +110,50 @@ export default function CartDrawer() {
     }
   }, [isCartOpen]);
 
+  // Monitora continuamente a validade do cupom aplicado
+  useEffect(() => {
+    if (!cupomAplicado || !cupomAplicado.data_expiracao) return;
+
+    const checkExpiration = () => {
+      let expDateStr = cupomAplicado.data_expiracao;
+      if (!expDateStr.endsWith('Z') && !expDateStr.includes('+') && !expDateStr.includes('-')) {
+        expDateStr += 'Z';
+      }
+      
+      if (new Date(expDateStr) < new Date()) {
+        setCupomAplicado(null);
+        setCupomMessage({ text: 'Seu cupom acabou de expirar!', type: 'error' });
+      }
+    };
+
+    const intervalId = setInterval(checkExpiration, 1000);
+    return () => clearInterval(intervalId);
+  }, [cupomAplicado]);
+
   if (!isCartOpen) return null;
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(price);
   };
 
+  let cupomDiscount = 0;
+  if (cupomAplicado) {
+    if (cupomAplicado.tipo_desconto === 'porcentagem') {
+      cupomDiscount = cartTotal * (cupomAplicado.valor_desconto / 100);
+    } else {
+      cupomDiscount = cupomAplicado.valor_desconto;
+    }
+  }
+
   const isPix = pagamento === 'PIX';
-  const pixDiscount = isPix ? cartTotal * 0.05 : 0;
+  // O desconto pix é aplicado sobre o subtotal já subtraindo o cupom
+  const pixDiscount = isPix ? Math.max(0, cartTotal - cupomDiscount) * 0.05 : 0;
   const currentRate = MP_RATES[parcelas as keyof typeof MP_RATES] || 0;
   
   // Frete é somado ANTES do juros do cartão, e os descontos são aplicados só no valor dos produtos
-  const baseValueForInstallments = cartTotal + frete;
+  const baseValueForInstallments = Math.max(0, cartTotal - cupomDiscount) + frete;
   const finalTotal = isPix 
-    ? (cartTotal - pixDiscount + frete) 
+    ? (Math.max(0, cartTotal - cupomDiscount) - pixDiscount + frete) 
     : baseValueForInstallments * (1 + currentRate);
     
   const installmentValue = finalTotal / parcelas;
@@ -238,8 +274,25 @@ export default function CartDrawer() {
             message: 'Você acabou de enviar um pedido! Aguarde alguns minutos antes de fazer outro.',
             type: 'warning'
           });
-          setIsSubmitting(false);
           return;
+        }
+
+        setIsSubmitting(true);
+
+        // Re-validação do Cupom no momento do fechamento
+        if (cupomAplicado) {
+          if (cupomAplicado.data_expiracao && new Date(cupomAplicado.data_expiracao) < new Date()) {
+            showAlert({ title: 'Cupom Expirado', message: 'O cupom aplicado expirou enquanto você estava no carrinho. Ele foi removido.', type: 'warning' });
+            setCupomAplicado(null);
+            setIsSubmitting(false);
+            return;
+          }
+          if (cupomAplicado.quantidade_disponivel !== null && cupomAplicado.quantidade_disponivel <= 0) {
+            showAlert({ title: 'Cupom Esgotado', message: 'O cupom aplicado esgotou enquanto você estava no carrinho. Ele foi removido.', type: 'warning' });
+            setCupomAplicado(null);
+            setIsSubmitting(false);
+            return;
+          }
         }
 
         const productIds = items.map(i => i.productId);
@@ -308,14 +361,20 @@ export default function CartDrawer() {
         const afiliado_id = localStorage.getItem('afiliado_id');
         const idParaSalvar = (afiliado_id && afiliado_id !== user.id) ? afiliado_id : null;
 
+        const payloadPedido: any = {
+          user_id: user.id,
+          total: finalTotal,
+          status: 'Pendente',
+          afiliado_id: idParaSalvar
+        };
+        
+        if (cupomAplicado) {
+          payloadPedido.cupom_id = cupomAplicado.id;
+        }
+
         const { data: pedido, error: errorPedido } = await supabase
           .from('pedidos')
-          .insert({
-            user_id: user.id,
-            total: finalTotal,
-            status: 'Pendente',
-            afiliado_id: idParaSalvar
-          })
+          .insert(payloadPedido)
           .select()
           .single();
 
@@ -368,6 +427,10 @@ export default function CartDrawer() {
     message += `*RESUMO FINANCEIRO:*\n`;
     message += `Subtotal: ${formatPrice(cartTotal)}\n`;
 
+    if (cupomAplicado) {
+      message += `Cupom Aplicado (${cupomAplicado.codigo}): - ${formatPrice(cupomDiscount)}\n`;
+    }
+
     if (frete > 0) {
       message += `Frete (Motoboy): + ${formatPrice(frete)}\n`;
     } else {
@@ -389,11 +452,145 @@ export default function CartDrawer() {
 
     message += `\n*TOTAL FINAL: ${formatPrice(finalTotal)}*`;
 
+    // Atualizar uso do cupom se existir
+    if (cupomAplicado && cupomAplicado.quantidade_disponivel !== null) {
+      try {
+        const novosUsos = cupomAplicado.quantidade_disponivel - 1;
+        const payload: any = { quantidade_disponivel: novosUsos };
+        
+        // Se acabou de esgotar, seta a expiração para AGORA, para a vassoura limpar em 1 hora
+        if (novosUsos <= 0) {
+          payload.data_expiracao = new Date().toISOString();
+        }
+
+        await supabase
+          .from('cupons')
+          .update(payload)
+          .eq('id', cupomAplicado.id);
+      } catch (err) {
+        console.error('Erro ao diminuir uso do cupom:', err);
+      }
+    }
     clearCart();
+    removeCupom();
     const url = `https://wa.me/5516997700430?text=${encodeURIComponent(message)}`;
     
     setIsSubmitting(false);
     window.open(url, '_blank');
+  };
+
+  const applyCupom = async () => {
+    if (!cupomCode) return;
+    setIsApplyingCupom(true);
+    try {
+      const { data, error } = await supabase
+        .from('cupons')
+        .select('*')
+        .eq('codigo', cupomCode.toUpperCase())
+        .eq('ativo', true)
+        .single();
+
+      if (error || !data) {
+        throw new Error('Cupom inválido ou inativo.');
+      }
+
+      if (data.quantidade_disponivel !== null && data.quantidade_disponivel <= 0) {
+        throw new Error('Este cupom esgotou.');
+      }
+
+      // Validação de Data de Expiração (Tratando timezone)
+      if (data.data_expiracao) {
+        let expDateStr = data.data_expiracao;
+        if (!expDateStr.endsWith('Z') && !expDateStr.includes('+') && !expDateStr.includes('-')) {
+          expDateStr += 'Z';
+        }
+        
+        if (new Date(expDateStr) < new Date()) {
+          throw new Error('Este cupom expirou.');
+        }
+      }
+
+      // Validação de Uso Único por Pessoa
+      if (user) {
+        try {
+          const { data: jaUsou, error: erroUso } = await supabase
+            .from('pedidos')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('cupom_id', data.id)
+            .limit(1);
+            
+          if (!erroUso && jaUsou && jaUsou.length > 0) {
+            throw new Error('Você já utilizou este cupom em uma compra anterior.');
+          }
+        } catch (err: any) {
+          // Se der erro pq a coluna ainda nao existe, ignora pra nao quebrar, 
+          // ou propaga se for o throw de uso unico
+          if (err.message === 'Você já utilizou este cupom em uma compra anterior.') {
+            throw err;
+          }
+        }
+      }
+
+      // Validação de Usuário Específico
+      if (data.user_id) {
+        if (!user || user.id !== data.user_id) {
+          throw new Error('Este cupom não está disponível para o seu usuário.');
+        }
+      }
+
+      // Validação de Valor Mínimo
+      if (data.valor_minimo !== null && cartTotal < data.valor_minimo) {
+        throw new Error(`Este cupom exige um pedido mínimo de ${formatPrice(data.valor_minimo)}.`);
+      }
+
+      // Validação de Valor Máximo
+      if (data.valor_maximo !== null && cartTotal > data.valor_maximo) {
+        throw new Error(`Este cupom só é válido para pedidos de até ${formatPrice(data.valor_maximo)}.`);
+      }
+
+      // Validação de Categoria
+      if (data.categoria_nome) {
+        const hasCategoryItem = items.some(item => item.category === data.categoria_nome);
+        if (!hasCategoryItem) {
+          throw new Error(`Este cupom exige ao menos um produto da categoria "${data.categoria_nome}" no carrinho.`);
+        }
+      }
+
+      // Validação de Nível do Clube
+      if (data.nivel_id) {
+        if (!user || !perfil) {
+          throw new Error('Você precisa estar logado para usar este cupom restrito a membros do Clube.');
+        }
+        
+        const { data: nivelData, error: nivelError } = await supabase
+          .from('niveis_fidelidade')
+          .select('nome, pontos_minimos')
+          .eq('id', data.nivel_id)
+          .single();
+
+        if (!nivelError && nivelData) {
+          const userPontos = perfil.pontos || 0;
+          if (userPontos < nivelData.pontos_minimos) {
+            throw new Error(`Este cupom é exclusivo para clientes Nível ${nivelData.nome} ou superior.`);
+          }
+        }
+      }
+
+      setCupomAplicado(data);
+      setCupomMessage({ text: 'Desconto adicionado com sucesso!', type: 'success' });
+    } catch (err: any) {
+      setCupomMessage({ text: err.message || 'Cupom inválido.', type: 'error' });
+      setCupomAplicado(null);
+    } finally {
+      setIsApplyingCupom(false);
+    }
+  };
+
+  const removeCupom = () => {
+    setCupomAplicado(null);
+    setCupomCode('');
+    setCupomMessage(null);
   };
 
   return (
@@ -724,44 +921,107 @@ export default function CartDrawer() {
 
         {items.length > 0 && (
           <div className="p-5 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 shrink-0 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)] relative z-40">
-            {step === 3 && (
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-gray-500 font-medium text-sm">Produtos</span>
-                  <span className="text-sm font-bold text-gray-500">{formatPrice(cartTotal)}</span>
-                </div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-gray-500 font-medium text-sm">Frete</span>
-                  <span className="text-sm font-bold text-gray-500">{frete === 0 ? 'Grátis' : `+ ${formatPrice(frete)}`}</span>
-                </div>
-                
-                {pagamento === 'Cartão de Crédito' && parcelas > 1 && (
-                  <div className="flex items-center justify-between mb-2 text-orange-500 animate-in slide-in-from-top-1 duration-300">
-                    <span className="font-medium text-xs">Juros de Parcelamento (MP)</span>
-                    <span className="text-xs font-bold">+ {formatPrice(interestValue)}</span>
+            
+            {/* Cupom Section (Sempre Visível) */}
+            <div className="mb-4">
+              {cupomAplicado ? (
+                <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/10 rounded-xl border border-green-100 dark:border-green-900/30">
+                  <div>
+                    <p className="text-xs font-bold text-green-700 dark:text-green-500 flex items-center gap-1.5">
+                      <Tag className="w-3.5 h-3.5" />
+                      Cupom: {cupomAplicado.codigo}
+                    </p>
+                    <p className="text-xs text-green-600 dark:text-green-400 font-medium mt-0.5">
+                      -{formatPrice(cupomDiscount)} no pedido
+                    </p>
                   </div>
-                )}
-                
-                {pagamento === 'PIX' && (
-                  <div className="flex items-center justify-between mb-2 text-green-500 animate-in slide-in-from-top-1 duration-300">
-                    <span className="font-medium text-xs">Desconto PIX (5% nos produtos)</span>
-                    <span className="text-xs font-bold">- {formatPrice(pixDiscount)}</span>
-                  </div>
-                )}
-                
-                <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-800">
-                  <span className="text-gray-700 dark:text-gray-300 font-black text-lg">Total</span>
-                  <span className="text-2xl font-black text-vanta-blue">{formatPrice(finalTotal)}</span>
+                  <button onClick={removeCupom} className="text-gray-400 hover:text-red-500 transition-colors p-1" title="Remover cupom">
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Código do cupom"
+                      value={cupomCode}
+                      onChange={(e) => {
+                        setCupomCode(e.target.value.toUpperCase());
+                        setCupomMessage(null);
+                      }}
+                      className={`flex-1 px-3 py-2 text-sm border rounded-xl bg-gray-50 dark:bg-gray-800 focus:ring-2 outline-none uppercase font-bold transition-all ${
+                        cupomMessage?.type === 'error' 
+                          ? 'border-red-300 dark:border-red-500/50 focus:ring-red-500/20 focus:border-red-500' 
+                          : 'border-gray-200 dark:border-gray-700 focus:ring-vanta-blue/20 focus:border-vanta-blue'
+                      }`}
+                    />
+                    <button
+                      onClick={applyCupom}
+                      disabled={!cupomCode || isApplyingCupom}
+                      className="px-4 bg-gray-900 hover:bg-black dark:bg-vanta-blue dark:hover:bg-blue-600 text-white rounded-xl text-sm font-bold transition-colors disabled:opacity-50 flex items-center justify-center min-w-[90px]"
+                    >
+                      {isApplyingCupom ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Aplicar'}
+                    </button>
+                  </div>
+                  {cupomMessage && (
+                    <p className={`text-xs font-medium animate-in slide-in-from-top-1 ${cupomMessage.type === 'error' ? 'text-red-500' : 'text-green-500'}`}>
+                      {cupomMessage.text}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
 
-            {step !== 3 && (
-              <div className="flex items-center justify-between mb-4">
+            {/* Resumo Dinâmico */}
+            <div className="space-y-1.5 mb-4">
+              <div className="flex items-center justify-between">
                 <span className="text-gray-500 font-medium text-sm">Subtotal</span>
-                <span className="text-xl font-black text-gray-900 dark:text-white">{formatPrice(cartTotal)}</span>
+                <span className="text-sm font-bold text-gray-500">{formatPrice(cartTotal)}</span>
               </div>
-            )}
+              
+              {cupomAplicado && (
+                <div className="flex items-center justify-between text-green-600 dark:text-green-400">
+                  <span className="font-medium text-sm">Desconto Cupom</span>
+                  <span className="text-sm font-bold">- {formatPrice(cupomDiscount)}</span>
+                </div>
+              )}
+
+              {step === 3 && frete > 0 && (
+                <div className="flex items-center justify-between animate-in slide-in-from-top-1 duration-300">
+                  <span className="text-gray-500 font-medium text-sm">Frete</span>
+                  <span className="text-sm font-bold text-gray-500">+ {formatPrice(frete)}</span>
+                </div>
+              )}
+
+              {step === 3 && frete === 0 && (
+                <div className="flex items-center justify-between animate-in slide-in-from-top-1 duration-300">
+                  <span className="text-gray-500 font-medium text-sm">Frete</span>
+                  <span className="text-sm font-bold text-green-500">Grátis</span>
+                </div>
+              )}
+              
+              {step === 3 && pagamento === 'Cartão de Crédito' && parcelas > 1 && (
+                <div className="flex items-center justify-between text-orange-500 animate-in slide-in-from-top-1 duration-300">
+                  <span className="font-medium text-xs">Juros (Maquininha)</span>
+                  <span className="text-xs font-bold">+ {formatPrice(interestValue)}</span>
+                </div>
+              )}
+              
+              {step === 3 && pagamento === 'PIX' && (
+                <div className="flex items-center justify-between text-green-500 animate-in slide-in-from-top-1 duration-300">
+                  <span className="font-medium text-xs">Desconto PIX (5%)</span>
+                  <span className="text-xs font-bold">- {formatPrice(pixDiscount)}</span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-2 mt-2 border-t border-gray-100 dark:border-gray-800">
+                <span className="text-gray-700 dark:text-gray-300 font-black text-lg">Total</span>
+                <span className="text-2xl font-black text-vanta-blue">
+                  {step === 3 ? formatPrice(finalTotal) : formatPrice(Math.max(0, cartTotal - cupomDiscount))}
+                </span>
+              </div>
+            </div>
             
             {step === 1 && (
               <button 

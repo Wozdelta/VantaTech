@@ -10,6 +10,7 @@ import Fidelidade from './pages/Fidelidade';
 import AdminDashboard from './pages/AdminDashboard';
 import ProductDetails from './pages/ProductDetails';
 import Produtos from './pages/Produtos';
+import Cupons from './pages/Cupons';
 import { AlertProvider } from './contexts/AlertContext';
 
 export default function App() {
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="produto/:id" element={<ProductDetails />} />
           <Route path="perfil" element={<Perfil />} />
           <Route path="pedidos" element={<Pedidos />} />
+          <Route path="cupons" element={<Cupons />} />
           <Route path="fidelidade" element={<Fidelidade />} />
           <Route path="admin" element={<AdminDashboard />} />
         </Route>

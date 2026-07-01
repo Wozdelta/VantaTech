@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
-import { Users, ShoppingBag, DollarSign, Activity, ListOrdered, BellRing, Package, History, Award } from 'lucide-react';
+import { Users, ShoppingBag, DollarSign, Activity, ListOrdered, BellRing, Package, History, Award, Tag } from 'lucide-react';
 import AdminProducts from '../components/admin/AdminProducts';
 import AdminCategories from '../components/admin/AdminCategories';
 import AdminNotifications from '../components/admin/AdminNotifications';
@@ -11,10 +11,11 @@ import AdminOrders from '../components/admin/AdminOrders';
 import AdminEntradas from '../components/admin/AdminEntradas';
 import AdminSalesHistory from '../components/admin/AdminSalesHistory';
 import AdminFidelidade from '../components/admin/AdminFidelidade';
+import AdminCupons from '../components/admin/AdminCupons';
 
 export default function AdminDashboard() {
   const { user, perfil, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'products' | 'categories' | 'notifications' | 'attributes' | 'sales_history' | 'fidelidade'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'products' | 'categories' | 'notifications' | 'attributes' | 'sales_history' | 'fidelidade' | 'cupons'>('overview');
   const [receitaMensal, setReceitaMensal] = useState(0);
   const [margemLucro, setMargemLucro] = useState(0);
   const [totalPedidos, setTotalPedidos] = useState(0);
@@ -266,6 +267,16 @@ export default function AdminDashboard() {
             >
               <Award className="w-4 h-4" /> Fidelidade
             </button>
+            <button
+              onClick={() => setActiveTab('cupons')}
+              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
+                activeTab === 'cupons' 
+                  ? 'bg-vanta-blue/10 text-vanta-blue dark:bg-blue-900/20 dark:text-blue-400' 
+                  : 'text-gray-500 hover:text-vanta-blue dark:text-gray-400 dark:hover:text-blue-400'
+              }`}
+            >
+              <Tag className="w-4 h-4" /> Cupons
+            </button>
           </div>
         </div>
 
@@ -324,6 +335,7 @@ export default function AdminDashboard() {
         {activeTab === 'attributes' && <AdminAttributes />}
         {activeTab === 'sales_history' && <AdminSalesHistory />}
         {activeTab === 'fidelidade' && <AdminFidelidade />}
+        {activeTab === 'cupons' && <AdminCupons />}
       </div>
     </div>
   );

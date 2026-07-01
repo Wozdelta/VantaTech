@@ -316,6 +316,7 @@ export default function ProductDetails() {
       image: exactImage?.url || mainImage,
       color: selectedColor || undefined,
       storage: selectedStorage || undefined,
+      category: product.categoria,
       quantity: 1,
       isItem: !(product.cor || product.memoria || (product.galeria && product.galeria.length > 0 && product.galeria.some((g:any)=>g.cor)) || availableStorages.length > 0),
       maxQuantity: typeof product.estoque === 'number' ? product.estoque : undefined

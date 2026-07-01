@@ -263,11 +263,20 @@ export default function Navbar() {
       <div className="flex flex-col gap-1 px-1">
         <Link to="/perfil" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium">Configurar Perfil</Link>
         <Link to="/pedidos" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium">Meus Pedidos</Link>
+        <Link to="/cupons" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium">Meus Cupons</Link>
         {perfil?.cargo === 'Admin' ? (
-          <Link to="/fidelidade" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-orange rounded-md transition-colors font-medium">Programa de Fidelidade</Link>
+          <Link to="/fidelidade" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-orange rounded-md transition-colors font-medium">Clube Vanta</Link>
         ) : (
           <div className="px-3 py-2 text-sm text-gray-400 dark:text-gray-600 rounded-md font-medium flex items-center justify-between cursor-not-allowed select-none">
-            <span>Programa de Fidelidade</span>
+            <span>Clube Vanta</span>
+            <span className="text-[9px] font-bold bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-500 uppercase">Em breve</span>
+          </div>
+        )}
+        {perfil?.cargo === 'Admin' ? (
+          <Link to="/encomendar" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-orange rounded-md transition-colors font-medium">Encomendar um Aparelho</Link>
+        ) : (
+          <div className="px-3 py-2 text-sm text-gray-400 dark:text-gray-600 rounded-md font-medium flex items-center justify-between cursor-not-allowed select-none">
+            <span>Encomendar um Aparelho</span>
             <span className="text-[9px] font-bold bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-500 uppercase">Em breve</span>
           </div>
         )}

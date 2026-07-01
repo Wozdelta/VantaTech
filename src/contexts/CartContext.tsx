@@ -8,6 +8,7 @@ export type CartItem = {
   image: string;
   color?: string;
   storage?: string;
+  category?: string;
   quantity: number;
   isItem?: boolean;
   maxQuantity?: number;

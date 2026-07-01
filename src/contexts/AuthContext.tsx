@@ -15,6 +15,7 @@ interface Perfil {
   cidade?: string;
   estado?: string;
   avatar_url?: string;
+  pontos?: number;
 }
 
 interface AuthContextType {

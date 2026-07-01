@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
 import { Plus, Trash2, Image as ImageIcon, Loader2, X, Edit, UploadCloud, Palette, Smartphone, Package, Search, ChevronDown, Check } from 'lucide-react';
@@ -86,6 +86,31 @@ export default function AdminProducts() {
   const [filterStatus, setFilterStatus] = useState('');
   const [filterPreco, setFilterPreco] = useState('');
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+
+  // Drag and drop referências
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    dragItem.current = index;
+    if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragEnter = (e: React.DragEvent, index: number) => {
+    if (dragItem.current !== null && dragItem.current !== index) {
+      const newImages = [...images];
+      const draggedItemContent = newImages[dragItem.current];
+      newImages.splice(dragItem.current, 1);
+      newImages.splice(index, 0, draggedItemContent);
+      setImages(newImages);
+      dragItem.current = index;
+    }
+  };
+
+  const handleDragEnd = () => {
+    dragItem.current = null;
+    dragOverItem.current = null;
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -781,7 +806,15 @@ export default function AdminProducts() {
 
                 <div className="flex flex-wrap gap-4">
                   {images.map((img, index) => (
-                    <div key={img.id} className="relative bg-white dark:bg-gray-900 p-3 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm w-56 flex flex-col group gap-2">
+                    <div 
+                      key={img.id} 
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, index)}
+                      onDragEnter={(e) => handleDragEnter(e, index)}
+                      onDragEnd={handleDragEnd}
+                      onDragOver={(e) => e.preventDefault()}
+                      className="relative bg-white dark:bg-gray-900 p-3 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm w-56 flex flex-col group gap-2 cursor-move hover:border-vanta-blue transition-colors"
+                    >
                       <button type="button" onClick={() => handleRemoveImage(img.id)} className="absolute -top-3 -right-3 bg-red-500 text-white p-1.5 rounded-full shadow hover:bg-red-600 z-10 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-4 h-4" /></button>
                       <div className="h-28 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800">
                         <img src={img.preview} alt="" className="max-h-full max-w-full object-contain" />
@@ -855,13 +888,16 @@ export default function AdminProducts() {
                     </div>
                   ))}
 
-                  <label className="w-36 h-44 flex flex-col items-center justify-center bg-white dark:bg-gray-900 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl cursor-pointer hover:border-vanta-blue hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors group">
-                    <div className="w-12 h-12 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-3 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
-                      <UploadCloud className="w-6 h-6 text-gray-400 group-hover:text-vanta-blue" />
-                    </div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400 font-bold">Adicionar Foto</span>
-                    <input type="file" multiple accept="image/*" className="hidden" onChange={handleAddImage} />
-                  </label>
+                  <div className="flex flex-col items-center gap-2">
+                    <label className="w-36 h-44 flex flex-col items-center justify-center bg-white dark:bg-gray-900 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl cursor-pointer hover:border-vanta-blue hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors group">
+                      <div className="w-12 h-12 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-3 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
+                        <UploadCloud className="w-6 h-6 text-gray-400 group-hover:text-vanta-blue" />
+                      </div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400 font-bold">Adicionar Foto</span>
+                      <input type="file" multiple accept="image/*" className="hidden" onChange={handleAddImage} />
+                    </label>
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium text-center max-w-[140px]">Recomendado: Proporção 1:1 (Ex: 1080x1080) para preencher sem sobras.</span>
+                  </div>
                 </div>
               </div>
 
