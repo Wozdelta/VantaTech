@@ -438,8 +438,14 @@ export default function ProductDetails() {
                             } else {
                               setSelectedColor(cor);
                               if (product.galeria && product.galeria.length > 0) {
-                                const matchingImages = product.galeria.filter((g: any) => g.cor?.toLowerCase().trim() === cor.toLowerCase());
-                                const storages = Array.from(new Set(matchingImages.map((g: any) => g.memoria?.trim()).filter(Boolean))) as string[];
+                                const matchingImages = product.galeria.filter((g: any) => 
+                                  g.cor?.toLowerCase().split(',').map((c:string)=>c.trim()).includes(cor.toLowerCase())
+                                );
+                                let storages: string[] = [];
+                                matchingImages.forEach((g: any) => {
+                                  if (g.memoria) g.memoria.split(',').forEach((m: string) => storages.push(m.trim()));
+                                });
+                                storages = Array.from(new Set(storages.filter(Boolean)));
                                 if (storages.length === 1) {
                                   setSelectedStorage(storages[0]);
                                 } else if (selectedStorage && !storages.some(s => s.toLowerCase() === selectedStorage.toLowerCase())) {
@@ -485,8 +491,14 @@ export default function ProductDetails() {
                         } else {
                           setSelectedStorage(mem);
                           if (product.galeria && product.galeria.length > 0) {
-                            const matchingImages = product.galeria.filter((g: any) => g.memoria?.toLowerCase().trim() === mem.toLowerCase());
-                            const colors = Array.from(new Set(matchingImages.map((g: any) => g.cor?.trim()).filter(Boolean))) as string[];
+                            const matchingImages = product.galeria.filter((g: any) => 
+                              g.memoria?.toLowerCase().split(',').map((m:string)=>m.trim()).includes(mem.toLowerCase())
+                            );
+                            let colors: string[] = [];
+                            matchingImages.forEach((g: any) => {
+                              if (g.cor) g.cor.split(',').forEach((c: string) => colors.push(c.trim()));
+                            });
+                            colors = Array.from(new Set(colors.filter(Boolean)));
                             if (colors.length === 1) {
                               setSelectedColor(colors[0]);
                             } else if (selectedColor && !colors.some(c => c.toLowerCase() === selectedColor.toLowerCase())) {
