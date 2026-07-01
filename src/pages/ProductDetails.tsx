@@ -122,11 +122,29 @@ export default function ProductDetails() {
         // Mágica: Remove do produto os itens "Entregues" para que sumam completamente da página
         if (mainProduct.galeria) {
           mainProduct.galeria = mainProduct.galeria.filter((g: any) => {
-            const isEntregue = sold.some(sv => 
-              sv.status === 'Entregue' && 
-              ((sv.cor === g.cor?.toLowerCase().trim() && sv.storage === (g.memoria?.toLowerCase().trim() || '')) || sv.cor === 'INTEIRO')
-            );
-            return !isEntregue;
+            const isInteiroEntregue = sold.some(sv => sv.status === 'Entregue' && sv.cor === 'INTEIRO');
+            if (isInteiroEntregue) return false;
+
+            let colors = g.cor ? g.cor.split(',').map((c:string)=>c.trim()) : [''];
+            let storages = g.memoria ? g.memoria.split(',').map((m:string)=>m.trim()) : [''];
+
+            if (g.memoria) {
+              const remainingStorages = storages.filter(st => {
+                return !colors.some(c => 
+                  sold.some(sv => sv.status === 'Entregue' && sv.cor === c.toLowerCase() && sv.storage === st.toLowerCase())
+                );
+              });
+              g.memoria = remainingStorages.join(',');
+              if (remainingStorages.length === 0) return false; // Remove da galeria pois todos os armazenamentos foram entregues
+            } else if (g.cor) {
+              const remainingColors = colors.filter(c => {
+                return !sold.some(sv => sv.status === 'Entregue' && sv.cor === c.toLowerCase());
+              });
+              g.cor = remainingColors.join(',');
+              if (remainingColors.length === 0) return false; // Remove da galeria pois todas as cores foram entregues
+            }
+            
+            return true;
           });
           
           // Se esvaziou a galeria por causa de entregas, limpamos o legado também
