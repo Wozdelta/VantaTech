@@ -9,6 +9,8 @@ export type CartItem = {
   color?: string;
   storage?: string;
   quantity: number;
+  isItem?: boolean;
+  maxQuantity?: number;
 };
 
 type CartContextType = {

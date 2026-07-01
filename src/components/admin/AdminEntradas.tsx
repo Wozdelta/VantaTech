@@ -27,6 +27,7 @@ export default function AdminEntradas() {
   const [items, setItems] = useState<EntryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isSavingAll, setIsSavingAll] = useState(false);
   const { showAlert } = useAlert();
 
   useEffect(() => {
@@ -108,57 +109,59 @@ export default function AdminEntradas() {
     setItems(newItems);
   };
 
-  const handleSave = async (index: number) => {
-    const item = items[index];
-    
-    // Atualiza estado de carregamento do botão
-    const newItems = [...items];
-    newItems[index].isSaving = true;
-    setItems(newItems);
-
+  const handleSaveAll = async () => {
+    setIsSavingAll(true);
     try {
-      // 1. Busca o produto completo para atualizar o array da galeria
-      const { data: productData, error: fetchError } = await supabase
-        .from('produtos')
-        .select('galeria')
-        .eq('id', item.productId)
-        .single();
+      // Agrupar itens por productId para não sobrescrever galerias e fazer menos requests
+      const itemsByProduct = items.reduce((acc, item) => {
+        if (!acc[item.productId]) acc[item.productId] = [];
+        acc[item.productId].push(item);
+        return acc;
+      }, {} as Record<string, typeof items>);
 
-      if (fetchError) throw fetchError;
+      for (const [productId, productItems] of Object.entries(itemsByProduct)) {
+        const { data: productData, error: fetchError } = await supabase
+          .from('produtos')
+          .select('galeria')
+          .eq('id', productId)
+          .single();
 
-      const updatedGaleria = [...productData.galeria];
-      
-      // 2. Atualiza apenas o preco_custo da variação específica
-      if (updatedGaleria[item.variantIndex]) {
-        updatedGaleria[item.variantIndex] = {
-          ...updatedGaleria[item.variantIndex],
-          preco_custo: item.precoCusto.toString()
-        };
+        if (fetchError) throw fetchError;
+
+        const updatedGaleria = [...productData.galeria];
+        
+        productItems.forEach(item => {
+          if (updatedGaleria[item.variantIndex]) {
+            updatedGaleria[item.variantIndex] = {
+              ...updatedGaleria[item.variantIndex],
+              preco_custo: item.precoCusto.toString()
+            };
+          }
+        });
+
+        const { error: updateError } = await supabase
+          .from('produtos')
+          .update({ galeria: updatedGaleria })
+          .eq('id', productId);
+
+        if (updateError) throw updateError;
       }
-
-      // 3. Salva de volta no banco
-      const { error: updateError } = await supabase
-        .from('produtos')
-        .update({ galeria: updatedGaleria })
-        .eq('id', item.productId);
-
-      if (updateError) throw updateError;
-
-      showAlert({ title: 'Sucesso', message: 'Valor pago atualizado!', type: 'success' });
+      showAlert({ title: 'Sucesso', message: 'Todos os custos foram salvos!', type: 'success' });
     } catch (error) {
-      console.error('Erro ao salvar custo:', error);
-      showAlert({ title: 'Erro', message: 'Falha ao salvar o valor.', type: 'error' });
+      console.error('Erro ao salvar tudo:', error);
+      showAlert({ title: 'Erro', message: 'Falha ao salvar alguns itens.', type: 'error' });
     } finally {
-      const resetItems = [...items];
-      resetItems[index].isSaving = false;
-      setItems(resetItems);
+      setIsSavingAll(false);
     }
   };
+
 
   const filteredItems = items.filter(i => 
     i.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
     i.cor.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const unfilledCount = items.filter(i => !i.precoCusto || i.precoCusto === 0).length;
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mt-8">
@@ -168,20 +171,35 @@ export default function AdminEntradas() {
             <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-green-500" />
               Entrada de Produtos (Lucro)
+              {unfilledCount > 0 && (
+                <span className="flex items-center justify-center bg-orange-500 text-white text-xs font-bold w-6 h-6 rounded-md shadow-sm ml-2" title={`${unfilledCount} itens sem custo preenchido`}>
+                  {unfilledCount}
+                </span>
+              )}
             </h3>
             <p className="text-sm text-gray-500 mt-1">
               Preencha o valor pago (custo) em cada aparelho para visualizar sua margem de lucro.
             </p>
           </div>
-          <div className="relative w-full md:w-64">
-            <input
-              type="text"
-              placeholder="Buscar modelo..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:border-vanta-blue"
-            />
-            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+            <div className="relative w-full sm:w-64">
+              <input
+                type="text"
+                placeholder="Buscar modelo..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:border-vanta-blue"
+              />
+              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+            </div>
+            <button
+              onClick={handleSaveAll}
+              disabled={isSavingAll}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-bold whitespace-nowrap disabled:opacity-50 w-full sm:w-auto"
+            >
+              {isSavingAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              Salvar Todos
+            </button>
           </div>
         </div>
       </div>
@@ -204,7 +222,6 @@ export default function AdminEntradas() {
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Valor Venda</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Valor Pago (Custo)</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Lucro</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Ação</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -248,16 +265,6 @@ export default function AdminEntradas() {
                     <span className={`text-sm font-bold ${item.lucro > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`}>
                       R$ {item.lucro.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <button
-                      onClick={() => handleSave(index)}
-                      disabled={item.isSaving}
-                      className="inline-flex items-center justify-center p-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors disabled:opacity-50"
-                      title="Salvar"
-                    >
-                      {item.isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    </button>
                   </td>
                 </tr>
               ))}

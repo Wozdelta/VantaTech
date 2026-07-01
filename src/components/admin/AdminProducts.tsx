@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
-import { Plus, Trash2, Image as ImageIcon, Loader2, X, Edit, UploadCloud, Palette } from 'lucide-react';
+import { Plus, Trash2, Image as ImageIcon, Loader2, X, Edit, UploadCloud, Palette, Smartphone, Package, Search, ChevronDown, Check } from 'lucide-react';
 import RichTextEditor from '../ui/RichTextEditor';
 
 type Product = {
@@ -18,6 +18,7 @@ type Product = {
   imagem_url: string;
   ativo: boolean;
   descricao: string | null;
+  estoque: number | null;
   galeria: { url: string; cor: string; cor_tipo?: string; cor_valor?: string; memoria?: string; bateria?: string; mostrar_bateria?: boolean; preco?: string; preco_antigo?: string }[];
 };
 
@@ -48,6 +49,8 @@ export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showTypeSelector, setShowTypeSelector] = useState(false);
+  const [productType, setProductType] = useState<'aparelho' | 'item' | null>(null);
   const [saving, setSaving] = useState(false);
 
   const [editId, setEditId] = useState<string | null>(null);
@@ -62,7 +65,8 @@ export default function AdminProducts() {
     preco_antigo: '',
     badge: '',
     categoria: 'Celulares',
-    descricao: ''
+    descricao: '',
+    estoque: ''
   });
 
   const [images, setImages] = useState<ImageUploadItem[]>([]);
@@ -73,8 +77,15 @@ export default function AdminProducts() {
   const [productColors, setProductColors] = useState<ProductColor[]>([]);
   const [novaCorNome, setNovaCorNome] = useState('');
   const [novaCorTipo, setNovaCorTipo] = useState<'hex' | 'image'>('hex');
-  const [novaCorHex, setNovaCorHex] = useState('#1d8eff');
+  const [novaCorHex, setNovaCorHex] = useState('#000000');
   const [novaCorFile, setNovaCorFile] = useState<File | null>(null);
+
+  // Filters state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterCategoria, setFilterCategoria] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [filterPreco, setFilterPreco] = useState('');
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProducts();
@@ -132,7 +143,24 @@ export default function AdminProducts() {
     }
   }
 
+  async function handleToggleActive(id: string, currentAtivo: boolean) {
+    try {
+      const { error } = await supabase
+        .from('produtos')
+        .update({ ativo: !currentAtivo })
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      setProducts(products.map(p => p.id === id ? { ...p, ativo: !currentAtivo } : p));
+    } catch (error) {
+      console.error('Erro ao alterar status:', error);
+      showAlert({ title: 'Erro', message: 'Erro ao alterar status do produto.', type: 'error' });
+    }
+  }
+
   function handleEdit(product: Product) {
+    setProductType(product.cor || product.memoria || (product.galeria && product.galeria.length > 0 && product.galeria.some((g:any)=>g.cor)) ? 'aparelho' : 'item');
     setEditId(product.id);
     setFormData({
       nome: product.nome,
@@ -143,7 +171,8 @@ export default function AdminProducts() {
       preco_antigo: product.preco_antigo ? product.preco_antigo.toString() : '',
       badge: product.badge || '',
       categoria: product.categoria,
-      descricao: product.descricao || ''
+      descricao: product.descricao || '',
+      estoque: product.estoque !== null && product.estoque !== undefined ? product.estoque.toString() : ''
     });
     setTemDesconto(!!product.preco_antigo);
 
@@ -323,16 +352,17 @@ export default function AdminProducts() {
       const productData = {
         nome: formData.nome,
         marca: formData.marca,
-        condicao: formData.condicao,
-        memoria: formData.memoria,
-        cor: uniqueColors,
+        condicao: productType === 'aparelho' ? formData.condicao : 'Novo',
+        memoria: productType === 'aparelho' ? formData.memoria : '',
+        cor: productType === 'aparelho' ? uniqueColors : '',
         preco: parseFloat(formData.preco || '0'),
         preco_antigo: temDesconto && formData.preco_antigo ? parseFloat(formData.preco_antigo) : null,
         badge: formData.badge || null,
         categoria: formData.categoria,
         descricao: formData.descricao || null,
         imagem_url: mainImageUrl,
-        galeria: uploadedGallery
+        galeria: uploadedGallery,
+        estoque: productType === 'item' ? (formData.estoque ? parseInt(formData.estoque) : 0) : null
       };
 
       if (editId) {
@@ -360,12 +390,23 @@ export default function AdminProducts() {
     setTemDesconto(false);
     setFormData({
       nome: '', marca: '', condicao: 'Novo', memoria: '',
-      preco: '', preco_antigo: '', badge: '', categoria: 'Celulares', descricao: ''
+      preco: '', preco_antigo: '', badge: '', categoria: 'Celulares', descricao: '', estoque: ''
     });
     setImages([]);
     setProductColors([]);
     setNovaCorNome('');
     setNovaCorFile(null);
+  }
+
+  function openTypeSelector() {
+    resetForm();
+    setShowTypeSelector(true);
+  }
+
+  function handleSelectType(type: 'aparelho' | 'item') {
+    setProductType(type);
+    setShowTypeSelector(false);
+    setIsModalOpen(true);
   }
 
   return (
@@ -376,30 +417,158 @@ export default function AdminProducts() {
           <p className="text-sm text-gray-500">Gerencie o catálogo da sua loja.</p>
         </div>
         <button
-          onClick={() => { resetForm(); setIsModalOpen(true); }}
+          onClick={openTypeSelector}
           className="flex items-center gap-2 px-4 py-2 bg-vanta-blue text-white rounded-lg hover:bg-blue-600 transition-colors"
         >
           <Plus className="w-4 h-4" /> Novo Produto
         </button>
       </div>
 
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="flex-1 relative">
+          <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Pesquisar produto pelo nome..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-vanta-blue/20 focus:border-vanta-blue transition-all text-gray-900 dark:text-white"
+          />
+        </div>
+      </div>
+
       {loading ? (
         <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-vanta-blue" /></div>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto min-h-[380px]">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead>
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produto</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Preço</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 text-left relative">
+                  <button 
+                    onClick={() => setOpenDropdown(openDropdown === 'preco' ? null : 'preco')}
+                    className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-900 dark:hover:text-gray-300 uppercase tracking-wider transition-colors"
+                  >
+                    Preço
+                    {filterPreco && <span className="w-1.5 h-1.5 rounded-full bg-vanta-blue ml-0.5"></span>}
+                    <ChevronDown className={`w-3.5 h-3.5 ml-0.5 transition-transform ${openDropdown === 'preco' ? 'rotate-180' : ''}`} />
+                  </button>
+                  {openDropdown === 'preco' && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setOpenDropdown(null)}></div>
+                      <div className="absolute top-full left-4 mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-2 z-50 overflow-hidden text-sm">
+                        <button onClick={() => { setFilterPreco(''); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Nenhum</span>
+                          {!filterPreco && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                        <button onClick={() => { setFilterPreco('maior'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Maior Preço</span>
+                          {filterPreco === 'maior' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                        <button onClick={() => { setFilterPreco('menor'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Menor Preço</span>
+                          {filterPreco === 'menor' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </th>
+                <th className="px-6 py-3 text-left relative">
+                  <button 
+                    onClick={() => setOpenDropdown(openDropdown === 'categoria' ? null : 'categoria')}
+                    className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-900 dark:hover:text-gray-300 uppercase tracking-wider transition-colors"
+                  >
+                    Categoria
+                    {filterCategoria && <span className="w-1.5 h-1.5 rounded-full bg-vanta-blue ml-0.5"></span>}
+                    <ChevronDown className={`w-3.5 h-3.5 ml-0.5 transition-transform ${openDropdown === 'categoria' ? 'rotate-180' : ''}`} />
+                  </button>
+                  {openDropdown === 'categoria' && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setOpenDropdown(null)}></div>
+                      <div className="absolute top-full left-4 mt-1 w-48 max-h-64 overflow-y-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-2 z-50 text-sm custom-scrollbar">
+                        <button onClick={() => { setFilterCategoria(''); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Todas</span>
+                          {!filterCategoria && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                        {categorias.map(c => (
+                          <button key={c.id} onClick={() => { setFilterCategoria(c.nome); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                            <span>{c.nome}</span>
+                            {filterCategoria === c.nome && <Check className="w-4 h-4 text-vanta-blue" />}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </th>
+                <th className="px-6 py-3 text-left relative">
+                  <button 
+                    onClick={() => setOpenDropdown(openDropdown === 'status' ? null : 'status')}
+                    className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-900 dark:hover:text-gray-300 uppercase tracking-wider transition-colors"
+                  >
+                    Status
+                    {filterStatus && <span className="w-1.5 h-1.5 rounded-full bg-vanta-blue ml-0.5"></span>}
+                    <ChevronDown className={`w-3.5 h-3.5 ml-0.5 transition-transform ${openDropdown === 'status' ? 'rotate-180' : ''}`} />
+                  </button>
+                  {openDropdown === 'status' && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setOpenDropdown(null)}></div>
+                      <div className="absolute top-full left-4 mt-1 w-40 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-2 z-50 overflow-hidden text-sm">
+                        <button onClick={() => { setFilterStatus(''); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Todos</span>
+                          {!filterStatus && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                        <button onClick={() => { setFilterStatus('ativo'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Ativos</span>
+                          {filterStatus === 'ativo' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                        <button onClick={() => { setFilterStatus('oculto'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Ocultos</span>
+                          {filterStatus === 'oculto' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {products.map(product => (
-                <tr key={product.id}>
+              {products
+                .filter(p => {
+                  if (searchTerm && !p.nome.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+                  if (filterCategoria && p.categoria !== filterCategoria) return false;
+                  if (filterStatus) {
+                    const isAtivo = filterStatus === 'ativo';
+                    if (p.ativo !== isAtivo) return false;
+                  }
+                  return true;
+                })
+                .sort((a, b) => {
+                  if (filterPreco === 'maior') return b.preco - a.preco;
+                  if (filterPreco === 'menor') return a.preco - b.preco;
+                  return 0;
+                })
+                .map((product) => (
+                <tr 
+                  key={product.id}
+                  onContextMenu={async (e) => {
+                    e.preventDefault();
+                    const confirm = await showAlert({
+                      title: 'Alterar Status do Produto',
+                      message: `Deseja ${product.ativo ? 'ocultar' : 'ativar'} o produto "${product.nome}"?`,
+                      type: 'info',
+                      showConfirm: true,
+                      confirmText: product.ativo ? 'Ocultar Produto' : 'Ativar Produto',
+                      cancelText: 'Cancelar'
+                    });
+                    if (confirm) {
+                      handleToggleActive(product.id, product.ativo);
+                    }
+                  }}
+                  className="transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-800/50 cursor-pointer"
+                  title="Clique com o botão direito para alternar entre Ativo e Oculto"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10">
@@ -407,7 +576,20 @@ export default function AdminProducts() {
                       </div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900 dark:text-white">{product.nome}</div>
-                        <div className="text-sm text-gray-500 truncate w-48">{product.cor} • {product.memoria}</div>
+                        {(() => {
+                          const isAparelho = product.cor || product.memoria || (product.galeria && product.galeria.length > 0 && product.galeria.some((g:any)=>g.cor));
+                          if (!isAparelho) {
+                            return (
+                              <div className="text-sm font-semibold text-vanta-blue truncate w-48 mt-0.5">
+                                Estoque: {product.estoque !== null && product.estoque !== undefined ? product.estoque : 0} un.
+                              </div>
+                            );
+                          }
+                          const subtitle = [product.cor, product.memoria].filter(Boolean).join(' • ');
+                          return subtitle ? (
+                            <div className="text-sm text-gray-500 truncate w-48 mt-0.5">{subtitle}</div>
+                          ) : null;
+                        })()}
                       </div>
                     </div>
                   </td>
@@ -436,13 +618,56 @@ export default function AdminProducts() {
                   </td>
                 </tr>
               ))}
-              {products.length === 0 && (
+              {products.filter(p => {
+                  if (searchTerm && !p.nome.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+                  if (filterCategoria && p.categoria !== filterCategoria) return false;
+                  if (filterStatus) {
+                    const isAtivo = filterStatus === 'ativo';
+                    if (p.ativo !== isAtivo) return false;
+                  }
+                  return true;
+                }).length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center text-gray-500">Nenhum produto cadastrado.</td>
+                  <td colSpan={5} className="px-6 py-10 text-center text-gray-500">Nenhum produto encontrado.</td>
                 </tr>
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {showTypeSelector && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowTypeSelector(false)}></div>
+          <div className="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-3xl shadow-xl overflow-hidden flex flex-col p-6 sm:p-8 border border-gray-100 dark:border-gray-800">
+            
+            <div className="text-center mb-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">O que deseja cadastrar?</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Selecione o tipo de produto para continuar.</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button onClick={() => handleSelectType('aparelho')} className="flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border border-gray-200 hover:border-vanta-blue bg-white hover:bg-blue-50/50 dark:bg-gray-800 dark:border-gray-700 dark:hover:border-vanta-blue dark:hover:bg-blue-900/10 transition-all group">
+                <Smartphone className="w-8 h-8 text-gray-400 group-hover:text-vanta-blue transition-colors" strokeWidth={1.5} />
+                <div className="text-center">
+                  <span className="block font-bold text-sm text-gray-900 dark:text-white">Aparelho</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Celulares e iPads</span>
+                </div>
+              </button>
+              
+              <button onClick={() => handleSelectType('item')} className="flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border border-gray-200 hover:border-vanta-blue bg-white hover:bg-blue-50/50 dark:bg-gray-800 dark:border-gray-700 dark:hover:border-vanta-blue dark:hover:bg-blue-900/10 transition-all group">
+                <Package className="w-8 h-8 text-gray-400 group-hover:text-vanta-blue transition-colors" strokeWidth={1.5} />
+                <div className="text-center">
+                  <span className="block font-bold text-sm text-gray-900 dark:text-white">Item / Acessório</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Capinhas e Cabos</span>
+                </div>
+              </button>
+            </div>
+            
+            <button onClick={() => setShowTypeSelector(false)} className="mt-6 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 font-medium self-center transition-colors">
+              Cancelar
+            </button>
+          </div>
         </div>
       )}
 
@@ -457,7 +682,7 @@ export default function AdminProducts() {
             <div className="sticky top-0 z-20 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800 p-4 sm:p-6 sm:px-10 flex justify-between items-center">
               <div>
                 <h3 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">
-                  {editId ? 'Editar Aparelho' : 'Novo Aparelho'}
+                  {editId ? (productType === 'aparelho' ? 'Editar Aparelho' : 'Editar Item') : (productType === 'aparelho' ? 'Novo Aparelho' : 'Novo Item')}
                 </h3>
                 <p className="text-sm text-gray-500 mt-1">Preencha os detalhes do produto abaixo.</p>
               </div>
@@ -467,6 +692,7 @@ export default function AdminProducts() {
             <form onSubmit={handleSubmit} className="p-4 sm:p-10 space-y-8 sm:space-y-10">
 
               {/* Seção: Cores do Produto (Local) */}
+              {productType === 'aparelho' && (
               <div className="bg-purple-50/50 dark:bg-purple-900/10 p-4 sm:p-8 rounded-[24px] border border-purple-100 dark:border-purple-800/30">
                 <div className="flex items-center gap-2 mb-2">
                   <Palette className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -546,6 +772,7 @@ export default function AdminProducts() {
                   </div>
                 )}
               </div>
+              )}
 
               {/* Seção: Galeria de Imagens */}
               <div className="bg-gray-50 dark:bg-gray-800/50 p-6 sm:p-8 rounded-[24px] border border-gray-100 dark:border-gray-800">
@@ -559,13 +786,17 @@ export default function AdminProducts() {
                       <div className="h-28 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800">
                         <img src={img.preview} alt="" className="max-h-full max-w-full object-contain" />
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <label className="flex items-center justify-center gap-2 cursor-pointer w-full p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:border-vanta-blue transition-colors">
-                          <input type="checkbox" checked={img.isVariant || false} onChange={(e) => handleUpdateImageField(img.id, 'isVariant', e.target.checked)} className="w-4 h-4 text-vanta-blue rounded border-gray-300 dark:border-gray-600 focus:ring-vanta-blue cursor-pointer transition-colors" />
-                          <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Variação / Produto</span>
-                        </label>
-                      </div>
-                      {img.isVariant && (
+                      
+                      {productType === 'aparelho' && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <label className="flex items-center justify-center gap-2 cursor-pointer w-full p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:border-vanta-blue transition-colors">
+                            <input type="checkbox" checked={img.isVariant || false} onChange={(e) => handleUpdateImageField(img.id, 'isVariant', e.target.checked)} className="w-4 h-4 text-vanta-blue rounded border-gray-300 dark:border-gray-600 focus:ring-vanta-blue cursor-pointer transition-colors" />
+                            <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Variação / Produto</span>
+                          </label>
+                        </div>
+                      )}
+                      
+                      {productType === 'aparelho' && img.isVariant && (
                         <>
                           <select
                             value={img.color}
@@ -639,8 +870,8 @@ export default function AdminProducts() {
                 <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Informações Principais</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Nome do Aparelho</label>
-                    <input required type="text" value={formData.nome} onChange={e => setFormData({ ...formData, nome: e.target.value })} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-sm font-medium" placeholder="Ex: iPhone 15 Pro Max" />
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Nome do {productType === 'aparelho' ? 'Aparelho' : 'Item'}</label>
+                    <input required type="text" value={formData.nome} onChange={e => setFormData({ ...formData, nome: e.target.value })} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-sm font-medium" placeholder={productType === 'aparelho' ? "Ex: iPhone 15 Pro Max" : "Ex: Capinha Transparente iPhone 15"} />
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Marca</label>
@@ -660,6 +891,8 @@ export default function AdminProducts() {
                       ))}
                     </select>
                   </div>
+
+                  {productType === 'aparelho' && (
                   <div>
                     <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Condição</label>
                     <select required value={formData.condicao} onChange={e => setFormData({ ...formData, condicao: e.target.value })} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-sm font-medium appearance-none">
@@ -669,6 +902,15 @@ export default function AdminProducts() {
                       <option value="Usado">Usado</option>
                     </select>
                   </div>
+                  )}
+
+                  {productType === 'item' && (
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Quantidade em Estoque (QTD)</label>
+                    <input required type="number" min="0" value={formData.estoque} onChange={e => setFormData({ ...formData, estoque: e.target.value })} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-sm font-medium" placeholder="Ex: 50" />
+                  </div>
+                  )}
+
                   <div>
                     <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Etiqueta (Badge)</label>
                     <select value={formData.badge} onChange={e => setFormData({ ...formData, badge: e.target.value })} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-sm font-medium appearance-none">

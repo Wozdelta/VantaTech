@@ -21,9 +21,9 @@ const MP_RATES = {
   12: 0.1001
 };
 
-// VantaTech coordinates (Araraquara - SP)
-const STORE_LAT = -21.7826;
-const STORE_LON = -48.1717;
+// VantaTech coordinates (Avenida Luiz Antonio Correa da Silva, 269 - Vila Xavier)
+const STORE_LAT = -21.7819305;
+const STORE_LON = -48.1306358;
 
 // Haversine formula to calculate distance in KM
 function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -170,8 +170,8 @@ export default function CartDrawer() {
         const distance = getDistanceFromLatLonInKm(STORE_LAT, STORE_LON, parseFloat(lat), parseFloat(lon));
         setDistanciaKm(distance);
 
-        if (distance <= 10) setFrete(0);
-        else if (distance <= 20) setFrete(30);
+        if (distance <= 5) setFrete(0);
+        else if (distance <= 20) setFrete(20);
         else if (distance <= 30) setFrete(40);
         else if (distance <= 40) setFrete(50);
         else if (distance <= 50) setFrete(60);
@@ -261,8 +261,11 @@ export default function CartDrawer() {
                const status = (soldItem.pedidos as any).status;
                const orderUserId = (soldItem.pedidos as any).user_id;
                
-               const isBlockedGlobally = status === 'Enviado' || status === 'Entregue';
-               const isBlockedForUser = orderUserId === user.id;
+               // Bloqueio global (para todos) apenas se for Aparelho e já estiver vendido/enviado
+               const isBlockedGlobally = !item.isItem && (status === 'Enviado' || status === 'Entregue');
+               
+               // Bloqueio por usuário: não deixa criar outro igual se já tiver um pendente
+               const isBlockedForUser = orderUserId === user.id && status === 'Pendente';
 
                if (!isBlockedGlobally && !isBlockedForUser) return false;
 
@@ -333,7 +336,7 @@ export default function CartDrawer() {
               produto_id: item.productId,
               produto_nome: nomeDetalhado,
               produto_preco: item.price,
-              quantidade: 1,
+              quantidade: item.quantity || 1,
               imagem_url: item.image
             };
           });
@@ -350,7 +353,7 @@ export default function CartDrawer() {
     }
 
     const text = items.map(item => 
-      `*1x ${item.name}*\n     Cor: ${item.color || 'Padrão'} | Armazenamento: ${item.storage || 'Padrão'}\n     Valor: ${formatPrice(item.price)}`
+      `*${item.quantity}x ${item.name}*\n     Cor: ${item.color || 'Padrão'} | Armazenamento: ${item.storage || 'Padrão'}\n     Valor: ${formatPrice(item.price * item.quantity)}`
     ).join('\n\n');
     
     let message = `*NOVO PEDIDO - VANTATECH*\n\n`;
@@ -475,22 +478,53 @@ export default function CartDrawer() {
                             {item.name}
                           </h4>
                           <div className="text-xs text-gray-500 font-medium">
-                            {item.color} • {item.storage}
+                            {item.color || 'Cor Única'}{item.storage ? ` • ${item.storage}` : ''}
                           </div>
                         </div>
                         
                         <div className="flex items-end justify-between mt-2">
                           <div className="text-vanta-blue dark:text-blue-400 font-bold text-base">
-                            {formatPrice(item.price)}
+                            {formatPrice(item.price * item.quantity)}
                           </div>
                           
-                          <button 
-                            onClick={() => removeFromCart(item.id)}
-                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
-                            title="Remover produto"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center gap-3">
+                            {(item.isItem && !item.storage) && (
+                              <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 border border-gray-200 dark:border-gray-700">
+                                <button
+                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                  className="w-6 h-6 flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+                                >
+                                  <span className="font-bold leading-none select-none text-base mb-0.5">-</span>
+                                </button>
+                                <span className="w-6 text-center text-xs font-bold text-gray-900 dark:text-white select-none">
+                                  {item.quantity}
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    if (typeof item.maxQuantity === 'number' && item.quantity >= item.maxQuantity) return;
+                                    updateQuantity(item.id, item.quantity + 1);
+                                  }}
+                                  disabled={typeof item.maxQuantity === 'number' && item.quantity >= item.maxQuantity}
+                                  className={`w-6 h-6 flex items-center justify-center rounded transition-colors ${
+                                    typeof item.maxQuantity === 'number' && item.quantity >= item.maxQuantity
+                                      ? 'text-gray-300 cursor-not-allowed'
+                                      : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                                  }`}
+                                  title={typeof item.maxQuantity === 'number' && item.quantity >= item.maxQuantity ? 'Estoque máximo atingido' : ''}
+                                >
+                                  <span className="font-bold leading-none select-none text-base mb-0.5">+</span>
+                                </button>
+                              </div>
+                            )}
+
+                            <button 
+                              onClick={() => removeFromCart(item.id)}
+                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+                              title="Remover produto"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>

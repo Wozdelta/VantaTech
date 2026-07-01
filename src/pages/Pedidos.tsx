@@ -180,7 +180,7 @@ export default function Pedidos() {
                       <p className="font-bold text-gray-900 dark:text-white line-clamp-1">{item.produto_nome}</p>
                       <div className="flex items-center gap-3 mt-1">
                         <span className="text-sm font-semibold text-vanta-blue">
-                          R$ {Number(item.produto_preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {item.quantidade > 1 ? `${item.quantidade}x ` : ''}R$ {Number(item.produto_preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                       </div>
                     </div>

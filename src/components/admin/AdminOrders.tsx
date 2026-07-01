@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
-import { Package, ChevronDown, CheckCircle, Truck, XCircle, Clock, Loader2, ExternalLink, Trash2 } from 'lucide-react';
+import { Package, ChevronDown, CheckCircle, Truck, XCircle, Clock, Loader2, ExternalLink, Trash2, Check, Search } from 'lucide-react';
 
 interface ItemPedido {
   id: string;
@@ -28,6 +28,12 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
+
+  const [filterData, setFilterData] = useState('mais_recente');
+  const [filterTotal, setFilterTotal] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   useEffect(() => {
     fetchOrders();
@@ -124,19 +130,35 @@ export default function AdminOrders() {
         });
       }
 
-      // Automação do Estoque
-      for (const item of itens) {
-        if (item.produto_id) {
-          // O anúncio em si (produto pai) nunca é desativado automaticamente,
-          // pois as variações (cores/armazenamentos) são controladas dinamicamente.
-          const updates: any = {};
-          updates.ativo = true;
-          updates.badge = null;
-          
-          await supabase
-            .from('produtos')
-            .update(updates)
-            .eq('id', item.produto_id);
+      // Automação do Estoque para Itens
+      const wasAlreadyDelivered = oldStatus === 'Entregue';
+      const isNowDelivered = newStatus === 'Entregue';
+
+      if (!wasAlreadyDelivered && isNowDelivered) {
+        for (const item of itens) {
+          if (item.produto_id) {
+            const { data: prod } = await supabase
+              .from('produtos')
+              .select('estoque, ativo')
+              .eq('id', item.produto_id)
+              .single();
+
+            // Se o produto tiver estoque (é um Item/Acessório e não um Aparelho)
+            if (prod && prod.estoque !== null && prod.estoque !== undefined) {
+              const novoEstoque = Math.max(0, prod.estoque - (item.quantidade || 1));
+              const updates: any = { estoque: novoEstoque };
+              
+              // Se o estoque zerou, oculta o produto automaticamente
+              if (novoEstoque === 0) {
+                updates.ativo = false;
+              }
+
+              await supabase
+                .from('produtos')
+                .update(updates)
+                .eq('id', item.produto_id);
+            }
+          }
         }
       }
 
@@ -234,33 +256,162 @@ export default function AdminOrders() {
         </h2>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-left">
+      <div className="p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+        <div className="relative max-w-md">
+          <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Pesquisar por ID do pedido (ex: 123)..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-vanta-blue/20 focus:border-vanta-blue transition-all text-gray-900 dark:text-white"
+          />
+        </div>
+      </div>
+
+      <div className="overflow-x-auto min-h-[380px]">
+        <table className="min-w-full text-left">
           <thead className="bg-gray-50 dark:bg-gray-900/50 text-gray-500 dark:text-gray-400 text-xs uppercase font-bold tracking-wider">
             <tr>
-              <th className="px-6 py-4">Data/Hora</th>
+              <th className="px-6 py-4 relative">
+                  <button 
+                    onClick={() => setOpenDropdown(openDropdown === 'data' ? null : 'data')}
+                    className="flex items-center gap-1 font-bold text-gray-500 hover:text-gray-900 dark:hover:text-gray-300 uppercase tracking-wider transition-colors focus:outline-none"
+                  >
+                    Pedido / Data
+                    {filterData !== 'mais_recente' && <span className="w-1.5 h-1.5 rounded-full bg-vanta-blue ml-0.5"></span>}
+                    <ChevronDown className={`w-3.5 h-3.5 ml-0.5 transition-transform ${openDropdown === 'data' ? 'rotate-180' : ''}`} />
+                  </button>
+                  {openDropdown === 'data' && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setOpenDropdown(null)}></div>
+                      <div className="absolute top-full left-4 mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-2 z-50 overflow-hidden text-sm font-normal normal-case">
+                        <button onClick={() => { setFilterData('mais_recente'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Mais Recente</span>
+                          {filterData === 'mais_recente' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                        <button onClick={() => { setFilterData('mais_antigo'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Mais Antigo</span>
+                          {filterData === 'mais_antigo' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                      </div>
+                    </>
+                  )}
+              </th>
               <th className="px-6 py-4">Produtos</th>
-              <th className="px-6 py-4">Total</th>
-              <th className="px-6 py-4">Status</th>
+              <th className="px-6 py-4 relative">
+                  <button 
+                    onClick={() => setOpenDropdown(openDropdown === 'total' ? null : 'total')}
+                    className="flex items-center gap-1 font-bold text-gray-500 hover:text-gray-900 dark:hover:text-gray-300 uppercase tracking-wider transition-colors focus:outline-none"
+                  >
+                    Total
+                    {filterTotal && <span className="w-1.5 h-1.5 rounded-full bg-vanta-blue ml-0.5"></span>}
+                    <ChevronDown className={`w-3.5 h-3.5 ml-0.5 transition-transform ${openDropdown === 'total' ? 'rotate-180' : ''}`} />
+                  </button>
+                  {openDropdown === 'total' && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setOpenDropdown(null)}></div>
+                      <div className="absolute top-full left-4 mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-2 z-50 overflow-hidden text-sm font-normal normal-case">
+                        <button onClick={() => { setFilterTotal(''); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Padrão</span>
+                          {!filterTotal && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                        <button onClick={() => { setFilterTotal('maior'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Maior Valor</span>
+                          {filterTotal === 'maior' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                        <button onClick={() => { setFilterTotal('menor'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Menor Valor</span>
+                          {filterTotal === 'menor' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                      </div>
+                    </>
+                  )}
+              </th>
+              <th className="px-6 py-4 relative">
+                  <button 
+                    onClick={() => setOpenDropdown(openDropdown === 'status' ? null : 'status')}
+                    className="flex items-center gap-1 font-bold text-gray-500 hover:text-gray-900 dark:hover:text-gray-300 uppercase tracking-wider transition-colors focus:outline-none"
+                  >
+                    Status
+                    {filterStatus && <span className="w-1.5 h-1.5 rounded-full bg-vanta-blue ml-0.5"></span>}
+                    <ChevronDown className={`w-3.5 h-3.5 ml-0.5 transition-transform ${openDropdown === 'status' ? 'rotate-180' : ''}`} />
+                  </button>
+                  {openDropdown === 'status' && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setOpenDropdown(null)}></div>
+                      <div className="absolute top-full left-4 mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-2 z-50 overflow-hidden text-sm font-normal normal-case">
+                        <button onClick={() => { setFilterStatus(''); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Todos</span>
+                          {!filterStatus && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                        <button onClick={() => { setFilterStatus('pendente'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Pendente</span>
+                          {filterStatus === 'pendente' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                        <button onClick={() => { setFilterStatus('preparando'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Preparando</span>
+                          {filterStatus === 'preparando' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                        <button onClick={() => { setFilterStatus('enviado'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Enviado</span>
+                          {filterStatus === 'enviado' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                        <button onClick={() => { setFilterStatus('entregue'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Entregue</span>
+                          {filterStatus === 'entregue' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                        <button onClick={() => { setFilterStatus('cancelado'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Cancelado</span>
+                          {filterStatus === 'cancelado' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                      </div>
+                    </>
+                  )}
+              </th>
               <th className="px-6 py-4 text-right">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
-            {orders.length === 0 ? (
+            {orders.filter(o => {
+                if (filterStatus && o.status !== filterStatus) return false;
+                return true;
+              }).length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
                   Nenhum pedido encontrado.
                 </td>
               </tr>
             ) : (
-              orders.map((pedido) => (
+            orders
+              .filter(o => {
+                if (filterStatus && o.status?.toLowerCase() !== filterStatus.toLowerCase()) return false;
+                if (searchTerm && !o.numero?.toString().includes(searchTerm)) return false;
+                return true;
+              })
+              .sort((a, b) => {
+                if (filterTotal === 'maior') return b.total - a.total;
+                if (filterTotal === 'menor') return a.total - b.total;
+                
+                if (filterData === 'mais_antigo') {
+                  return new Date(a.criado_em).getTime() - new Date(b.criado_em).getTime();
+                }
+                // default mais_recente
+                return new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime();
+              })
+              .map((pedido) => (
                 <tr key={pedido.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                   <td className="px-6 py-4">
-                    <div className="text-sm font-bold text-gray-900 dark:text-white">
-                      {new Date(pedido.criado_em).toLocaleDateString('pt-BR')}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {new Date(pedido.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-vanta-blue mb-1">
+                        #{pedido.numero}
+                      </span>
+                      <div className="text-sm font-bold text-gray-900 dark:text-white">
+                        {new Date(pedido.criado_em).toLocaleDateString('pt-BR')}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {new Date(pedido.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
