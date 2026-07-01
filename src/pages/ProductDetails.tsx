@@ -159,14 +159,14 @@ export default function ProductDetails() {
 
     // Se o produto tiver galeria
     if (product.galeria && product.galeria.length > 0) {
-      // Procura na galeria uma imagem vinculada à cor selecionada
-      let matchingImage = product.galeria.find((img: any) => 
-        img.cor && img.cor.toLowerCase().trim() === selectedColor.toLowerCase().trim() &&
-        img.memoria && selectedStorage && img.memoria.toLowerCase().trim() === selectedStorage.toLowerCase().trim()
-      );
+      let matchingImage = product.galeria.find((img: any) => {
+        const matchCor = img.cor?.toLowerCase().split(',').map((c:string)=>c.trim()).includes(selectedColor.toLowerCase().trim());
+        const matchMem = selectedStorage && img.memoria && img.memoria.toLowerCase().split(',').map((m:string)=>m.trim()).includes(selectedStorage.toLowerCase().trim());
+        return matchCor && matchMem;
+      });
       if (!matchingImage) {
         matchingImage = product.galeria.find((img: any) => 
-          img.cor && img.cor.toLowerCase().trim() === selectedColor.toLowerCase().trim()
+          img.cor?.toLowerCase().split(',').map((c:string)=>c.trim()).includes(selectedColor.toLowerCase().trim())
         );
       }
       
@@ -205,35 +205,41 @@ export default function ProductDetails() {
 
     // Sobrescreve e cruza as informações se existirem na galeria
     if (product.galeria && product.galeria.length > 0) {
-      // Cores NUNCA somem - exibe todas as cores da galeria sempre
-      const allColorsFromGallery = Array.from(new Set(product.galeria.map((g: any) => g.cor?.trim()).filter(Boolean))) as string[];
-      if (allColorsFromGallery.length > 0) {
-        availableColors = allColorsFromGallery;
-      }
+      let allColors: string[] = [];
+      product.galeria.forEach((g: any) => {
+        if (g.cor) g.cor.split(',').forEach((c: string) => allColors.push(c.trim()));
+      });
+      allColors = Array.from(new Set(allColors.filter(Boolean)));
+      if (allColors.length > 0) availableColors = allColors;
 
-      // Filtrar Memórias baseado na Cor selecionada
       if (selectedColor) {
-        const matchingImages = product.galeria.filter((g: any) => g.cor?.toLowerCase().trim() === selectedColor.toLowerCase().trim());
-        const storagesFromGallery = Array.from(new Set(matchingImages.map((g: any) => g.memoria?.trim()).filter(Boolean))) as string[];
-        if (storagesFromGallery.length > 0) {
-          availableStorages = storagesFromGallery;
-        }
+        const matchingImages = product.galeria.filter((g: any) => 
+          g.cor?.toLowerCase().split(',').map((c:string)=>c.trim()).includes(selectedColor.toLowerCase().trim())
+        );
+        let storages: string[] = [];
+        matchingImages.forEach((g: any) => {
+          if (g.memoria) g.memoria.split(',').forEach((m: string) => storages.push(m.trim()));
+        });
+        storages = Array.from(new Set(storages.filter(Boolean)));
+        if (storages.length > 0) availableStorages = storages;
       } else {
-        const allStoragesFromGallery = Array.from(new Set(product.galeria.map((g: any) => g.memoria?.trim()).filter(Boolean))) as string[];
-        if (allStoragesFromGallery.length > 0) {
-          availableStorages = allStoragesFromGallery;
-        }
+        let allStorages: string[] = [];
+        product.galeria.forEach((g: any) => {
+          if (g.memoria) g.memoria.split(',').forEach((m: string) => allStorages.push(m.trim()));
+        });
+        allStorages = Array.from(new Set(allStorages.filter(Boolean)));
+        if (allStorages.length > 0) availableStorages = allStorages;
       }
     }
   }
 
-  // Identifica a imagem exata para extrair bateria e preço
   let exactImage: any = null;
   if (product?.galeria && product.galeria.length > 0 && selectedColor) {
-    exactImage = product.galeria.find((g: any) => 
-      g.cor?.toLowerCase().trim() === selectedColor.toLowerCase().trim() && 
-      (!selectedStorage || !g.memoria || g.memoria.toLowerCase().trim() === selectedStorage.toLowerCase().trim())
-    );
+    exactImage = product.galeria.find((g: any) => {
+      const matchCor = g.cor?.toLowerCase().split(',').map((c:string)=>c.trim()).includes(selectedColor.toLowerCase().trim());
+      const matchMem = !selectedStorage || !g.memoria || g.memoria.toLowerCase().split(',').map((m:string)=>m.trim()).includes(selectedStorage.toLowerCase().trim());
+      return matchCor && matchMem;
+    });
   }
 
   let displayPreco = product?.preco;
@@ -244,29 +250,33 @@ export default function ProductDetails() {
     displayPrecoAntigo = exactImage.preco_antigo ? Number(exactImage.preco_antigo) : null;
   }
 
-  // Verifica se uma cor está totalmente esgotada
   const checkColorSold = (cor: string) => {
     if (product?.galeria && product.galeria.length > 0) {
-      const imagesOfColor = product.galeria.filter((g: any) => g.cor?.toLowerCase().trim() === cor.toLowerCase());
+      const imagesOfColor = product.galeria.filter((g: any) => g.cor?.toLowerCase().split(',').map((c:string)=>c.trim()).includes(cor.toLowerCase()));
       if (imagesOfColor.length === 0) return false;
-      return imagesOfColor.every((g: any) => 
-        soldVariants.some(sv => sv.cor === g.cor?.toLowerCase().trim() && sv.storage === (g.memoria?.toLowerCase().trim() || ''))
-      );
+      return imagesOfColor.every((g: any) => {
+        const storages = g.memoria ? g.memoria.split(',').map((m:string)=>m.trim().toLowerCase()) : [''];
+        return storages.every((st: string) => 
+          soldVariants.some(sv => sv.cor === cor.toLowerCase() && sv.storage === st)
+        );
+      });
     }
     return soldVariants.some(sv => sv.cor === cor.toLowerCase());
   };
 
-  // Verifica se um armazenamento está totalmente esgotado
   const checkStorageSold = (mem: string) => {
     if (selectedColor) {
       return soldVariants.some(sv => sv.cor === selectedColor.toLowerCase() && sv.storage === mem.toLowerCase());
     }
     if (product?.galeria && product.galeria.length > 0) {
-      const imagesOfStorage = product.galeria.filter((g: any) => g.memoria?.toLowerCase().trim() === mem.toLowerCase());
+      const imagesOfStorage = product.galeria.filter((g: any) => g.memoria?.toLowerCase().split(',').map((m:string)=>m.trim()).includes(mem.toLowerCase()));
       if (imagesOfStorage.length === 0) return false;
-      return imagesOfStorage.every((g: any) => 
-        soldVariants.some(sv => sv.cor === (g.cor?.toLowerCase().trim() || '') && sv.storage === g.memoria?.toLowerCase().trim())
-      );
+      return imagesOfStorage.every((g: any) => {
+        const colors = g.cor ? g.cor.split(',').map((c:string)=>c.trim().toLowerCase()) : [''];
+        return colors.every((c: string) => 
+          soldVariants.some(sv => sv.cor === c && sv.storage === mem.toLowerCase())
+        );
+      });
     }
     return false;
   };
