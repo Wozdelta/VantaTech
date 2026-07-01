@@ -303,7 +303,12 @@ export default function Login() {
                 <div className="mt-6">
                   <button 
                     type="button"
-                    onClick={() => supabase.auth.signInWithOAuth({ provider: 'google' })}
+                    onClick={() => supabase.auth.signInWithOAuth({ 
+                      provider: 'google',
+                      options: {
+                        redirectTo: window.location.origin
+                      }
+                    })}
                     className="w-full flex items-center justify-center py-3 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                   >
                     <FcGoogle className="w-5 h-5 mr-2" />
