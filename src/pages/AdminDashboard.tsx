@@ -27,8 +27,8 @@ export default function AdminDashboard() {
       try {
         const { data: pedidos } = await supabase
           .from('pedidos')
-          .select(`itens_pedido (produto_id, produto_nome, produto_preco, quantidade)`)
-          .in('status', ['Pago', 'Enviado', 'Entregue']);
+          .select(`total, itens_pedido (produto_id, produto_nome, produto_preco, quantidade)`)
+          .in('status', ['Entregue']);
 
         const { data: produtos } = await supabase.from('produtos').select('id, galeria');
 
@@ -36,6 +36,16 @@ export default function AdminDashboard() {
           let totalLucro = 0;
           let totalVendas = 0;
           pedidos.forEach(pedido => {
+            let totalProdutos = 0;
+            pedido.itens_pedido?.forEach((item: any) => {
+              totalProdutos += (item.produto_preco || 0) * (item.quantidade || 1);
+            });
+
+            let descontoPedido = 0;
+            if (pedido.total && totalProdutos > 0 && pedido.total < totalProdutos) {
+              descontoPedido = totalProdutos - pedido.total;
+            }
+
             pedido.itens_pedido?.forEach((item: any) => {
               let custo = 0;
               if (item.produto_id) {
@@ -49,9 +59,13 @@ export default function AdminDashboard() {
                   }
                 }
               }
-              const vendaItem = item.produto_preco * item.quantidade;
-              totalVendas += vendaItem;
-              totalLucro += (item.produto_preco - custo) * item.quantidade;
+
+              const proporcao = totalProdutos > 0 ? ((item.produto_preco * item.quantidade) / totalProdutos) : 0;
+              const descontoItem = descontoPedido * proporcao;
+              const vendaRealItem = (item.produto_preco * item.quantidade) - descontoItem;
+              
+              totalVendas += vendaRealItem;
+              totalLucro += vendaRealItem - (custo * item.quantidade);
             });
           });
           setReceitaMensal(totalLucro);

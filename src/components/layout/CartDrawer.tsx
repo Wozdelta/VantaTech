@@ -379,7 +379,7 @@ export default function CartDrawer() {
       }
     } else if (pagamento === 'PIX') {
       message += `Forma de Pagamento: PIX\n`;
-      message += `Desconto PIX: - ${formatPrice(pixDiscount)}\n`;
+      message += `Desconto PIX (5% nos produtos): - ${formatPrice(pixDiscount)}\n`;
     } else {
       message += `Forma de Pagamento: ${pagamento}\n`;
     }

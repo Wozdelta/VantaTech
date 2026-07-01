@@ -33,10 +33,10 @@ export default function AdminSalesHistory() {
       const { data: pedidos, error: pedidosError } = await supabase
         .from('pedidos')
         .select(`
-          id, numero, criado_em, status,
+          id, numero, criado_em, status, total,
           itens_pedido (id, produto_id, produto_nome, produto_preco, quantidade)
         `)
-        .in('status', ['Pago', 'Enviado', 'Entregue'])
+        .in('status', ['Entregue'])
         .order('criado_em', { ascending: false });
 
       if (pedidosError) throw pedidosError;
@@ -50,37 +50,49 @@ export default function AdminSalesHistory() {
       const history: SoldItem[] = [];
 
       pedidos?.forEach(pedido => {
+        let totalProdutos = 0;
+        pedido.itens_pedido?.forEach((item: any) => {
+          totalProdutos += (item.produto_preco || 0) * (item.quantidade || 1);
+        });
+
+        let descontoPedido = 0;
+        if (pedido.total && totalProdutos > 0 && pedido.total < totalProdutos) {
+          descontoPedido = totalProdutos - pedido.total;
+        }
+
         pedido.itens_pedido?.forEach((item: any) => {
           let custo = 0;
           
-          // Tenta encontrar o custo do produto
           if (item.produto_id) {
             const produtoDb = produtos?.find(p => p.id === item.produto_id);
             if (produtoDb && produtoDb.galeria) {
-              // Tenta achar a variação correspondente pelo nome (cor)
-              const variant = produtoDb.galeria.find(g => 
+              const variant = produtoDb.galeria.find((g: any) => 
                 g.cor && item.produto_nome.includes(g.cor)
               );
               
               if (variant && variant.preco_custo) {
                 custo = parseFloat(variant.preco_custo);
               } else if (produtoDb.galeria[0] && produtoDb.galeria[0].preco_custo) {
-                // Fallback para a primeira imagem se não achar variação ou se não tiver cor
                 custo = parseFloat(produtoDb.galeria[0].preco_custo);
               }
             }
           }
 
+          const proporcao = totalProdutos > 0 ? ((item.produto_preco * item.quantidade) / totalProdutos) : 0;
+          const descontoItem = descontoPedido * proporcao;
+          const precoVendaRealItemTotal = (item.produto_preco * item.quantidade) - descontoItem;
+          const precoVendaUnitarioReal = item.quantidade > 0 ? precoVendaRealItemTotal / item.quantidade : 0;
+          
           history.push({
             id: item.id,
             pedido_id: pedido.id,
             pedido_numero: pedido.numero,
             data: pedido.criado_em,
             produto_nome: item.produto_nome,
-            produto_preco: item.produto_preco,
+            produto_preco: precoVendaUnitarioReal,
             quantidade: item.quantidade,
             custo: custo,
-            lucro: (item.produto_preco - custo) * item.quantidade
+            lucro: precoVendaRealItemTotal - (custo * item.quantidade)
           });
         });
       });
