@@ -16,6 +16,7 @@ interface Perfil {
   estado?: string;
   avatar_url?: string;
   pontos?: number;
+  pontos_acumulados?: number;
 }
 
 interface AuthContextType {

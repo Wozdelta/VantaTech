@@ -358,14 +358,10 @@ export default function CartDrawer() {
 
     if (user) {
       try {
-        const afiliado_id = localStorage.getItem('afiliado_id');
-        const idParaSalvar = (afiliado_id && afiliado_id !== user.id) ? afiliado_id : null;
-
         const payloadPedido: any = {
           user_id: user.id,
           total: finalTotal,
-          status: 'Pendente',
-          afiliado_id: idParaSalvar
+          status: 'Pendente'
         };
         
         if (cupomAplicado) {
@@ -381,9 +377,6 @@ export default function CartDrawer() {
         if (errorPedido) throw errorPedido;
 
         if (pedido) {
-          if (idParaSalvar) {
-            localStorage.removeItem('afiliado_id');
-          }
 
           const itensToInsert = items.map(item => {
             let nomeDetalhado = item.name;
@@ -570,7 +563,7 @@ export default function CartDrawer() {
           .single();
 
         if (!nivelError && nivelData) {
-          const userPontos = perfil.pontos || 0;
+          const userPontos = perfil.pontos_acumulados || 0;
           if (userPontos < nivelData.pontos_minimos) {
             throw new Error(`Este cupom é exclusivo para clientes Nível ${nivelData.nome} ou superior.`);
           }

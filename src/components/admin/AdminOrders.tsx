@@ -72,12 +72,25 @@ export default function AdminOrders() {
       const wasAlreadyPaid = ['Pago', 'Enviado', 'Entregue'].includes(oldStatus);
       const isNowPaid = ['Pago', 'Enviado', 'Entregue'].includes(newStatus);
       
-      if (!wasAlreadyPaid && isNowPaid && afiliadoId && total) {
-        const { data: perfilAfiliado } = await supabase
+      if (!wasAlreadyPaid && isNowPaid && userId && total) {
+        // Anti-Fraude: Verifica se o comprador foi indicado e se AINDA NÃO pagou bônus
+        const { data: perfilComprador } = await supabase
           .from('perfis')
-          .select('pontos')
-          .eq('id', afiliadoId)
+          .select('indicado_por, bonus_indicacao_pago')
+          .eq('id', userId)
           .single();
+
+        if (perfilComprador?.indicado_por && !perfilComprador.bonus_indicacao_pago) {
+          const afiliadoId = perfilComprador.indicado_por;
+
+          // Marca que a primeira compra já premiou o afiliado
+          await supabase.from('perfis').update({ bonus_indicacao_pago: true }).eq('id', userId);
+
+          const { data: perfilAfiliado } = await supabase
+            .from('perfis')
+            .select('pontos, pontos_acumulados')
+            .eq('id', afiliadoId)
+            .single();
         
         const { data: niveis } = await supabase
           .from('niveis_fidelidade')
@@ -85,23 +98,38 @@ export default function AdminOrders() {
           .order('pontos_minimos', { ascending: true });
 
         const pontosAtuais = perfilAfiliado?.pontos || 0;
+        const pontosAcumulados = perfilAfiliado?.pontos_acumulados || 0;
+        
         const pontosGanhos = Math.floor(total);
+        
         const novosPontos = pontosAtuais + pontosGanhos;
+        const novosPontosAcumulados = pontosAcumulados + pontosGanhos;
 
         let nivelAntigo = niveis?.[0];
         let nivelNovo = niveis?.[0];
 
         if (niveis && niveis.length > 0) {
           for (const n of niveis) {
-            if (pontosAtuais >= n.pontos_minimos) nivelAntigo = n;
-            if (novosPontos >= n.pontos_minimos) nivelNovo = n;
+            if (pontosAcumulados >= n.pontos_minimos) nivelAntigo = n;
+            if (novosPontosAcumulados >= n.pontos_minimos) nivelNovo = n;
           }
         }
 
         await supabase
           .from('perfis')
-          .update({ pontos: novosPontos })
+          .update({ 
+            pontos: novosPontos,
+            pontos_acumulados: novosPontosAcumulados 
+          })
           .eq('id', afiliadoId);
+
+        // Registrar no Extrato (Histórico)
+        await supabase.from('historico_pontos').insert({
+          user_id: afiliadoId,
+          tipo: 'entrada',
+          quantidade: pontosGanhos,
+          descricao: `Bônus por Indicação (Pedido Confirmado)`
+        });
 
         await supabase.from('notificacoes').insert({
           usuario_id: afiliadoId,
@@ -118,6 +146,7 @@ export default function AdminOrders() {
             lida: false
           });
         }
+        } // <- Fechando if (perfilComprador?.indicado_por...)
       }
 
       // Enviar notificação para o comprador

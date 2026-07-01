@@ -31,7 +31,7 @@ export default function Cupons() {
 
       const now = new Date();
       const umHoraAtras = new Date(now.getTime() - 60 * 60 * 1000);
-      const userPontos = perfil?.pontos || 0;
+      const userPontos = perfil?.pontos_acumulados || 0;
       
       const cuponsProcessados = (cuponsRes.data || []).map(c => {
         let isExpired = false;

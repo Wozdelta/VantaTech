@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
-import { Plus, Trash2, Image as ImageIcon, Loader2, X, Edit, UploadCloud, Award, Medal, Trophy, Users, Gift, Star, Settings } from 'lucide-react';
+import { Plus, Trash2, Image as ImageIcon, Loader2, X, Edit, UploadCloud, Award, Medal, Trophy, Users, Gift, Star, Settings, Ticket } from 'lucide-react';
 
 type Nivel = {
   id: string;
@@ -15,15 +15,17 @@ type Recompensa = {
   nome: string;
   pontos: number;
   badge: string | null;
-  imagem_url: string;
   ativo: boolean;
   nivel_id?: string | null;
+  cupom_valor?: number | null;
+  cupom_tipo?: string | null;
 };
 
-type Perfil = {
+interface Perfil {
   id: string;
   nome_completo: string;
   pontos: number;
+  pontos_acumulados?: number;
 };
 
 export default function AdminFidelidade() {
@@ -48,9 +50,10 @@ export default function AdminFidelidade() {
   // Form Data
   const [formData, setFormData] = useState({
     nome: '',
-    pontos: '',
-    badge: '',
-    nivel_id: ''
+    nivel_id: '',
+    tipo: 'produto',
+    cupom_valor: '',
+    cupom_tipo: 'fixo'
   });
   
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -101,7 +104,7 @@ export default function AdminFidelidade() {
       setLoadingPerfis(true);
       const { data, error } = await supabase
         .from('perfis')
-        .select('id, nome_completo, pontos')
+        .select('id, nome_completo, pontos, pontos_acumulados')
         .order('pontos', { ascending: false });
 
       if (error) throw error;
@@ -127,7 +130,10 @@ export default function AdminFidelidade() {
       nome: recompensa.nome,
       pontos: recompensa.pontos.toString(),
       badge: recompensa.badge || '',
-      nivel_id: recompensa.nivel_id || ''
+      nivel_id: recompensa.nivel_id || '',
+      tipo: recompensa.cupom_valor ? 'cupom' : 'produto',
+      cupom_valor: recompensa.cupom_valor ? recompensa.cupom_valor.toString() : '',
+      cupom_tipo: recompensa.cupom_tipo || 'fixo'
     });
     setImagePreview(recompensa.imagem_url);
     setImageFile(null);
@@ -166,8 +172,13 @@ export default function AdminFidelidade() {
       return;
     }
     
-    if (!editId && !imageFile && !imagePreview) {
-      showAlert({ title: 'Atenção', message: 'Adicione uma imagem para a recompensa.', type: 'warning' });
+    if (formData.tipo === 'cupom' && (!formData.cupom_valor || isNaN(parseFloat(formData.cupom_valor)))) {
+      showAlert({ title: 'Atenção', message: 'Informe um valor numérico válido para o desconto.', type: 'warning' });
+      return;
+    }
+    
+    if (formData.tipo === 'produto' && !editId && !imageFile && !imagePreview) {
+      showAlert({ title: 'Atenção', message: 'Adicione uma imagem para a recompensa física.', type: 'warning' });
       return;
     }
 
@@ -176,7 +187,9 @@ export default function AdminFidelidade() {
     try {
       let imagem_url = imagePreview;
 
-      if (imageFile) {
+      if (formData.tipo === 'cupom') {
+        imagem_url = 'https://i.ibb.co/6P0rJ89/coupon-icon.png'; // Generic coupon icon or could be omitted
+      } else if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
         const { error: uploadError } = await supabase.storage
@@ -197,8 +210,9 @@ export default function AdminFidelidade() {
         pontos: parseInt(formData.pontos),
         badge: formData.badge || null,
         imagem_url,
-        ativo: true,
-        nivel_id: formData.nivel_id || null
+        nivel_id: formData.nivel_id || null,
+        cupom_valor: formData.tipo === 'cupom' ? parseFloat(formData.cupom_valor) : null,
+        cupom_tipo: formData.tipo === 'cupom' ? formData.cupom_tipo : null
       };
 
       if (editId) {
@@ -222,10 +236,11 @@ export default function AdminFidelidade() {
   };
 
   const resetForm = () => {
-    setFormData({ nome: '', pontos: '', badge: '', nivel_id: '' });
+    setFormData({ nome: '', pontos: '', badge: '', nivel_id: '', tipo: 'produto', cupom_valor: '', cupom_tipo: 'fixo' });
     setImageFile(null);
     setImagePreview('');
     setEditId(null);
+    setIsModalOpen(false);
   };
 
   const handleSaveNivel = async (nivel: Nivel, novosPontos: number) => {
@@ -244,31 +259,20 @@ export default function AdminFidelidade() {
     }
   };
 
-  const getNivelInfo = (pontos: number) => {
-    // Se ainda não carregou os níveis do banco, usa default
-    if (niveis.length === 0) {
-      if (pontos >= 5000) return { nome: 'Diamante', color: 'text-cyan-500', bg: 'bg-cyan-100 dark:bg-cyan-900/30' };
-      if (pontos >= 2500) return { nome: 'Ouro', color: 'text-yellow-500', bg: 'bg-yellow-100 dark:bg-yellow-900/30' };
-      if (pontos >= 1000) return { nome: 'Prata', color: 'text-gray-400', bg: 'bg-gray-100 dark:bg-gray-800' };
-      return { nome: 'Bronze', color: 'text-orange-600', bg: 'bg-orange-100 dark:bg-orange-900/30' };
-    }
-
-    // Acha o maior nível que o usuário tem pontos suficientes
-    let nivelAtual = niveis[0];
-    for (const n of niveis) {
-      if (pontos >= n.pontos_minimos) {
-        nivelAtual = n;
+  const getNivelInfo = (pontosAcumulados: number) => {
+    if (niveis.length > 0) {
+      let n = niveis[0];
+      for (let i = 0; i < niveis.length; i++) {
+        if (pontosAcumulados >= niveis[i].pontos_minimos) n = niveis[i];
       }
+      return { nome: n.nome, bg: 'bg-vanta-darkblue text-white' };
     }
-
-    let color = 'text-gray-600';
-    let bg = 'bg-gray-100 dark:bg-gray-800';
-    if (nivelAtual.nome === 'Bronze') { color = 'text-orange-600'; bg = 'bg-orange-100 dark:bg-orange-900/30'; }
-    else if (nivelAtual.nome === 'Prata') { color = 'text-gray-400'; bg = 'bg-gray-100 dark:bg-gray-800'; }
-    else if (nivelAtual.nome === 'Ouro') { color = 'text-yellow-500'; bg = 'bg-yellow-100 dark:bg-yellow-900/30'; }
-    else if (nivelAtual.nome === 'Diamante') { color = 'text-cyan-500'; bg = 'bg-cyan-100 dark:bg-cyan-900/30'; }
-
-    return { nome: nivelAtual.nome, color, bg };
+    
+    // Fallback caso não carregue os níveis do banco
+    if (pontosAcumulados >= 5000) return { nome: 'Diamante', bg: 'bg-cyan-900 text-white' };
+    if (pontosAcumulados >= 2500) return { nome: 'Ouro', bg: 'bg-yellow-700 text-white' };
+    if (pontosAcumulados >= 1000) return { nome: 'Prata', bg: 'bg-gray-600 text-white' };
+    return { nome: 'Bronze', bg: 'bg-orange-800 text-white' };
   };
 
   return (
@@ -361,7 +365,6 @@ export default function AdminFidelidade() {
           ) : (
             <div className="space-y-2 p-4">
               {perfis.map((perfil, index) => {
-                const nivel = getNivelInfo(perfil.pontos || 0);
                 return (
                   <div key={perfil.id} className="flex items-center justify-between p-4 rounded-xl border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                     <div className="flex items-center gap-4">
@@ -373,9 +376,10 @@ export default function AdminFidelidade() {
                         <p className="text-sm text-gray-500">{perfil.pontos || 0} VantaCoins</p>
                       </div>
                     </div>
-                    <div className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${nivel.bg} ${nivel.color}`}>
-                      <Medal className="w-3.5 h-3.5" />
-                      {nivel.nome}
+                    <div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${getNivelInfo(perfil.pontos_acumulados || 0).bg}`}>
+                        {getNivelInfo(perfil.pontos_acumulados || 0).nome}
+                      </span>
                     </div>
                   </div>
                 );
@@ -422,7 +426,7 @@ export default function AdminFidelidade() {
                 <div key={rec.id} className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden group">
                   <div className="aspect-square relative bg-gray-100 dark:bg-gray-800">
                     {rec.badge && (
-                      <span className="absolute top-2 left-2 z-10 px-2 py-1 bg-vanta-orange text-white text-xs font-bold rounded-lg shadow-sm">
+                      <span className={`absolute top-2 left-2 z-10 px-2 py-1 text-xs font-bold rounded-lg shadow-sm ${rec.cupom_valor ? 'bg-white text-vanta-orange shadow-md' : 'bg-vanta-orange text-white'}`}>
                         {rec.badge}
                       </span>
                     )}
@@ -434,7 +438,17 @@ export default function AdminFidelidade() {
                         Exclusivo {niveis.find(n => n.id === rec.nivel_id)?.nome}
                       </span>
                     )}
-                    <img src={rec.imagem_url} alt={rec.nome} className="w-full h-full object-cover" />
+                    {rec.cupom_valor ? (
+                      <div className="w-full h-full bg-gradient-to-br from-vanta-orange to-orange-600 flex flex-col items-center justify-center text-white p-4">
+                        <Ticket className="w-12 h-12 mb-2 opacity-80" />
+                        <span className="font-black text-2xl">
+                          {rec.cupom_tipo === 'porcentagem' ? `${rec.cupom_valor}%` : `R$ ${rec.cupom_valor}`}
+                        </span>
+                        <span className="text-xs uppercase tracking-widest opacity-80 font-bold mt-1">Desconto</span>
+                      </div>
+                    ) : (
+                      <img src={rec.imagem_url} alt={rec.nome} className="w-full h-full object-cover" />
+                    )}
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 backdrop-blur-sm">
                       <button
                         onClick={() => handleEdit(rec)}
@@ -480,39 +494,85 @@ export default function AdminFidelidade() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6 flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              {/* Imagem */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Imagem da Recompensa
-                </label>
-                <div className="flex items-center gap-4">
-                  {imagePreview ? (
-                    <div className="relative w-32 h-32 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden group">
-                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => { setImagePreview(''); setImageFile(null); }}
-                        className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
-                      >
-                        <Trash2 className="w-6 h-6" />
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 flex flex-col items-center justify-center text-gray-500 hover:text-vanta-blue hover:border-vanta-blue hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer transition-colors">
-                      <ImageIcon className="w-8 h-8 mb-2" />
-                      <span className="text-xs font-medium">Fazer Upload</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="hidden"
-                      />
-                    </label>
-                  )}
-                </div>
-              </div>
-
               <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Tipo de Recompensa
+                  </label>
+                  <select
+                    value={formData.tipo}
+                    onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-vanta-blue focus:border-transparent outline-none transition-all dark:text-white"
+                  >
+                    <option value="produto">Produto Físico / Brinde</option>
+                    <option value="cupom">Cupom de Desconto Exclusivo</option>
+                  </select>
+                </div>
+
+                {formData.tipo === 'cupom' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Tipo do Desconto
+                      </label>
+                      <select
+                        value={formData.cupom_tipo}
+                        onChange={(e) => setFormData({ ...formData, cupom_tipo: e.target.value })}
+                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-vanta-blue focus:border-transparent outline-none transition-all dark:text-white"
+                      >
+                        <option value="fixo">Valor Fixo (R$)</option>
+                        <option value="porcentagem">Porcentagem (%)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Valor do Desconto
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={formData.cupom_valor}
+                        onChange={(e) => setFormData({ ...formData, cupom_valor: e.target.value })}
+                        placeholder={formData.cupom_tipo === 'porcentagem' ? 'Ex: 10' : 'Ex: 50.00'}
+                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-vanta-blue focus:border-transparent outline-none transition-all dark:text-white"
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {formData.tipo === 'produto' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Imagem da Recompensa
+                    </label>
+                    <div className="flex items-center gap-4">
+                      {imagePreview ? (
+                        <div className="relative w-32 h-32 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden group">
+                          <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => { setImagePreview(''); setImageFile(null); }}
+                            className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
+                          >
+                            <Trash2 className="w-6 h-6" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 flex flex-col items-center justify-center text-gray-500 hover:text-vanta-blue hover:border-vanta-blue hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer transition-colors">
+                          <ImageIcon className="w-8 h-8 mb-2" />
+                          <span className="text-xs font-medium">Fazer Upload</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Nome da Recompensa

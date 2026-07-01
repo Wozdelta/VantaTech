@@ -1,8 +1,9 @@
 import { useAuth } from '../contexts/AuthContext';
-import { Award, Star, Gift, TrendingUp, Copy, CheckCircle2, Share2, Loader2, Lock, LayoutGrid, List } from 'lucide-react';
+import { Copy, Gift, Star, Target, CheckCircle2, Share2, Award, Crown, Diamond, LayoutGrid, List, Lock, Check, Medal, Trophy, Loader2, Ticket, TrendingUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useAlert } from '../contexts/AlertContext';
 
 type Nivel = {
   id: string;
@@ -19,35 +20,50 @@ type Recompensa = {
   imagem_url: string;
   ativo: boolean;
   nivel_id: string | null;
+  cupom_valor?: number | null;
+  cupom_tipo?: string | null;
+};
+
+type Historico = {
+  id: string;
+  tipo: 'entrada' | 'saida';
+  quantidade: number;
+  descricao: string;
+  created_at: string;
 };
 
 export default function Fidelidade() {
-  const { user, perfil } = useAuth();
+  const { user, perfil, refreshPerfil } = useAuth();
+  const { showAlert } = useAlert();
   const [copied, setCopied] = useState(false);
   const [niveis, setNiveis] = useState<Nivel[]>([]);
   const [recompensas, setRecompensas] = useState<Recompensa[]>([]);
+  const [historico, setHistorico] = useState<Historico[]>([]);
   const [loading, setLoading] = useState(true);
+  const [resgatandoId, setResgatandoId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'detailed' | 'minimal'>('detailed');
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const { data: niveisData, error: niveisError } = await supabase
-          .from('niveis_fidelidade')
-          .select('*')
-          .order('pontos_minimos', { ascending: true });
+        const [
+          { data: niveisData, error: niveisError },
+          { data: recData, error: recError },
+          { data: histData, error: histError }
+        ] = await Promise.all([
+          supabase.from('niveis_fidelidade').select('*').order('pontos_minimos', { ascending: true }),
+          supabase.from('recompensas').select('*').eq('ativo', true).order('pontos', { ascending: true }),
+          supabase.from('historico_pontos').select('*').eq('user_id', user!.id).order('created_at', { ascending: false }).limit(20)
+        ]);
           
         if (niveisError) throw niveisError;
         setNiveis(niveisData || []);
 
-        const { data: recData, error: recError } = await supabase
-          .from('recompensas')
-          .select('*')
-          .eq('ativo', true)
-          .order('pontos', { ascending: true });
-        
         if (recError) throw recError;
         setRecompensas(recData || []);
+
+        if (histError) console.error('Erro ao buscar histórico:', histError);
+        setHistorico(histData || []);
       } catch (error) {
         console.error('Erro ao carregar dados de fidelidade:', error);
       } finally {
@@ -78,13 +94,14 @@ export default function Fidelidade() {
   }
 
   const pontosAtuais = perfil?.pontos || 0;
+  const pontosAcumulados = perfil?.pontos_acumulados || 0;
   
   let nivelAtual = niveis.length > 0 ? niveis[0] : null;
   let proximoNivel = null;
   
   if (niveis.length > 0) {
     for (let i = 0; i < niveis.length; i++) {
-      if (pontosAtuais >= niveis[i].pontos_minimos) {
+      if (pontosAcumulados >= niveis[i].pontos_minimos) {
         nivelAtual = niveis[i];
         proximoNivel = niveis[i + 1] || null;
       }
@@ -93,7 +110,7 @@ export default function Fidelidade() {
 
   const nivelNome = nivelAtual?.nome || 'Bronze';
   const isMaxLevel = !proximoNivel;
-  const progressPercentage = isMaxLevel ? 100 : Math.min(100, (pontosAtuais / (proximoNivel?.pontos_minimos || 1)) * 100);
+  const progressPercentage = isMaxLevel ? 100 : Math.min(100, (pontosAcumulados / (proximoNivel?.pontos_minimos || 1)) * 100);
   
   const affiliateLink = `https://vantatech-one.vercel.app/?ref=${user.id}`;
 
@@ -101,6 +118,79 @@ export default function Fidelidade() {
     navigator.clipboard.writeText(affiliateLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleResgatar = async (recompensa: Recompensa) => {
+    if (pontosAtuais < recompensa.pontos) {
+      showAlert({ title: 'Pontos Insuficientes', message: 'Você não tem saldo suficiente de VantaCoins para resgatar.', type: 'warning' });
+      return;
+    }
+    
+    setResgatandoId(recompensa.id);
+    try {
+      if (recompensa.cupom_valor && recompensa.cupom_tipo) {
+        // Resgate de Cupom (Direto, sem cupom base)
+        const novoCodigo = `R${Math.random().toString(36).substring(2, 6).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+        
+        const novoCupom = {
+          codigo: novoCodigo,
+          tipo_desconto: recompensa.cupom_tipo,
+          valor_desconto: recompensa.cupom_valor,
+          quantidade_disponivel: 1, 
+          ativo: true,
+          user_id: user?.id,
+          categoria_nome: null,
+          valor_minimo: null,
+          valor_maximo: null,
+          nivel_id: null
+        };
+        
+        const { error: insertError } = await supabase.from('cupons').insert(novoCupom);
+        if (insertError) throw insertError;
+        
+        const novosPontos = pontosAtuais - recompensa.pontos;
+        await supabase.from('perfis').update({ pontos: novosPontos }).eq('id', user?.id);
+        
+        await supabase.from('historico_pontos').insert({
+          user_id: user?.id,
+          tipo: 'saida',
+          quantidade: recompensa.pontos,
+          descricao: `Resgate: ${recompensa.nome}`
+        });
+
+        // Atualizar lista
+        const { data: hData } = await supabase.from('historico_pontos').select('*').eq('user_id', user?.id).order('created_at', { ascending: false }).limit(20);
+        if (hData) setHistorico(hData);
+        
+        await refreshPerfil();
+        showAlert({ title: 'Resgate Concluído!', message: `Você ganhou o cupom! Seu código é ${novoCodigo} e já está salvo na sua aba Meus Cupons.`, type: 'success' });
+      } else {
+        // Produto físico -> Redirecionar WhatsApp
+        const novosPontos = pontosAtuais - recompensa.pontos;
+        await supabase.from('perfis').update({ pontos: novosPontos }).eq('id', user?.id);
+        
+        await supabase.from('historico_pontos').insert({
+          user_id: user?.id,
+          tipo: 'saida',
+          quantidade: recompensa.pontos,
+          descricao: `Resgate: ${recompensa.nome}`
+        });
+
+        const { data: hData } = await supabase.from('historico_pontos').select('*').eq('user_id', user?.id).order('created_at', { ascending: false }).limit(20);
+        if (hData) setHistorico(hData);
+
+        await refreshPerfil();
+        
+        showAlert({ title: 'Resgatado!', message: 'Seus pontos foram descontados. Vamos abrir o WhatsApp para combinar a entrega!', type: 'success' });
+        const text = encodeURIComponent(`Olá! Acabei de resgatar a recompensa "${recompensa.nome}" (Custo: ${recompensa.pontos} pts) no site.`);
+        window.open(`https://wa.me/5516997700430?text=${text}`, '_blank');
+      }
+    } catch (err) {
+      console.error(err);
+      showAlert({ title: 'Erro', message: 'Houve um erro ao resgatar a recompensa.', type: 'error' });
+    } finally {
+      setResgatandoId(null);
+    }
   };
 
   return (
@@ -137,7 +227,7 @@ export default function Fidelidade() {
                 {isMaxLevel ? (
                   <span className="text-vanta-orange font-bold">Nível Máximo Atingido!</span>
                 ) : (
-                  <span className="text-gray-300">Faltam {proximoNivel.pontos_minimos - pontosAtuais} pts para {proximoNivel.nome}</span>
+                  <span className="text-gray-300">Faltam {proximoNivel.pontos_minimos - pontosAcumulados} pts para {proximoNivel.nome}</span>
                 )}
               </div>
               <div className="h-3 w-full bg-white/20 rounded-full overflow-hidden">
@@ -180,9 +270,10 @@ export default function Fidelidade() {
         </div>
       </div>
 
-      {/* Grid Inferior: Como Funciona */}
-      <div className="mb-12">
-        <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-soft">
+      {/* Grid Inferior: Como Funciona e Histórico */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+        {/* Como Funciona */}
+        <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-soft h-full">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
               <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -192,6 +283,33 @@ export default function Fidelidade() {
           <p className="text-gray-600 dark:text-gray-400 leading-relaxed text-lg">
             A cada R$ 1,00 gasto na loja, você ou quem comprar pelo seu link acumula 1 VantaCoin. 
           </p>
+        </div>
+
+        {/* Histórico de Pontos */}
+        <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-soft h-full flex flex-col">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
+              <List className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <h3 className="font-bold text-xl text-gray-900 dark:text-white">Seu Extrato</h3>
+          </div>
+          <div className="flex-1 overflow-y-auto pr-2 space-y-3 max-h-[250px] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-gray-200 dark:[&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar-track]:bg-transparent">
+            {historico.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">Nenhuma movimentação ainda.</p>
+            ) : (
+              historico.map(item => (
+                <div key={item.id} className="flex justify-between items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors border border-gray-100 dark:border-gray-700/50">
+                  <div className="flex flex-col min-w-0 pr-4">
+                    <span className="font-medium text-gray-900 dark:text-white text-sm line-clamp-1">{item.descricao}</span>
+                    <span className="text-xs text-gray-500">{new Date(item.created_at).toLocaleDateString('pt-BR')}</span>
+                  </div>
+                  <div className={`font-black whitespace-nowrap ${item.tipo === 'entrada' ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
+                    {item.tipo === 'entrada' ? '+' : '-'}{item.quantidade} <span className="text-xs font-bold opacity-70">pts</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
 
@@ -243,14 +361,24 @@ export default function Fidelidade() {
                 {viewMode === 'detailed' ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     {recsNivel.map(rec => (
-                      <div key={rec.id} className={`group bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-3xl overflow-hidden shadow-soft transition-all ${isLocked ? 'opacity-60 grayscale' : 'hover:-translate-y-2 hover:shadow-2xl hover:border-vanta-orange/30'}`}>
+                      <div key={rec.id} className={`group bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-3xl overflow-hidden shadow-soft transition-all flex flex-col h-full ${isLocked ? 'opacity-60 grayscale' : 'hover:-translate-y-2 hover:shadow-2xl hover:border-vanta-orange/30'}`}>
                         <div className="aspect-square relative bg-gray-50 dark:bg-gray-900 overflow-hidden">
                           {rec.badge && (
-                            <span className={`absolute top-4 left-4 z-10 px-3 py-1 text-[11px] uppercase tracking-wider font-bold rounded-lg shadow-sm backdrop-blur-md border border-white/20 ${isLocked ? 'bg-gray-300/80 text-gray-700' : 'bg-vanta-orange/90 text-white'}`}>
+                            <span className={`absolute top-4 left-4 z-10 px-3 py-1 text-[11px] uppercase tracking-wider font-bold rounded-lg shadow-sm backdrop-blur-md border border-white/20 ${isLocked ? 'bg-gray-300/80 text-gray-700' : (rec.cupom_valor ? 'bg-white text-vanta-orange shadow-xl border-none' : 'bg-vanta-orange/90 text-white')}`}>
                               {rec.badge}
                             </span>
                           )}
-                          <img src={rec.imagem_url} alt={rec.nome} className={`w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal transition-transform duration-500 ${!isLocked && 'group-hover:scale-110'}`} />
+                          {rec.cupom_valor ? (
+                            <div className="w-full h-full bg-gradient-to-br from-vanta-orange to-orange-600 flex flex-col items-center justify-center text-white p-4">
+                              <Ticket className={`w-12 h-12 mb-2 opacity-80 transition-transform duration-500 ${!isLocked && 'group-hover:scale-110'}`} />
+                              <span className="font-black text-2xl text-center leading-tight">
+                                {rec.cupom_tipo === 'porcentagem' ? `${rec.cupom_valor}%` : `R$ ${rec.cupom_valor}`}
+                              </span>
+                              <span className="text-xs uppercase tracking-widest opacity-80 font-bold mt-1 text-center">Desconto</span>
+                            </div>
+                          ) : (
+                            <img src={rec.imagem_url} alt={rec.nome} className={`w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal transition-transform duration-500 ${!isLocked && 'group-hover:scale-110'}`} />
+                          )}
                           {isLocked && (
                             <div className="absolute inset-0 bg-white/30 dark:bg-black/40 backdrop-blur-[3px] flex items-center justify-center">
                               <div className="bg-white/90 dark:bg-gray-800/90 p-4 rounded-full shadow-xl border border-gray-200 dark:border-gray-700 backdrop-blur-md">
@@ -259,7 +387,7 @@ export default function Fidelidade() {
                             </div>
                           )}
                         </div>
-                        <div className="p-6 relative bg-white dark:bg-gray-800">
+                        <div className="p-6 relative bg-white dark:bg-gray-800 flex flex-col flex-1">
                           <h3 className={`font-bold text-lg mb-4 line-clamp-2 leading-tight ${isLocked ? 'text-gray-500' : 'text-gray-900 dark:text-white group-hover:text-vanta-orange transition-colors'}`}>
                             {rec.nome}
                           </h3>
@@ -269,6 +397,26 @@ export default function Fidelidade() {
                               {rec.pontos.toLocaleString('pt-BR')} <span className="text-sm font-bold opacity-70">pts</span>
                             </span>
                           </div>
+                          
+                          <button
+                            onClick={() => !isLocked && handleResgatar(rec)}
+                            disabled={isLocked || resgatandoId === rec.id}
+                            className={`w-full mt-4 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all duration-300
+                              ${isLocked ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700/50 dark:text-gray-500' :
+                              resgatandoId === rec.id ? 'bg-vanta-orange/50 text-white cursor-wait' :
+                              pontosAtuais >= rec.pontos ? 'bg-vanta-orange text-white shadow-md shadow-vanta-orange/20 hover:bg-orange-600 hover:shadow-lg hover:-translate-y-0.5' :
+                              'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-800'}`}
+                          >
+                            {resgatandoId === rec.id ? (
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : isLocked ? (
+                              'Bloqueado'
+                            ) : pontosAtuais >= rec.pontos ? (
+                              'Resgatar Agora'
+                            ) : (
+                              'Pontos Insuficientes'
+                            )}
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -278,7 +426,16 @@ export default function Fidelidade() {
                     {recsNivel.map(rec => (
                       <div key={rec.id} className={`flex items-center gap-4 p-4 bg-white dark:bg-gray-800 rounded-2xl border ${isLocked ? 'border-gray-200 dark:border-gray-700 opacity-60 grayscale' : 'border-gray-100 dark:border-gray-700 hover:border-vanta-orange/40 hover:shadow-lg transition-all group cursor-default'}`}>
                         <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-900 flex-shrink-0 border border-gray-100 dark:border-gray-800">
-                          <img src={rec.imagem_url} alt={rec.nome} className={`w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal transition-transform duration-500 ${!isLocked && 'group-hover:scale-110'}`} />
+                          {rec.cupom_valor ? (
+                            <div className="w-full h-full bg-gradient-to-br from-vanta-orange to-orange-600 flex flex-col items-center justify-center text-white p-2">
+                              <Ticket className="w-6 h-6 mb-1 opacity-80" />
+                              <span className="font-black text-sm text-center leading-none">
+                                {rec.cupom_tipo === 'porcentagem' ? `${rec.cupom_valor}%` : `R$ ${rec.cupom_valor}`}
+                              </span>
+                            </div>
+                          ) : (
+                            <img src={rec.imagem_url} alt={rec.nome} className={`w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal transition-transform duration-500 ${!isLocked && 'group-hover:scale-110'}`} />
+                          )}
                           {isLocked && (
                              <div className="absolute inset-0 bg-white/40 dark:bg-black/50 backdrop-blur-[2px] flex items-center justify-center">
                                <Lock className="w-5 h-5 text-gray-600 dark:text-gray-300" />
@@ -304,6 +461,28 @@ export default function Fidelidade() {
                             <span className={`font-black text-xl ${isLocked ? 'text-gray-400' : 'text-vanta-orange'}`}>{rec.pontos.toLocaleString('pt-BR')}</span>
                           </div>
                           <span className={`text-[11px] font-bold uppercase tracking-wider ${isLocked ? 'text-gray-400' : 'text-gray-500 dark:text-gray-400'}`}>VantaCoins</span>
+                        </div>
+                        
+                        <div className="pl-4 border-l border-gray-100 dark:border-gray-700 ml-auto">
+                           <button
+                            onClick={() => !isLocked && handleResgatar(rec)}
+                            disabled={isLocked || resgatandoId === rec.id}
+                            className={`px-4 py-2.5 rounded-xl font-bold flex items-center justify-center transition-all duration-300 min-w-[120px]
+                              ${isLocked ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700/50 dark:text-gray-500' :
+                              resgatandoId === rec.id ? 'bg-vanta-orange/50 text-white cursor-wait' :
+                              pontosAtuais >= rec.pontos ? 'bg-vanta-orange text-white shadow-md shadow-vanta-orange/20 hover:bg-orange-600 hover:shadow-lg hover:-translate-y-0.5' :
+                              'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-800'}`}
+                          >
+                            {resgatandoId === rec.id ? (
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : isLocked ? (
+                              'Bloqueado'
+                            ) : pontosAtuais >= rec.pontos ? (
+                              'Resgatar'
+                            ) : (
+                              'Sem saldo'
+                            )}
+                          </button>
                         </div>
                       </div>
                     ))}

@@ -56,6 +56,17 @@ export default function Login() {
           if (error.message.includes('User already registered')) throw new Error('Este e-mail já está em uso.');
           throw new Error(error.message);
         }
+        
+        // Anti-Fraude: Salvar o afiliado_id no perfil para a primeira compra
+        if (data?.user) {
+          const afiliadoId = localStorage.getItem('afiliado_id');
+          if (afiliadoId && afiliadoId !== data.user.id) {
+            // Tenta dar update no perfil recém criado pela trigger do supabase
+            await supabase.from('perfis').update({ indicado_por: afiliadoId }).eq('id', data.user.id);
+          }
+          localStorage.removeItem('afiliado_id');
+        }
+
         navigate('/');
 
       } else if (view === 'forgot_email') {
