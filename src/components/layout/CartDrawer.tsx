@@ -361,11 +361,19 @@ export default function CartDrawer() {
         const payloadPedido: any = {
           user_id: user.id,
           total: finalTotal,
-          status: 'Pendente'
+          status: 'Pendente',
+          subtotal: cartTotal,
+          frete: frete,
+          forma_pagamento: pagamento,
+          desconto_pix: pixDiscount,
+          juros_cartao: interestValue,
+          parcelas: pagamento === 'Cartão de Crédito' ? parcelas : 1,
+          endereco_entrega: (endereco.cep || endereco.rua) ? endereco : null
         };
         
         if (cupomAplicado) {
           payloadPedido.cupom_id = cupomAplicado.id;
+          payloadPedido.desconto_cupom = cupomDiscount;
         }
 
         const { data: pedido, error: errorPedido } = await supabase
@@ -450,11 +458,6 @@ export default function CartDrawer() {
       try {
         const novosUsos = cupomAplicado.quantidade_disponivel - 1;
         const payload: any = { quantidade_disponivel: novosUsos };
-        
-        // Se acabou de esgotar, seta a expiração para AGORA, para a vassoura limpar em 1 hora
-        if (novosUsos <= 0) {
-          payload.data_expiracao = new Date().toISOString();
-        }
 
         await supabase
           .from('cupons')

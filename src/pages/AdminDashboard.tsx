@@ -15,7 +15,7 @@ import AdminCupons from '../components/admin/AdminCupons';
 
 export default function AdminDashboard() {
   const { user, perfil, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'categories' | 'notifications' | 'attributes' | 'sales_history' | 'fidelidade' | 'cupons'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'products' | 'categories' | 'notifications' | 'attributes' | 'sales_history' | 'fidelidade' | 'cupons'>('overview');
   const [receitaMensal, setReceitaMensal] = useState(0);
   const [margemLucro, setMargemLucro] = useState(0);
   const [totalPedidos, setTotalPedidos] = useState(0);
@@ -64,7 +64,7 @@ export default function AdminDashboard() {
               const proporcao = totalProdutos > 0 ? ((item.produto_preco * item.quantidade) / totalProdutos) : 0;
               const descontoItem = descontoPedido * proporcao;
               const vendaRealItem = (item.produto_preco * item.quantidade) - descontoItem;
-              
+
               totalVendas += vendaRealItem;
               totalLucro += vendaRealItem - (custo * item.quantidade);
             });
@@ -77,12 +77,12 @@ export default function AdminDashboard() {
         const { data: todosPedidos } = await supabase.from('pedidos').select('criado_em');
         if (todosPedidos) {
           setTotalPedidos(todosPedidos.length);
-          
+
           const hoje = new Date();
           const ontem = new Date();
           ontem.setDate(hoje.getDate() - 1);
-          
-          const inicioHoje = new Date(hoje.setHours(0,0,0,0)).getTime();
+
+          const inicioHoje = new Date(hoje.setHours(0, 0, 0, 0)).getTime();
 
           const totalPedidosHoje = todosPedidos.length;
           const totalPedidosAteOntem = todosPedidos.filter(p => new Date(p.criado_em).getTime() < inicioHoje).length;
@@ -100,12 +100,12 @@ export default function AdminDashboard() {
         const { data: todosClientes } = await supabase.from('perfis').select('*');
         if (todosClientes) {
           setTotalClientes(todosClientes.length);
-          
+
           const hoje = new Date();
           const ontem = new Date();
           ontem.setDate(hoje.getDate() - 1);
-          
-          const inicioHoje = new Date(hoje.setHours(0,0,0,0)).getTime();
+
+          const inicioHoje = new Date(hoje.setHours(0, 0, 0, 0)).getTime();
 
           const totalClientesHoje = todosClientes.length;
           const totalClientesAteOntem = todosClientes.filter(c => {
@@ -126,7 +126,7 @@ export default function AdminDashboard() {
         console.error('Erro ao buscar receita:', err);
       }
     }
-    
+
     if (activeTab === 'overview') {
       fetchReceita();
     }
@@ -185,86 +185,77 @@ export default function AdminDashboard() {
               Gerencie seus produtos, menu, clientes e notificações.
             </p>
           </div>
-          
+
           <div className="flex overflow-x-auto justify-start md:justify-center bg-white dark:bg-gray-800 rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-700 no-scrollbar w-full">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors ${
-                activeTab === 'overview' 
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' 
+              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors ${activeTab === 'overview'
+                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
                   : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-              }`}
+                }`}
             >
               Visão Geral
             </button>
             <button
-              onClick={() => setActiveTab('sales_history')}
-              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
-                activeTab === 'sales_history' 
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' 
+              onClick={() => setActiveTab('orders')}
+              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${activeTab === 'orders'
+                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
                   : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-              }`}
+                }`}
             >
-              <History className="w-4 h-4" /> Histórico de Vendas
+              <ShoppingBag className="w-4 h-4" /> Pedidos
             </button>
             <button
               onClick={() => setActiveTab('products')}
-              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
-                activeTab === 'products' 
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' 
+              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${activeTab === 'products'
+                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
                   : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-              }`}
+                }`}
             >
               <Package className="w-4 h-4" /> Produtos
             </button>
             <button
               onClick={() => setActiveTab('categories')}
-              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
-                activeTab === 'categories' 
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' 
+              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${activeTab === 'categories'
+                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
                   : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-              }`}
+                }`}
             >
               <ListOrdered className="w-4 h-4" /> Menu do Site
             </button>
             <button
               onClick={() => setActiveTab('notifications')}
-              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
-                activeTab === 'notifications' 
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' 
+              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${activeTab === 'notifications'
+                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
                   : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-              }`}
+                }`}
             >
               <BellRing className="w-4 h-4" /> Disparar Avisos
             </button>
             <button
               onClick={() => setActiveTab('attributes')}
-              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
-                activeTab === 'attributes' 
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' 
+              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${activeTab === 'attributes'
+                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
                   : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-              }`}
+                }`}
             >
               Atributos
             </button>
-
             <button
               onClick={() => setActiveTab('fidelidade')}
-              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
-                activeTab === 'fidelidade' 
-                  ? 'bg-vanta-orange/10 text-vanta-orange dark:bg-vanta-orange/20 dark:text-orange-400' 
+              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${activeTab === 'fidelidade'
+                  ? 'bg-vanta-orange/10 text-vanta-orange dark:bg-vanta-orange/20 dark:text-orange-400'
                   : 'text-gray-500 hover:text-vanta-orange dark:text-gray-400 dark:hover:text-orange-400'
-              }`}
+                }`}
             >
               <Award className="w-4 h-4" /> Fidelidade
             </button>
             <button
               onClick={() => setActiveTab('cupons')}
-              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
-                activeTab === 'cupons' 
-                  ? 'bg-vanta-blue/10 text-vanta-blue dark:bg-blue-900/20 dark:text-blue-400' 
+              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${activeTab === 'cupons'
+                  ? 'bg-vanta-blue/10 text-vanta-blue dark:bg-blue-900/20 dark:text-blue-400'
                   : 'text-gray-500 hover:text-vanta-blue dark:text-gray-400 dark:hover:text-blue-400'
-              }`}
+                }`}
             >
               <Tag className="w-4 h-4" /> Cupons
             </button>
@@ -296,9 +287,8 @@ export default function AdminDashboard() {
                     </div>
                     <div className="bg-gray-50 dark:bg-gray-900/50 px-5 py-3">
                       <div className="text-sm">
-                        <span className={`font-medium ${
-                          item.changeType === 'positive' ? 'text-green-600 dark:text-green-400' : 'text-gray-500'
-                        }`}>
+                        <span className={`font-medium ${item.changeType === 'positive' ? 'text-green-600 dark:text-green-400' : 'text-gray-500'
+                          }`}>
                           {item.change}
                         </span>
                         <span className="text-gray-500 dark:text-gray-400 ml-2">desde ontem</span>
@@ -319,12 +309,16 @@ export default function AdminDashboard() {
           </>
         )}
 
-
+        {activeTab === 'orders' && (
+          <div className="space-y-8">
+            <AdminOrders />
+            <AdminSalesHistory />
+          </div>
+        )}
         {activeTab === 'products' && <AdminProducts />}
         {activeTab === 'categories' && <AdminCategories />}
         {activeTab === 'notifications' && <AdminNotifications />}
         {activeTab === 'attributes' && <AdminAttributes />}
-        {activeTab === 'sales_history' && <AdminSalesHistory />}
         {activeTab === 'fidelidade' && <AdminFidelidade />}
         {activeTab === 'cupons' && <AdminCupons />}
       </div>

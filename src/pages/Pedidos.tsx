@@ -98,6 +98,14 @@ export default function Pedidos() {
 
       if (error) throw error;
       
+      const pedido = pedidos.find(p => p.id === pedidoId);
+      if (pedido?.cupom_id) {
+        const { data: cupom } = await supabase.from('cupons').select('quantidade_disponivel').eq('id', pedido.cupom_id).single();
+        if (cupom && cupom.quantidade_disponivel !== null) {
+          await supabase.from('cupons').update({ quantidade_disponivel: cupom.quantidade_disponivel + 1 }).eq('id', pedido.cupom_id);
+        }
+      }
+      
       // Atualizar lista local
       setPedidos(pedidos.map(p => p.id === pedidoId ? { ...p, status: 'Cancelado pelo cliente' } : p));
       showAlert({ title: 'Sucesso', message: 'Pedido cancelado com sucesso.', type: 'success' });

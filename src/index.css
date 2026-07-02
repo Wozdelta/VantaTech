@@ -88,3 +88,12 @@
 .bg-gradient-primary {
   @apply bg-gradient-to-r from-vanta-darkblue via-vanta-blue to-vanta-orange hover:opacity-90 transition-opacity;
 }
+
+/* Ocultar barra de rolagem em todo o site (mas mantendo a funcionalidade de scroll) */
+::-webkit-scrollbar {
+  display: none;
+}
+* {
+  -ms-overflow-style: none; /* IE e Edge */
+  scrollbar-width: none; /* Firefox */
+}

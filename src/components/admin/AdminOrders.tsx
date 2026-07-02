@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
-import { Package, ChevronDown, CheckCircle, Truck, XCircle, Clock, Loader2, ExternalLink, Trash2, Check, Search } from 'lucide-react';
+import { Package, ChevronDown, CheckCircle, Truck, XCircle, Clock, Loader2, ExternalLink, Trash2, Check, Search, FileText, X, DollarSign, CreditCard, Tag } from 'lucide-react';
 
 interface ItemPedido {
   id: string;
@@ -35,6 +35,7 @@ export default function AdminOrders() {
   const [searchTerm, setSearchTerm] = useState('');
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<Pedido | null>(null);
 
   useEffect(() => {
     fetchOrders();
@@ -46,7 +47,8 @@ export default function AdminOrders() {
         .from('pedidos')
         .select(`
           *,
-          itens_pedido (*)
+          itens_pedido (*),
+          cupons (codigo)
         `)
         .order('criado_em', { ascending: false });
 
@@ -197,6 +199,30 @@ export default function AdminOrders() {
         }
       }
 
+      // Automação do Cupom
+      const wasCancelled = oldStatus === 'Cancelado' || oldStatus === 'Cancelado pelo cliente';
+      const isNowCancelled = newStatus === 'Cancelado' || newStatus === 'Cancelado pelo cliente';
+
+      if (isNowCancelled && !wasCancelled) {
+        // Restaurar cupom
+        const pedido = orders.find(p => p.id === pedidoId);
+        if (pedido?.cupom_id) {
+          const { data: cupom } = await supabase.from('cupons').select('quantidade_disponivel').eq('id', pedido.cupom_id).single();
+          if (cupom && cupom.quantidade_disponivel !== null) {
+            await supabase.from('cupons').update({ quantidade_disponivel: cupom.quantidade_disponivel + 1 }).eq('id', pedido.cupom_id);
+          }
+        }
+      } else if (!isNowCancelled && wasCancelled) {
+        // Descontar cupom novamente
+        const pedido = orders.find(p => p.id === pedidoId);
+        if (pedido?.cupom_id) {
+          const { data: cupom } = await supabase.from('cupons').select('quantidade_disponivel').eq('id', pedido.cupom_id).single();
+          if (cupom && cupom.quantidade_disponivel !== null && cupom.quantidade_disponivel > 0) {
+            await supabase.from('cupons').update({ quantidade_disponivel: cupom.quantidade_disponivel - 1 }).eq('id', pedido.cupom_id);
+          }
+        }
+      }
+
       await fetchOrders();
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
@@ -224,6 +250,15 @@ export default function AdminOrders() {
     
     setUpdating(pedidoId);
     try {
+      // Restaurar cupom se houver
+      const pedido = orders.find(p => p.id === pedidoId);
+      if (pedido?.cupom_id) {
+        const { data: cupom } = await supabase.from('cupons').select('quantidade_disponivel').eq('id', pedido.cupom_id).single();
+        if (cupom && cupom.quantidade_disponivel !== null) {
+          await supabase.from('cupons').update({ quantidade_disponivel: cupom.quantidade_disponivel + 1 }).eq('id', pedido.cupom_id);
+        }
+      }
+
       // Excluir itens primeiro caso não tenha delete em cascata configurado
       await supabase.from('itens_pedido').delete().eq('pedido_id', pedidoId);
       
@@ -502,6 +537,14 @@ export default function AdminOrders() {
                       )}
                       
                       <button
+                        onClick={() => setSelectedOrder(pedido)}
+                        className="p-1.5 text-gray-400 hover:text-vanta-blue hover:bg-vanta-blue/10 rounded-lg transition-colors"
+                        title="Ver Detalhes do Pedido"
+                      >
+                        <FileText className="w-4 h-4" />
+                      </button>
+
+                      <button
                         onClick={() => deleteOrder(pedido.id)}
                         disabled={updating === pedido.id}
                         className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
@@ -517,6 +560,144 @@ export default function AdminOrders() {
           </tbody>
         </table>
       </div>
+
+      {selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-vanta-blue" />
+                  Detalhes do Pedido #{selectedOrder.numero}
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Feito em {new Date(selectedOrder.criado_em).toLocaleString('pt-BR')} às {new Date(selectedOrder.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+              <button 
+                onClick={() => setSelectedOrder(null)}
+                className="p-2 text-gray-400 hover:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[60vh] space-y-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              
+              {/* Informações do Cliente */}
+              <div>
+                <h4 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-3">Informações Adicionais</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-soft">
+                    <p className="text-xs text-gray-500 mb-1 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> Status Atual</p>
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${getStatusColor(selectedOrder.status)}`}>
+                      {getStatusIcon(selectedOrder.status)}
+                      {selectedOrder.status}
+                    </span>
+                  </div>
+                  <div className="bg-vanta-blue/5 dark:bg-vanta-blue/10 p-4 rounded-xl border border-vanta-blue/20 shadow-soft">
+                    <p className="text-xs text-vanta-blue dark:text-blue-400 mb-1 flex items-center gap-1.5"><DollarSign className="w-3.5 h-3.5" /> Total Final</p>
+                    <p className="text-xl font-black text-vanta-blue">
+                      R$ {selectedOrder.total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+
+                  {/* Subtotal */}
+                  {(selectedOrder as any).subtotal !== undefined && (selectedOrder as any).subtotal !== null && (
+                    <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-soft">
+                      <p className="text-xs text-gray-500 mb-1">Subtotal (Produtos)</p>
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">
+                        R$ {Number((selectedOrder as any).subtotal).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Frete */}
+                  {(selectedOrder as any).frete !== undefined && (selectedOrder as any).frete !== null && (
+                    <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-soft">
+                      <p className="text-xs text-gray-500 mb-1 flex items-center gap-1.5"><Truck className="w-3.5 h-3.5" /> Frete</p>
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">
+                        {Number((selectedOrder as any).frete) === 0 ? <span className="text-green-500">Grátis</span> : `R$ ${Number((selectedOrder as any).frete).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Pagamento */}
+                  {(selectedOrder as any).forma_pagamento && (
+                    <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-soft">
+                      <p className="text-xs text-gray-500 mb-1 flex items-center gap-1.5"><CreditCard className="w-3.5 h-3.5" /> Pagamento</p>
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">
+                        {(selectedOrder as any).forma_pagamento} {(selectedOrder as any).parcelas > 1 ? `(${(selectedOrder as any).parcelas}x)` : ''}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Desconto PIX */}
+                  {(selectedOrder as any).desconto_pix > 0 && (
+                    <div className="bg-green-50 dark:bg-green-900/10 p-4 rounded-xl border border-green-100 dark:border-green-900/30 shadow-soft">
+                      <p className="text-xs text-green-600 dark:text-green-400 mb-1 font-bold">Desconto PIX</p>
+                      <p className="text-sm font-bold text-green-600 dark:text-green-400">
+                        - R$ {Number((selectedOrder as any).desconto_pix).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Desconto Cupom */}
+                  {((selectedOrder as any).desconto_cupom > 0 || (selectedOrder as any).cupons?.codigo) && (
+                    <div className="bg-green-50 dark:bg-green-900/10 p-4 rounded-xl border border-green-100 dark:border-green-900/30 shadow-soft">
+                      <p className="text-xs text-green-600 dark:text-green-400 mb-1 font-bold flex items-center gap-1.5"><Tag className="w-3.5 h-3.5" /> Cupom {(selectedOrder as any).cupons?.codigo}</p>
+                      <p className="text-sm font-bold text-green-600 dark:text-green-400">
+                        {(selectedOrder as any).desconto_cupom > 0 ? `- R$ ${Number((selectedOrder as any).desconto_cupom).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'Aplicado'}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Juros Maquininha */}
+                  {(selectedOrder as any).juros_cartao > 0 && (
+                    <div className="bg-orange-50 dark:bg-orange-900/10 p-4 rounded-xl border border-orange-100 dark:border-orange-900/30 shadow-soft">
+                      <p className="text-xs text-orange-600 dark:text-orange-400 mb-1 font-bold">Taxa Maquininha</p>
+                      <p className="text-sm font-bold text-orange-600 dark:text-orange-400">
+                        + R$ {Number((selectedOrder as any).juros_cartao).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Itens do Pedido */}
+              <div>
+                <h4 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-3">Itens ({selectedOrder.itens_pedido?.length || 0})</h4>
+                <div className="space-y-3">
+                  {selectedOrder.itens_pedido?.map((item) => (
+                    <div key={item.id} className="flex items-center gap-4 bg-white dark:bg-gray-800 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
+                      <img src={item.imagem_url || '/placeholder.png'} alt={item.produto_nome} className="w-12 h-12 rounded-lg object-cover bg-gray-50" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{item.produto_nome}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-gray-900 dark:text-white">
+                          R$ {item.produto_preco?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
+                        </p>
+                        <p className="text-xs text-gray-500">Qtd: {item.quantidade}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+            
+            <div className="p-6 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex justify-end">
+              <button 
+                onClick={() => setSelectedOrder(null)}
+                className="px-6 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 font-bold rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                Fechar Detalhes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
