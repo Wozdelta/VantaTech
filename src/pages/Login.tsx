@@ -71,10 +71,13 @@ export default function Login() {
                 
               if (error || !perfilAtualizado || perfilAtualizado.length === 0) {
                 if (tentativas < 5) {
-                  setTimeout(() => tentarAtualizar(tentativas + 1), 500);
+                  setTimeout(() => tentarAtualizar(tentativas + 1), 1000); // 1 segundo
                 } else {
                   console.error("Falha ao vincular indicação", error);
+                  alert(`Erro ao vincular afiliado: ${error?.message || 'Perfil não encontrado'}. Por favor, contate o suporte.`);
                 }
+              } else {
+                console.log("Afiliado vinculado com sucesso:", perfilAtualizado);
               }
             };
             tentarAtualizar();
