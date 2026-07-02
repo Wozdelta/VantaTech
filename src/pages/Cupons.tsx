@@ -16,7 +16,7 @@ export default function Cupons() {
   const { user, perfil } = useAuth();
   const [niveis, setNiveis] = useState<any[]>([]);
 
-  const showCupons = settings.cupons_ativo || perfil?.cargo === 'Admin';
+  const showCupons = settings?.acesso_cupons === 'todos' || perfil?.cargo === 'Admin';
 
   useEffect(() => {
     fetchCupons();

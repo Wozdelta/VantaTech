@@ -45,7 +45,7 @@ export default function Fidelidade() {
   const [modalType, setModalType] = useState<'points' | 'history' | null>(null);
   const { settings } = useSettings();
 
-  const showFidelidade = settings.fidelidade_ativo || perfil?.cargo === 'Admin';
+  const showFidelidade = settings?.acesso_fidelidade === 'todos' || perfil?.cargo === 'Admin';
   const [viewMode, setViewMode] = useState<'detailed' | 'minimal'>('detailed');
 
   useEffect(() => {
