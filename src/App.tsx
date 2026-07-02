@@ -17,14 +17,37 @@ export default function App() {
   const location = useLocation();
   const { user } = useAuth();
 
+  // 1. Captura o ID do link quando acessa o site deslogado
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const ref = searchParams.get('ref');
-    // Só salva o afiliado se o usuário for novo (não estiver logado)
     if (ref && !user) {
       localStorage.setItem('afiliado_id', ref);
     }
   }, [location.search, user]);
+
+  // 2. Vincula o ID salvo logo após o usuário logar/cadastrar (Google ou Email)
+  useEffect(() => {
+    if (user) {
+      const afiliadoId = localStorage.getItem('afiliado_id');
+      if (afiliadoId) {
+        if (afiliadoId !== user.id) {
+          import('./lib/supabase').then(({ supabase }) => {
+            // Atualiza apenas se o perfil ainda não tiver indicação
+            supabase.from('perfis')
+              .update({ indicado_por: afiliadoId })
+              .eq('id', user.id)
+              .is('indicado_por', null)
+              .then(() => {
+                localStorage.removeItem('afiliado_id');
+              });
+          });
+        } else {
+          localStorage.removeItem('afiliado_id');
+        }
+      }
+    }
+  }, [user]);
 
   return (
     <AlertProvider>
