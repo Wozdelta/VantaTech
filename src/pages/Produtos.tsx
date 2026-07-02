@@ -4,7 +4,7 @@ import { useSettings } from '@/contexts/SettingsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import BlockScreen from '@/components/common/BlockScreen';
 import { supabase } from '@/lib/supabase';
-import { Loader2, Search } from 'lucide-react';
+import { Loader2, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import SidebarFilters from '@/components/home/SidebarFilters';
 import ProductCard from '@/components/home/ProductCard';
 
@@ -41,6 +41,13 @@ export default function Produtos() {
     PrecoMax: ''
   });
   const [searchTerm, setSearchTerm] = useState('');
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 12;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, activeFilters]);
 
   const [dbMarcas, setDbMarcas] = useState<string[]>([]);
   const [dbCategorias, setDbCategorias] = useState<string[]>([]);
@@ -132,6 +139,9 @@ export default function Produtos() {
     return true;
   });
 
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = filteredProducts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
   if (!showLoja) {
     return (
       <BlockScreen 
@@ -185,11 +195,69 @@ export default function Produtos() {
                 <Loader2 className="w-8 h-8 animate-spin text-vanta-blue" />
               </div>
             ) : filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filteredProducts.map(product => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {paginatedProducts.map(product => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+                
+                {totalPages > 1 && (
+                  <div className="mt-8 p-4 bg-gray-50/50 dark:bg-gray-800/50 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 border border-gray-100 dark:border-gray-800">
+                    <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                      Mostrando <span className="font-bold text-gray-900 dark:text-white">{((currentPage - 1) * ITEMS_PER_PAGE) + 1}</span> até <span className="font-bold text-gray-900 dark:text-white">{Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length)}</span> de <span className="font-bold text-gray-900 dark:text-white">{filteredProducts.length}</span> aparelhos
+                    </span>
+                    <div className="flex items-center gap-1 bg-white dark:bg-gray-900 p-1 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                      <button
+                        onClick={() => {
+                          setCurrentPage(prev => Math.max(prev - 1, 1));
+                          window.scrollTo({ top: 300, behavior: 'smooth' });
+                        }}
+                        disabled={currentPage === 1}
+                        className="p-1.5 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      
+                      <div className="flex items-center px-2 gap-1 border-x border-gray-100 dark:border-gray-800">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                          .filter(p => p === 1 || p === totalPages || Math.abs(currentPage - p) <= 1)
+                          .map((pageNum, index, array) => (
+                            <div key={`page-wrapper-${pageNum}`} className="flex items-center">
+                              {index > 0 && pageNum - array[index - 1] > 1 && (
+                                <span className="px-2 text-gray-400 dark:text-gray-500 font-bold">...</span>
+                              )}
+                              <button
+                                onClick={() => {
+                                  setCurrentPage(pageNum);
+                                  window.scrollTo({ top: 300, behavior: 'smooth' });
+                                }}
+                                className={`min-w-[32px] h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-all ${
+                                  currentPage === pageNum 
+                                    ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm' 
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800'
+                                }`}
+                              >
+                                {pageNum}
+                              </button>
+                            </div>
+                          ))}
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setCurrentPage(prev => Math.min(prev + 1, totalPages));
+                          window.scrollTo({ top: 300, behavior: 'smooth' });
+                        }}
+                        disabled={currentPage === totalPages}
+                        className="p-1.5 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-center py-20 bg-gray-50 dark:bg-gray-900/50 rounded-3xl border border-gray-100 dark:border-gray-800 border-dashed">
                 <div className="bg-white dark:bg-gray-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm">

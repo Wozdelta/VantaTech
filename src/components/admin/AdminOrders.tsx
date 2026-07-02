@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
-import { Package, ChevronDown, CheckCircle, Truck, XCircle, Clock, Loader2, ExternalLink, Trash2, Check, Search, FileText, X, DollarSign, CreditCard, Tag } from 'lucide-react';
+import { Package, ChevronDown, CheckCircle, Truck, XCircle, Clock, Loader2, ExternalLink, Trash2, Check, Search, FileText, X, DollarSign, CreditCard, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ItemPedido {
   id: string;
@@ -36,6 +36,13 @@ export default function AdminOrders() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Pedido | null>(null);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus, filterTotal, filterData]);
 
   useEffect(() => {
     fetchOrders();
@@ -317,6 +324,25 @@ export default function AdminOrders() {
     );
   }
 
+  const filteredOrders = orders
+    .filter(o => {
+      if (filterStatus && o.status?.toLowerCase() !== filterStatus.toLowerCase()) return false;
+      if (searchTerm && !o.numero?.toString().includes(searchTerm)) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (filterTotal === 'maior') return b.total - a.total;
+      if (filterTotal === 'menor') return a.total - b.total;
+      
+      if (filterData === 'mais_antigo') {
+        return new Date(a.criado_em).getTime() - new Date(b.criado_em).getTime();
+      }
+      return new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime();
+    });
+
+  const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
+  const paginatedOrders = filteredOrders.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft overflow-hidden">
       <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
@@ -419,9 +445,9 @@ export default function AdminOrders() {
                           <span>Pendente</span>
                           {filterStatus === 'pendente' && <Check className="w-4 h-4 text-vanta-blue" />}
                         </button>
-                        <button onClick={() => { setFilterStatus('preparando'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
-                          <span>Preparando</span>
-                          {filterStatus === 'preparando' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        <button onClick={() => { setFilterStatus('pago'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Pago</span>
+                          {filterStatus === 'pago' && <Check className="w-4 h-4 text-vanta-blue" />}
                         </button>
                         <button onClick={() => { setFilterStatus('enviado'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
                           <span>Enviado</span>
@@ -451,33 +477,14 @@ export default function AdminOrders() {
                   </div>
                 </td>
               </tr>
-            ) : orders.filter(o => {
-                if (filterStatus && o.status !== filterStatus) return false;
-                return true;
-              }).length === 0 ? (
+            ) : filteredOrders.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
                   Nenhum pedido encontrado.
                 </td>
               </tr>
             ) : (
-            orders
-              .filter(o => {
-                if (filterStatus && o.status?.toLowerCase() !== filterStatus.toLowerCase()) return false;
-                if (searchTerm && !o.numero?.toString().includes(searchTerm)) return false;
-                return true;
-              })
-              .sort((a, b) => {
-                if (filterTotal === 'maior') return b.total - a.total;
-                if (filterTotal === 'menor') return a.total - b.total;
-                
-                if (filterData === 'mais_antigo') {
-                  return new Date(a.criado_em).getTime() - new Date(b.criado_em).getTime();
-                }
-                // default mais_recente
-                return new Date(b.criado_em).getTime() - new Date(a.criado_em).getTime();
-              })
-              .map((pedido) => (
+              paginatedOrders.map((pedido) => (
                 <tr key={pedido.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
@@ -560,6 +567,53 @@ export default function AdminOrders() {
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+            Mostrando <span className="font-bold text-gray-900 dark:text-white">{((currentPage - 1) * ITEMS_PER_PAGE) + 1}</span> até <span className="font-bold text-gray-900 dark:text-white">{Math.min(currentPage * ITEMS_PER_PAGE, filteredOrders.length)}</span> de <span className="font-bold text-gray-900 dark:text-white">{filteredOrders.length}</span> resultados
+          </span>
+          <div className="flex items-center gap-1 bg-white dark:bg-gray-900 p-1 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="p-1.5 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            
+            <div className="flex items-center px-2 gap-1 border-x border-gray-100 dark:border-gray-800">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === totalPages || Math.abs(currentPage - p) <= 1)
+                .map((pageNum, index, array) => (
+                  <div key={`page-wrapper-${pageNum}`} className="flex items-center">
+                    {index > 0 && pageNum - array[index - 1] > 1 && (
+                      <span className="px-2 text-gray-400 dark:text-gray-500 font-bold">...</span>
+                    )}
+                    <button
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`min-w-[32px] h-8 flex items-center justify-center rounded-lg text-sm font-bold transition-all ${
+                        currentPage === pageNum 
+                          ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm' 
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  </div>
+                ))}
+            </div>
+
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="p-1.5 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
