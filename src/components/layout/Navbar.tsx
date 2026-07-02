@@ -350,14 +350,14 @@ export default function Navbar() {
         {/* Main Navbar */}
         <div className="flex items-center justify-between h-[75px]">
           {/* Logo */}
-          <Link to="/" className="flex items-center group">
-            <span className="text-3xl font-bold text-vanta-darkblue dark:text-white tracking-tight">
+          <Link to="/" className="flex items-center group shrink-0 mr-2 md:mr-0">
+            <span className="text-xl sm:text-2xl md:text-3xl font-bold text-vanta-darkblue dark:text-white tracking-tight">
               Vanta<span className="text-vanta-orange">Tech</span>
             </span>
           </Link>
 
-          {/* Search Bar - Desktop */}
-          <SearchBar className="hidden md:block flex-1 max-w-2xl mx-8" />
+          {/* Search Bar */}
+          <SearchBar className="flex-1 max-w-2xl mx-1 sm:mx-4 md:mx-8" />
 
           {/* Actions */}
           <div className="hidden md:flex items-center gap-6 text-gray-600 dark:text-gray-300">
@@ -392,8 +392,16 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Actions */}
-          <div className="flex md:hidden items-center gap-2">
-            {DarkModeToggle}
+          <div className="flex md:hidden items-center gap-1">
+            <ActionIcon 
+              icon={Bell} 
+              label="Notificações" 
+              badge={unreadCount}
+              isOpen={activeDropdown === 'notificacoes_mobile_header'}
+              onClick={() => toggleDropdown('notificacoes_mobile_header')}
+            >
+              {NotificationsContent}
+            </ActionIcon>
             <button 
               className="p-2 text-gray-600 dark:text-gray-300 hover:text-vanta-blue transition-colors"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -424,7 +432,6 @@ export default function Navbar() {
         mobileMenuOpen ? "max-h-[1000px] opacity-100 overflow-visible" : "max-h-0 opacity-0 overflow-hidden"
       )}>
         <div className="p-4 space-y-4">
-          <SearchBar onSearch={() => setMobileMenuOpen(false)} />
           <div className="grid grid-cols-2 gap-2">
             {categories.map((category) => (
               <Link
@@ -437,10 +444,8 @@ export default function Navbar() {
               </Link>
             ))}
           </div>
-          <div className="flex justify-around pt-4 pb-6 border-t border-gray-100 dark:border-gray-800">
-             <ActionIcon icon={Bell} label="Notificações" badge={unreadCount} isOpen={activeDropdown === 'notificacoes_mobile'} onClick={() => toggleDropdown('notificacoes_mobile')} align="left">
-               {NotificationsContent}
-             </ActionIcon>
+          <div className="flex justify-around pt-4 pb-6 border-t border-gray-100 dark:border-gray-800 items-center">
+             {DarkModeToggle}
              <ActionIcon icon={ShoppingCart} label="Carrinho" badge={cartCount} onClick={() => setIsCartOpen(true)} align="center" />
              <ActionIcon icon={User} label="Minha Conta" avatarUrl={perfil?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture} isOpen={activeDropdown === 'user_mobile'} onClick={() => toggleDropdown('user_mobile')} align="right">
                {UserContent}
@@ -469,7 +474,7 @@ function ActionIcon({ icon: Icon, badge, label, onClick, children, isOpen, align
           <Icon className="w-6 h-6 transition-transform duration-300 group-hover:scale-110 group-hover:text-vanta-blue group-hover:drop-shadow-[0_0_8px_rgba(29,142,255,0.4)]" />
         )}
         {badge !== undefined && badge > 0 && (
-          <span className="absolute top-0 right-0 inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-vanta-orange rounded-full border-2 border-white shadow-sm">
+          <span className="absolute -top-1.5 -right-1.5 inline-flex items-center justify-center min-w-[20px] w-auto h-5 px-1.5 text-[11px] font-bold text-white bg-vanta-orange rounded-full border-[2.5px] border-white dark:border-gray-900 shadow-sm leading-none whitespace-nowrap z-10">
             {badge}
           </span>
         )}

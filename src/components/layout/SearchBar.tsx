@@ -93,11 +93,11 @@ export default function SearchBar({ className, onSearch }: { className?: string;
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => { if (query.trim()) setIsOpen(true); }}
-          placeholder="Procure por celulares, marcas ou modelos..." 
-          className="w-full h-11 pl-5 pr-12 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 dark:text-white outline-none transition-all duration-300 focus:bg-white dark:focus:bg-gray-900 focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 group-hover:shadow-[0_0_15px_rgba(29,142,255,0.15)]"
+          placeholder="Buscar produtos..." 
+          className="w-full h-10 md:h-12 pl-4 pr-12 md:pl-6 md:pr-16 rounded-full border border-gray-200/80 dark:border-gray-700/50 bg-gray-100/50 dark:bg-gray-800/50 backdrop-blur-md dark:text-white outline-none transition-all duration-500 focus:bg-white dark:focus:bg-gray-900 focus:border-vanta-blue/50 focus:ring-4 focus:ring-vanta-blue/10 hover:bg-gray-100/80 dark:hover:bg-gray-800/80 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.06)] focus:shadow-[0_4px_25px_rgba(29,142,255,0.15)] text-sm md:text-base font-medium placeholder:text-gray-400"
         />
-        <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 dark:text-gray-500 hover:text-vanta-blue dark:hover:text-vanta-blue transition-colors">
-          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search className="w-5 h-5" />}
+        <button type="submit" className="absolute right-1 md:right-1.5 top-1/2 -translate-y-1/2 w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full bg-vanta-blue text-white hover:bg-vanta-darkblue hover:scale-105 hover:shadow-[0_0_15px_rgba(29,142,255,0.4)] transition-all duration-300">
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4 md:w-4 md:h-4 stroke-[2.5]" />}
         </button>
       </form>
 
