@@ -61,26 +61,30 @@ export default function Login() {
         if (data?.user) {
           const afiliadoId = localStorage.getItem('afiliado_id');
           if (afiliadoId && afiliadoId !== data.user.id) {
-            // Tenta dar update com retentativa (para dar tempo do Supabase criar o perfil na trigger)
-            const tentarAtualizar = async (tentativas = 0) => {
-              const { data: perfilAtualizado, error } = await supabase
-                .from('perfis')
-                .update({ indicado_por: afiliadoId })
-                .eq('id', data.user.id)
-                .select();
-                
-              if (error || !perfilAtualizado || perfilAtualizado.length === 0) {
-                if (tentativas < 5) {
-                  setTimeout(() => tentarAtualizar(tentativas + 1), 1000); // 1 segundo
+            // Transformar em Promise para podermos aguardar a finalização antes de mudar de tela
+            await new Promise<void>((resolve) => {
+              const tentarAtualizar = async (tentativas = 0) => {
+                const { data: perfilAtualizado, error } = await supabase
+                  .from('perfis')
+                  .update({ indicado_por: afiliadoId })
+                  .eq('id', data.user.id)
+                  .select();
+                  
+                if (error || !perfilAtualizado || perfilAtualizado.length === 0) {
+                  if (tentativas < 5) {
+                    setTimeout(() => tentarAtualizar(tentativas + 1), 1000);
+                  } else {
+                    console.error("Falha ao vincular indicação", error);
+                    alert(`Erro ao vincular afiliado: ${error?.message || 'Perfil não encontrado'}. Contate o suporte.`);
+                    resolve(); // Libera a tela mesmo com erro
+                  }
                 } else {
-                  console.error("Falha ao vincular indicação", error);
-                  alert(`Erro ao vincular afiliado: ${error?.message || 'Perfil não encontrado'}. Por favor, contate o suporte.`);
+                  console.log("Afiliado vinculado com sucesso:", perfilAtualizado);
+                  resolve(); // Deu certo, pode avançar
                 }
-              } else {
-                console.log("Afiliado vinculado com sucesso:", perfilAtualizado);
-              }
-            };
-            tentarAtualizar();
+              };
+              tentarAtualizar();
+            });
           }
           localStorage.removeItem('afiliado_id');
         }
