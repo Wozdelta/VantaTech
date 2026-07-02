@@ -667,7 +667,7 @@ export default function CartDrawer() {
                       
                       <div className="flex-1 flex flex-col justify-between">
                         <div>
-                          <h4 className="text-sm font-bold text-gray-900 dark:text-white leading-tight line-clamp-2 mb-0.5">
+                          <h4 className="text-sm font-bold text-gray-900 dark:text-white leading-tight break-words mb-0.5">
                             {item.name}
                           </h4>
                           <div className="text-xs text-gray-500 font-medium">

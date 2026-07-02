@@ -153,7 +153,7 @@ export default function SidebarFilters({ activeFilters, onFilterChange, marcas, 
     <>
       <button 
         onClick={() => setIsMobileOpen(true)}
-        className="lg:hidden w-full flex items-center justify-center gap-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-800 dark:text-white py-3 rounded-xl font-bold shadow-sm"
+        className="lg:hidden w-full flex items-center justify-center gap-2 bg-vanta-darkblue dark:bg-vanta-blue text-white py-3.5 rounded-full font-bold shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:scale-[1.02] active:scale-95 transition-all"
       >
         <SlidersHorizontal className="w-5 h-5" />
         Filtros e Ordenação

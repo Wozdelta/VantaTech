@@ -40,7 +40,12 @@ export default function Produtos() {
     PrecoMin: '',
     PrecoMax: ''
   });
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
+  
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q !== null) setSearchTerm(q);
+  }, [searchParams]);
   
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 12;
@@ -152,7 +157,7 @@ export default function Produtos() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 pt-32 pb-20">
+    <div className="min-h-screen bg-white dark:bg-gray-950 pt-8 lg:pt-16 pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header e Busca */}
@@ -161,15 +166,15 @@ export default function Produtos() {
           <p className="text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mb-8 text-lg">Encontre o aparelho perfeito para você usando nossos filtros avançados.</p>
           
           <div className="max-w-2xl mx-auto relative group">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-6 w-6 text-gray-400 group-focus-within:text-vanta-blue transition-colors" />
+            <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400 group-focus-within:text-vanta-blue transition-colors" />
             </div>
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Buscar por modelo, marca..."
-              className="block w-full pl-12 pr-4 py-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-vanta-blue focus:border-transparent transition-all shadow-sm text-lg"
+              className="block w-full pl-12 pr-4 py-4 rounded-full border-none bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-vanta-blue shadow-[0_8px_30px_rgb(0,0,0,0.08)] dark:shadow-[0_8px_30px_rgba(255,255,255,0.05)] transition-all text-base md:text-lg"
             />
           </div>
         </div>
@@ -196,7 +201,7 @@ export default function Produtos() {
               </div>
             ) : filteredProducts.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6">
                   {paginatedProducts.map(product => (
                     <ProductCard key={product.id} product={product} />
                   ))}

@@ -85,7 +85,7 @@ export default function AdminControle() {
           </div>
           <div>
             <h3 className="font-bold text-gray-900 dark:text-white text-base leading-tight">{title}</h3>
-            <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{description}</p>
+            <p className="text-xs text-gray-500 mt-0.5 break-words">{description}</p>
           </div>
         </div>
       </div>

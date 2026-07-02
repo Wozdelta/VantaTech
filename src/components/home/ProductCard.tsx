@@ -34,7 +34,7 @@ export default function ProductCard({ product }: { product: DatabaseProduct }) {
       )}
 
       {/* Image */}
-      <div className="relative w-full h-56 sm:h-64 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800 flex flex-col items-center justify-center p-2 overflow-hidden">
+      <div className="relative w-full h-40 sm:h-56 lg:h-64 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-800 flex flex-col items-center justify-center p-2 overflow-hidden">
         {product.imagem_url ? (
           <img src={product.imagem_url} alt={product.nome} className="w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal group-hover:scale-105 transition-transform duration-500" />
         ) : (
@@ -46,9 +46,9 @@ export default function ProductCard({ product }: { product: DatabaseProduct }) {
       </div>
 
       {/* Content */}
-      <div className="p-5 flex flex-col flex-1">
+      <div className="p-3 sm:p-5 flex flex-col flex-1">
         <div className="text-xs font-medium text-gray-400 dark:text-gray-500 mb-1">{product.marca}</div>
-        <h3 className="font-bold text-gray-900 dark:text-white leading-tight mb-2 group-hover:text-vanta-blue dark:group-hover:text-blue-400 transition-colors line-clamp-2">
+        <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white leading-tight mb-2 group-hover:text-vanta-blue dark:group-hover:text-blue-400 transition-colors break-words">
           {product.nome}
         </h3>
 
@@ -69,7 +69,7 @@ export default function ProductCard({ product }: { product: DatabaseProduct }) {
               {formatPrice(product.preco_antigo)}
             </div>
           )}
-          <div className="text-xl font-extrabold text-vanta-darkblue dark:text-blue-400">
+          <div className="text-base sm:text-xl font-extrabold text-vanta-darkblue dark:text-blue-400">
             {formatPrice(product.preco)}
           </div>
         </div>

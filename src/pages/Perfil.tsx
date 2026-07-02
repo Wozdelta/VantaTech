@@ -279,7 +279,7 @@ export default function Perfil() {
             </div>
             
             {!isEditingProfile ? (
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1 px-2 truncate" title={userName}>{userName}</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-1 px-2 break-words" title={userName}>{userName}</h2>
             ) : (
               <div className="text-sm text-vanta-orange font-medium mb-1">Editando perfil...</div>
             )}

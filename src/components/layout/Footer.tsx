@@ -10,7 +10,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 lg:gap-16 max-w-5xl mx-auto">
 
           {/* Suporte & Contato */}
-          <div>
+          <div className="flex flex-col items-center text-center md:items-start md:text-left">
             <h3 className="text-lg font-bold text-vanta-darkblue dark:text-white mb-6">Suporte & Contato</h3>
             <ul className="space-y-3">
               <li><Link to="/faq" className="text-gray-600 dark:text-gray-300 hover:text-vanta-blue transition-colors">Perguntas Frequentes</Link></li>
@@ -25,9 +25,9 @@ export default function Footer() {
           </div>
 
           {/* Redes Sociais & Comunidade */}
-          <div>
+          <div className="flex flex-col items-center text-center md:items-start md:text-left">
             <h3 className="text-lg font-bold text-vanta-darkblue dark:text-white mb-6">Redes Sociais</h3>
-            <div className="flex space-x-4 mb-6">
+            <div className="flex justify-center md:justify-start space-x-4 mb-6">
               <a href="https://www.instagram.com/vantatech016?igsh=aThuOGVvemVtZmcz&utm_source=qr" target="_blank" rel="noopener noreferrer" className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full hover:bg-pink-500 hover:text-white transition-all duration-300" title="Instagram">
                 <FaInstagram className="w-5 h-5" />
               </a>
@@ -37,7 +37,7 @@ export default function Footer() {
             </div>
             
             <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 mt-8">Pagamento</h4>
-            <div className="flex gap-2 text-gray-400 dark:text-gray-500">
+            <div className="flex justify-center md:justify-start gap-2 text-gray-400 dark:text-gray-500">
                {/* Pix */}
                <div className="flex items-center justify-center w-12 h-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-sm text-[#32BCAD] hover:border-[#32BCAD] transition-colors" title="Pix">
                  <FaPix className="w-5 h-5" />
@@ -61,25 +61,25 @@ export default function Footer() {
           </div>
 
           {/* Segurança & Selos */}
-          <div>
+          <div className="flex flex-col items-center text-center md:items-start md:text-left">
             <h3 className="text-lg font-bold text-vanta-darkblue dark:text-white mb-6">Segurança e Confiança</h3>
-            <div className="space-y-4">
-              <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-800">
-                <ShieldCheck className="w-8 h-8 text-vanta-blue mr-3 flex-shrink-0" />
+            <div className="space-y-4 w-full sm:w-auto">
+              <div className="flex flex-col md:flex-row items-center text-center md:text-left p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-800 gap-3">
+                <ShieldCheck className="w-8 h-8 text-vanta-blue flex-shrink-0" />
                 <div>
                   <p className="text-sm font-bold text-gray-800 dark:text-gray-200">Compra Segura</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Ambiente 100% protegido</p>
                 </div>
               </div>
-              <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-800">
-                <Lock className="w-8 h-8 text-green-500 mr-3 flex-shrink-0" />
+              <div className="flex flex-col md:flex-row items-center text-center md:text-left p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-800 gap-3">
+                <Lock className="w-8 h-8 text-green-500 flex-shrink-0" />
                 <div>
                   <p className="text-sm font-bold text-gray-800 dark:text-gray-200">Certificado SSL</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Seus dados criptografados</p>
                 </div>
               </div>
-              <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-800">
-                <Truck className="w-8 h-8 text-vanta-orange mr-3 flex-shrink-0" />
+              <div className="flex flex-col md:flex-row items-center text-center md:text-left p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-800 gap-3">
+                <Truck className="w-8 h-8 text-vanta-orange flex-shrink-0" />
                 <div>
                   <p className="text-sm font-bold text-gray-800 dark:text-gray-200">Entrega Garantida</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Região de Araraquara, São Carlos, Matão, Américo Brasiliense</p>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useCart } from '@/contexts/CartContext';
@@ -31,6 +31,10 @@ export default function ProductDetails() {
   const [selectedStorage, setSelectedStorage] = useState('');
   const [mainImage, setMainImage] = useState('');
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Legacy variants in case they use old system
   const [variants, setVariants] = useState<any[]>([]);
@@ -64,7 +68,7 @@ export default function ProductDetails() {
     }, 8000); // Troca a cada 8 segundos
 
     return () => clearInterval(interval);
-  }, [product]);
+  }, [product, mainImage]);
 
   async function fetchProductAndVariants() {
     setLoading(true);
@@ -356,15 +360,62 @@ export default function ProductDetails() {
   }
 
   // Pega todas as imagens (galeria + principal se não estiver na galeria)
-  let allImages = [];
+  let allImages: string[] = [];
   if (product.galeria && product.galeria.length > 0) {
     allImages = product.galeria.map((g: any) => g.url);
   } else {
     allImages = [product.imagem_url];
   }
 
+  const onPointerDown = (e: React.PointerEvent) => {
+    setIsDragging(true);
+    setStartX(e.clientX);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    const currentX = e.clientX;
+    const diff = currentX - startX;
+    
+    // Calcula resistência (rubber band) nas bordas
+    const currentIndex = allImages.indexOf(mainImage);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === allImages.length - 1;
+    
+    let offset = diff;
+    if ((isFirst && diff > 0) || (isLast && diff < 0)) {
+      offset = diff * 0.3;
+    }
+    
+    setDragOffset(offset);
+  };
+
+  const onPointerUp = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    
+    const containerWidth = containerRef.current?.offsetWidth || 300;
+    const threshold = containerWidth * 0.25; // 25% para mudar
+    const currentIndex = allImages.indexOf(mainImage);
+    
+    if (dragOffset > threshold && currentIndex > 0) {
+      setMainImage(allImages[currentIndex - 1]);
+    } else if (dragOffset < -threshold && currentIndex < allImages.length - 1) {
+      setMainImage(allImages[currentIndex + 1]);
+    }
+    
+    setDragOffset(0);
+  };
+
+  const onPointerLeave = () => {
+    if (isDragging) {
+      onPointerUp();
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 pt-24 pb-20">
+    <div className="min-h-screen bg-white dark:bg-gray-950 pt-6 lg:pt-24 pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <button onClick={() => navigate(-1)} className="flex items-center text-gray-500 dark:text-gray-400 hover:text-vanta-blue transition-colors mb-8 group">
@@ -376,14 +427,35 @@ export default function ProductDetails() {
           
           {/* Lado Esquerdo - Imagem Gigante e Galeria */}
           <div className="flex flex-col gap-4 relative lg:sticky lg:top-32 h-fit">
-            <div className="relative h-[40vh] md:h-[50vh] lg:h-[65vh] w-full bg-gray-50 dark:bg-gray-900 rounded-[32px] lg:rounded-[40px] flex items-center justify-center p-6 lg:p-8 overflow-hidden">
+            <div 
+              ref={containerRef}
+              className="relative h-[40vh] md:h-[50vh] lg:h-[65vh] w-full bg-gray-50 dark:bg-gray-900 rounded-[32px] lg:rounded-[40px] overflow-hidden touch-pan-y select-none cursor-grab active:cursor-grabbing"
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerLeave={onPointerLeave}
+              onPointerCancel={onPointerLeave}
+            >
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-3/4 bg-vanta-blue/10 dark:bg-vanta-blue/5 rounded-full blur-[80px] lg:blur-[100px] pointer-events-none"></div>
               
-              <img 
-                src={mainImage || '/Phone.png'} 
-                alt={product.nome} 
-                className="relative z-10 w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal hover:scale-105 transition-transform duration-700"
-              />
+              <div 
+                className="flex h-full w-full will-change-transform"
+                style={{
+                  transform: `translateX(calc(-${Math.max(0, allImages.indexOf(mainImage)) * 100}% + ${dragOffset}px))`,
+                  transition: isDragging ? 'none' : 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)'
+                }}
+              >
+                {allImages.map((url, i) => (
+                  <div key={i} className="flex-shrink-0 w-full h-full flex items-center justify-center p-6 lg:p-8 pointer-events-none">
+                    <img 
+                      src={url || '/Phone.png'} 
+                      alt={`${product.nome} - Imagem ${i + 1}`} 
+                      className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal pointer-events-none drop-shadow-sm"
+                      draggable="false"
+                    />
+                  </div>
+                ))}
+              </div>
 
               {product.badge && (
                 <div className="absolute top-8 left-8 z-20 bg-vanta-orange text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">

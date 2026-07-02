@@ -468,7 +468,7 @@ export default function AdminFidelidade() {
                     </div>
                   </div>
                   <div className="p-4 bg-white dark:bg-gray-800">
-                    <h3 className="font-bold text-gray-900 dark:text-white line-clamp-1">{rec.nome}</h3>
+                    <h3 className="font-bold text-gray-900 dark:text-white break-words">{rec.nome}</h3>
                     <p className="text-vanta-orange font-black mt-1 flex items-center gap-1">
                       <Star className="w-4 h-4 fill-vanta-orange" /> {rec.pontos} pts
                     </p>

@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { useAlert } from '@/contexts/AlertContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import CartDrawer from './CartDrawer';
+import SearchBar from './SearchBar';
 
 export default function Navbar() {
   const { showAlert } = useAlert();
@@ -356,16 +357,7 @@ export default function Navbar() {
           </Link>
 
           {/* Search Bar - Desktop */}
-          <div className="hidden md:flex flex-1 max-w-2xl mx-8 relative group">
-            <input 
-              type="text" 
-              placeholder="Procure por celulares, marcas ou modelos..." 
-              className="w-full h-11 pl-5 pr-12 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 dark:text-white outline-none transition-all duration-300 focus:bg-white dark:focus:bg-gray-900 focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 group-hover:shadow-[0_0_15px_rgba(29,142,255,0.15)]"
-            />
-            <button className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 dark:text-gray-500 hover:text-vanta-blue dark:hover:text-vanta-blue transition-colors">
-              <Search className="w-5 h-5" />
-            </button>
-          </div>
+          <SearchBar className="hidden md:block flex-1 max-w-2xl mx-8" />
 
           {/* Actions */}
           <div className="hidden md:flex items-center gap-6 text-gray-600 dark:text-gray-300">
@@ -432,14 +424,7 @@ export default function Navbar() {
         mobileMenuOpen ? "max-h-[1000px] opacity-100 overflow-visible" : "max-h-0 opacity-0 overflow-hidden"
       )}>
         <div className="p-4 space-y-4">
-          <div className="relative">
-            <input 
-              type="text" 
-              placeholder="Procurar..." 
-              className="w-full h-10 pl-4 pr-10 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 dark:text-white outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20"
-            />
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
-          </div>
+          <SearchBar onSearch={() => setMobileMenuOpen(false)} />
           <div className="grid grid-cols-2 gap-2">
             {categories.map((category) => (
               <Link

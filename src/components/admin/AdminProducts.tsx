@@ -605,14 +605,14 @@ export default function AdminProducts() {
                           const isAparelho = product.cor || product.memoria || (product.galeria && product.galeria.length > 0 && product.galeria.some((g:any)=>g.cor));
                           if (!isAparelho) {
                             return (
-                              <div className="text-sm font-semibold text-vanta-blue truncate w-48 mt-0.5">
+                              <div className="text-sm font-semibold text-vanta-blue break-words w-48 mt-0.5">
                                 Estoque: {product.estoque !== null && product.estoque !== undefined ? product.estoque : 0} un.
                               </div>
                             );
                           }
                           const subtitle = [product.cor, product.memoria].filter(Boolean).join(' • ');
                           return subtitle ? (
-                            <div className="text-sm text-gray-500 truncate w-48 mt-0.5">{subtitle}</div>
+                            <div className="text-sm text-gray-500 break-words w-48 mt-0.5">{subtitle}</div>
                           ) : null;
                         })()}
                       </div>
@@ -767,7 +767,7 @@ export default function AdminProducts() {
                         <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Imagem</label>
                         <label className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors h-9">
                           <UploadCloud className="w-4 h-4 text-gray-500" />
-                          <span className="text-xs text-gray-600 dark:text-gray-300 truncate w-20">{novaCorFile ? novaCorFile.name : 'Upload...'}</span>
+                          <span className="text-xs text-gray-600 dark:text-gray-300 break-words w-20">{novaCorFile ? novaCorFile.name : 'Upload...'}</span>
                           <input type="file" accept="image/*" className="hidden" onChange={e => e.target.files && setNovaCorFile(e.target.files[0])} />
                         </label>
                       </div>

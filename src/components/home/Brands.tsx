@@ -1,4 +1,4 @@
-import { SiApple, SiSamsung, SiXiaomi, SiMotorola, SiGoogle } from 'react-icons/si';
+import { SiApple, SiSamsung, SiXiaomi, SiMotorola } from 'react-icons/si';
 
 export default function Brands() {
   const brands = [
@@ -6,7 +6,6 @@ export default function Brands() {
     { name: 'Samsung', icon: SiSamsung },
     { name: 'Xiaomi', icon: SiXiaomi },
     { name: 'Motorola', icon: SiMotorola },
-    { name: 'Google', icon: SiGoogle },
     { name: 'Realme', icon: null }, 
     { name: 'Poco', icon: null }, 
   ];
@@ -14,7 +13,7 @@ export default function Brands() {
   return (
     <div className="pt-8">
       <h2 className="text-2xl font-bold text-vanta-darkblue dark:text-white mb-8 text-center">Nossas Marcas</h2>
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {brands.map((brand, index) => {
           const Icon = brand.icon;
           return (

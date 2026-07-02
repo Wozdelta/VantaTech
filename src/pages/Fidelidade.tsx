@@ -278,7 +278,7 @@ export default function Fidelidade() {
                <span className="text-xs opacity-80 mt-2 block">*Válido apenas para novos usuários sem cadastro anterior.</span>
              </p>
              <div className="bg-black/20 p-4 rounded-xl flex items-center justify-between gap-3 border border-white/20 mt-auto">
-               <span className="text-sm truncate opacity-90 font-medium">{affiliateLink}</span>
+               <span className="text-sm break-words opacity-90 font-medium">{affiliateLink}</span>
                <button 
                  onClick={handleCopy}
                  className="p-3 bg-white text-vanta-orange rounded-lg hover:bg-orange-50 transition-colors flex-shrink-0 shadow-sm"
@@ -321,7 +321,7 @@ export default function Fidelidade() {
               historico.map(item => (
                 <div key={item.id} className="flex justify-between items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors border border-gray-100 dark:border-gray-700/50">
                   <div className="flex flex-col min-w-0 pr-4">
-                    <span className="font-medium text-gray-900 dark:text-white text-sm line-clamp-1">{item.descricao}</span>
+                    <span className="font-medium text-gray-900 dark:text-white text-sm break-words">{item.descricao}</span>
                     <span className="text-xs text-gray-500">{new Date(item.created_at).toLocaleDateString('pt-BR')}</span>
                   </div>
                   <div className={`font-black whitespace-nowrap ${item.tipo === 'entrada' ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
@@ -409,7 +409,7 @@ export default function Fidelidade() {
                           )}
                         </div>
                         <div className="p-6 relative bg-white dark:bg-gray-800 flex flex-col flex-1">
-                          <h3 className={`font-bold text-lg mb-4 line-clamp-2 leading-tight ${isLocked ? 'text-gray-500' : 'text-gray-900 dark:text-white group-hover:text-vanta-orange transition-colors'}`}>
+                          <h3 className={`font-bold text-lg mb-4 break-words leading-tight ${isLocked ? 'text-gray-500' : 'text-gray-900 dark:text-white group-hover:text-vanta-orange transition-colors'}`}>
                             {rec.nome}
                           </h3>
                           <div className="flex items-center gap-2 mt-auto">
@@ -465,7 +465,7 @@ export default function Fidelidade() {
                         </div>
                         <div className="flex-1 min-w-0 flex flex-col justify-center">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <h3 className={`font-bold text-lg truncate ${isLocked ? 'text-gray-500' : 'text-gray-900 dark:text-white group-hover:text-vanta-orange transition-colors'}`}>
+                            <h3 className={`font-bold text-lg break-words ${isLocked ? 'text-gray-500' : 'text-gray-900 dark:text-white group-hover:text-vanta-orange transition-colors'}`}>
                               {rec.nome}
                             </h3>
                             {rec.badge && (

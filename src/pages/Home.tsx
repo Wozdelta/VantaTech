@@ -30,7 +30,7 @@ export default function Home() {
       <HeroBanner />
       <ProductsSection />
       <Brands />
-      {showFidelidade && <VantaClubSection />}
+      <VantaClubSection />
       <Newsletter />
       <WhatsAppButton />
     </div>

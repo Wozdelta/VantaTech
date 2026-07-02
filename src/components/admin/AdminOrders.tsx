@@ -369,7 +369,7 @@ export default function AdminOrders() {
         <table className="min-w-full text-left">
           <thead className="bg-gray-50 dark:bg-gray-900/50 text-gray-500 dark:text-gray-400 text-xs uppercase font-bold tracking-wider">
             <tr>
-              <th className="px-6 py-4 relative">
+              <th className="px-6 py-4 relative whitespace-nowrap">
                   <button 
                     onClick={() => setOpenDropdown(openDropdown === 'data' ? null : 'data')}
                     className="flex items-center gap-1 font-bold text-gray-500 hover:text-gray-900 dark:hover:text-gray-300 uppercase tracking-wider transition-colors focus:outline-none"
@@ -394,8 +394,8 @@ export default function AdminOrders() {
                     </>
                   )}
               </th>
-              <th className="px-6 py-4">Produtos</th>
-              <th className="px-6 py-4 relative">
+              <th className="px-6 py-4 whitespace-nowrap">Produtos</th>
+              <th className="px-6 py-4 relative whitespace-nowrap">
                   <button 
                     onClick={() => setOpenDropdown(openDropdown === 'total' ? null : 'total')}
                     className="flex items-center gap-1 font-bold text-gray-500 hover:text-gray-900 dark:hover:text-gray-300 uppercase tracking-wider transition-colors focus:outline-none"
@@ -424,7 +424,7 @@ export default function AdminOrders() {
                     </>
                   )}
               </th>
-              <th className="px-6 py-4 relative">
+              <th className="px-6 py-4 relative whitespace-nowrap">
                   <button 
                     onClick={() => setOpenDropdown(openDropdown === 'status' ? null : 'status')}
                     className="flex items-center gap-1 font-bold text-gray-500 hover:text-gray-900 dark:hover:text-gray-300 uppercase tracking-wider transition-colors focus:outline-none"
@@ -465,7 +465,7 @@ export default function AdminOrders() {
                     </>
                   )}
               </th>
-              <th className="px-6 py-4 text-right">Ações</th>
+              <th className="px-6 py-4 text-right whitespace-nowrap">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
@@ -486,7 +486,7 @@ export default function AdminOrders() {
             ) : (
               paginatedOrders.map((pedido) => (
                 <tr key={pedido.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex flex-col">
                       <span className="text-sm font-bold text-vanta-blue mb-1">
                         #{pedido.numero}
@@ -499,13 +499,13 @@ export default function AdminOrders() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex flex-col gap-2">
                       {pedido.itens_pedido.map((item) => (
                         <div key={item.id} className="flex items-center gap-3">
                           <img src={item.imagem_url || '/placeholder.png'} alt={item.produto_nome} className="w-8 h-8 rounded object-cover bg-gray-100" />
                           <div>
-                            <p className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{item.produto_nome}</p>
+                            <p className="text-sm font-bold text-gray-900 dark:text-white break-words">{item.produto_nome}</p>
                             <p className="text-xs text-gray-500">{item.quantidade}x R$ {item.produto_preco.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                           </div>
                         </div>
@@ -515,13 +515,13 @@ export default function AdminOrders() {
                   <td className="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">
                     R$ {pedido.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${getStatusColor(pedido.status)}`}>
                       {getStatusIcon(pedido.status)}
                       {pedido.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right whitespace-nowrap">
                     <div className="flex items-center justify-end gap-2">
                       {updating === pedido.id ? (
                         <div className="px-3 py-1.5 flex items-center justify-center text-sm font-medium text-gray-500">
@@ -726,7 +726,7 @@ export default function AdminOrders() {
                     <div key={item.id} className="flex items-center gap-4 bg-white dark:bg-gray-800 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
                       <img src={item.imagem_url || '/placeholder.png'} alt={item.produto_nome} className="w-12 h-12 rounded-lg object-cover bg-gray-50" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{item.produto_nome}</p>
+                        <p className="text-sm font-bold text-gray-900 dark:text-white break-words">{item.produto_nome}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-bold text-gray-900 dark:text-white">
