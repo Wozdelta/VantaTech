@@ -190,8 +190,8 @@ export default function AdminDashboard() {
             <button
               onClick={() => setActiveTab('overview')}
               className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors ${activeTab === 'overview'
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                 }`}
             >
               Visão Geral
@@ -199,8 +199,8 @@ export default function AdminDashboard() {
             <button
               onClick={() => setActiveTab('orders')}
               className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${activeTab === 'orders'
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                 }`}
             >
               <ShoppingBag className="w-4 h-4" /> Pedidos
@@ -208,8 +208,8 @@ export default function AdminDashboard() {
             <button
               onClick={() => setActiveTab('products')}
               className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${activeTab === 'products'
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                 }`}
             >
               <Package className="w-4 h-4" /> Produtos
@@ -217,8 +217,8 @@ export default function AdminDashboard() {
             <button
               onClick={() => setActiveTab('categories')}
               className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${activeTab === 'categories'
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                 }`}
             >
               <ListOrdered className="w-4 h-4" /> Menu do Site
@@ -226,8 +226,8 @@ export default function AdminDashboard() {
             <button
               onClick={() => setActiveTab('notifications')}
               className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${activeTab === 'notifications'
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                 }`}
             >
               <BellRing className="w-4 h-4" /> Disparar Avisos
@@ -235,8 +235,8 @@ export default function AdminDashboard() {
             <button
               onClick={() => setActiveTab('attributes')}
               className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${activeTab === 'attributes'
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
+                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                 }`}
             >
               Atributos
@@ -244,8 +244,8 @@ export default function AdminDashboard() {
             <button
               onClick={() => setActiveTab('fidelidade')}
               className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${activeTab === 'fidelidade'
-                  ? 'bg-vanta-orange/10 text-vanta-orange dark:bg-vanta-orange/20 dark:text-orange-400'
-                  : 'text-gray-500 hover:text-vanta-orange dark:text-gray-400 dark:hover:text-orange-400'
+                ? 'bg-vanta-orange/10 text-vanta-orange dark:bg-vanta-orange/20 dark:text-orange-400'
+                : 'text-gray-500 hover:text-vanta-orange dark:text-gray-400 dark:hover:text-orange-400'
                 }`}
             >
               <Award className="w-4 h-4" /> Fidelidade
@@ -253,8 +253,8 @@ export default function AdminDashboard() {
             <button
               onClick={() => setActiveTab('cupons')}
               className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${activeTab === 'cupons'
-                  ? 'bg-vanta-blue/10 text-vanta-blue dark:bg-blue-900/20 dark:text-blue-400'
-                  : 'text-gray-500 hover:text-vanta-blue dark:text-gray-400 dark:hover:text-blue-400'
+                ? 'bg-vanta-blue/10 text-vanta-blue dark:bg-blue-900/20 dark:text-blue-400'
+                : 'text-gray-500 hover:text-vanta-blue dark:text-gray-400 dark:hover:text-blue-400'
                 }`}
             >
               <Tag className="w-4 h-4" /> Cupons
