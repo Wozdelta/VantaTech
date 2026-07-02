@@ -61,8 +61,23 @@ export default function Login() {
         if (data?.user) {
           const afiliadoId = localStorage.getItem('afiliado_id');
           if (afiliadoId && afiliadoId !== data.user.id) {
-            // Tenta dar update no perfil recém criado pela trigger do supabase
-            await supabase.from('perfis').update({ indicado_por: afiliadoId }).eq('id', data.user.id);
+            // Tenta dar update com retentativa (para dar tempo do Supabase criar o perfil na trigger)
+            const tentarAtualizar = async (tentativas = 0) => {
+              const { data: perfilAtualizado, error } = await supabase
+                .from('perfis')
+                .update({ indicado_por: afiliadoId })
+                .eq('id', data.user.id)
+                .select();
+                
+              if (error || !perfilAtualizado || perfilAtualizado.length === 0) {
+                if (tentativas < 5) {
+                  setTimeout(() => tentarAtualizar(tentativas + 1), 500);
+                } else {
+                  console.error("Falha ao vincular indicação", error);
+                }
+              }
+            };
+            tentarAtualizar();
           }
           localStorage.removeItem('afiliado_id');
         }
