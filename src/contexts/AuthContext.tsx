@@ -41,14 +41,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Busca a sessão atual quando o app carrega
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchPerfil(session.user.id);
-      } else {
+    // Busca o usuário atual de forma segura validando com o servidor
+    supabase.auth.getUser().then(({ data: { user }, error }) => {
+      if (error || !user) {
+        // Usuário foi deletado do sistema ou token inválido
+        signOut();
         setLoading(false);
+        return;
       }
+      setUser(user);
+      fetchPerfil(user.id);
     });
 
     // Ouve mudanças de auth (login, logout)
@@ -75,10 +77,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', userId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // Se der erro ao buscar o perfil (ex: perfil deletado), deslogamos por segurança
+        signOut();
+        throw error;
+      }
       setPerfil(data);
     } catch (error) {
       console.error('Erro ao buscar perfil:', error);
+      // Fallback: garante que o state limpa
+      setPerfil(null);
     } finally {
       setLoading(false);
     }
