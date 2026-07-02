@@ -34,6 +34,7 @@ export default function AdminOrders() {
   const [filterStatus, setFilterStatus] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     fetchOrders();
@@ -49,10 +50,15 @@ export default function AdminOrders() {
         `)
         .order('criado_em', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        setErrorMsg(error.message);
+        throw error;
+      }
       setOrders(data as Pedido[]);
-    } catch (err) {
+      setErrorMsg(null);
+    } catch (err: any) {
       console.error('Erro ao buscar pedidos:', err);
+      setErrorMsg(err.message || 'Erro desconhecido ao buscar pedidos do Supabase');
     } finally {
       setLoading(false);
     }
@@ -402,7 +408,15 @@ export default function AdminOrders() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
-            {orders.filter(o => {
+            {errorMsg ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-12 text-center">
+                  <div className="bg-red-50 text-red-500 p-4 rounded-xl border border-red-100 inline-block font-bold">
+                    Erro no Supabase: {errorMsg}
+                  </div>
+                </td>
+              </tr>
+            ) : orders.filter(o => {
                 if (filterStatus && o.status !== filterStatus) return false;
                 return true;
               }).length === 0 ? (
