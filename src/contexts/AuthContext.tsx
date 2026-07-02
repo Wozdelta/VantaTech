@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchPerfil = async (userId: string) => {
+  const fetchPerfil = async (userId: string, tentativas = 3) => {
     try {
       const { data, error } = await supabase
         .from('perfis')
@@ -78,7 +78,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .single();
 
       if (error) {
-        // Se der erro ao buscar o perfil (ex: perfil deletado), deslogamos por segurança
+        if (error.code === 'PGRST116' && tentativas > 0) {
+          // O perfil pode não ter sido criado pela trigger ainda. Tenta de novo em 1s.
+          setTimeout(() => fetchPerfil(userId, tentativas - 1), 1000);
+          return;
+        }
+        // Se der erro ao buscar o perfil e esgotar tentativas, deslogamos por segurança
         signOut();
         throw error;
       }
@@ -88,7 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Fallback: garante que o state limpa
       setPerfil(null);
     } finally {
-      setLoading(false);
+      if (tentativas === 3) setLoading(false);
     }
   };
 
