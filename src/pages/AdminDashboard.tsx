@@ -15,7 +15,7 @@ import AdminCupons from '../components/admin/AdminCupons';
 
 export default function AdminDashboard() {
   const { user, perfil, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'products' | 'categories' | 'notifications' | 'attributes' | 'sales_history' | 'fidelidade' | 'cupons'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'categories' | 'notifications' | 'attributes' | 'sales_history' | 'fidelidade' | 'cupons'>('overview');
   const [receitaMensal, setReceitaMensal] = useState(0);
   const [margemLucro, setMargemLucro] = useState(0);
   const [totalPedidos, setTotalPedidos] = useState(0);
@@ -198,14 +198,14 @@ export default function AdminDashboard() {
               Visão Geral
             </button>
             <button
-              onClick={() => setActiveTab('orders')}
+              onClick={() => setActiveTab('sales_history')}
               className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
-                activeTab === 'orders' 
+                activeTab === 'sales_history' 
                   ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' 
                   : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
               }`}
             >
-              <ShoppingBag className="w-4 h-4" /> Vendas
+              <History className="w-4 h-4" /> Histórico de Vendas
             </button>
             <button
               onClick={() => setActiveTab('products')}
@@ -247,16 +247,7 @@ export default function AdminDashboard() {
             >
               Atributos
             </button>
-            <button
-              onClick={() => setActiveTab('sales_history')}
-              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
-                activeTab === 'sales_history' 
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' 
-                  : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-              }`}
-            >
-              <History className="w-4 h-4" /> Histórico de Vendas
-            </button>
+
             <button
               onClick={() => setActiveTab('fidelidade')}
               className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
@@ -328,7 +319,7 @@ export default function AdminDashboard() {
           </>
         )}
 
-        {activeTab === 'orders' && <AdminOrders />}
+
         {activeTab === 'products' && <AdminProducts />}
         {activeTab === 'categories' && <AdminCategories />}
         {activeTab === 'notifications' && <AdminNotifications />}
