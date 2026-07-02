@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
+import { useSettings } from '@/contexts/SettingsContext';
+import { useAuth } from '@/contexts/AuthContext';
+import BlockScreen from '@/components/common/BlockScreen';
 import { supabase } from '@/lib/supabase';
 import { Loader2, Search } from 'lucide-react';
 import SidebarFilters from '@/components/home/SidebarFilters';
@@ -23,6 +26,9 @@ export default function Produtos() {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const initialCategory = searchParams.get('categoria');
+  const { settings } = useSettings();
+  const { perfil } = useAuth();
+  const showLoja = settings.acesso_loja === 'todos' || perfil?.cargo === 'Admin';
 
   const [products, setProducts] = useState<DatabaseProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -125,6 +131,15 @@ export default function Produtos() {
     }
     return true;
   });
+
+  if (!showLoja) {
+    return (
+      <BlockScreen 
+        title="Catálogo Fechado" 
+        message="Nosso catálogo de produtos está temporariamente indisponível. Volte em breve para conferir as novidades!" 
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 pt-32 pb-20">

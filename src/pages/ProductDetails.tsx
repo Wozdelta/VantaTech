@@ -3,6 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useCart } from '@/contexts/CartContext';
 import { useAlert } from '../contexts/AlertContext';
+import { useSettings } from '../contexts/SettingsContext';
+import { useAuth } from '../contexts/AuthContext';
+import BlockScreen from '../components/common/BlockScreen';
 import { Loader2, ArrowLeft, ShieldCheck, Truck, ArrowRight, ShoppingCart, Battery } from 'lucide-react';
 
 type GaleriaImage = {
@@ -17,6 +20,9 @@ export default function ProductDetails() {
   const { showAlert } = useAlert();
   
   const [product, setProduct] = useState<any>(null);
+  const { settings } = useSettings();
+  const { perfil } = useAuth();
+  const showLoja = settings.acesso_loja === 'todos' || perfil?.cargo === 'Admin';
   const [loading, setLoading] = useState(true);
   const [soldVariants, setSoldVariants] = useState<{cor: string, storage: string, status: string}[]>([]);
   const [isProductCompletelySold, setIsProductCompletelySold] = useState(false);
@@ -322,6 +328,15 @@ export default function ProductDetails() {
       maxQuantity: typeof product.estoque === 'number' ? product.estoque : undefined
     });
   };
+
+  if (!showLoja) {
+    return (
+      <BlockScreen 
+        title="Página em Manutenção" 
+        message="A visualização de produtos está fechada temporariamente para atualizações. Volte em breve!" 
+      />
+    );
+  }
 
   if (loading) {
     return (

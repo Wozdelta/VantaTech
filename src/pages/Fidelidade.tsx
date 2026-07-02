@@ -1,4 +1,5 @@
 import { useAuth } from '../contexts/AuthContext';
+import { useSettings } from '../contexts/SettingsContext';
 import { Copy, Gift, Star, Target, CheckCircle2, Share2, Award, Crown, Diamond, LayoutGrid, List, Lock, Check, Medal, Trophy, Loader2, Ticket, TrendingUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -41,6 +42,10 @@ export default function Fidelidade() {
   const [historico, setHistorico] = useState<Historico[]>([]);
   const [loading, setLoading] = useState(true);
   const [resgatandoId, setResgatandoId] = useState<string | null>(null);
+  const [modalType, setModalType] = useState<'points' | 'history' | null>(null);
+  const { settings } = useSettings();
+
+  const showFidelidade = settings.fidelidade_ativo || perfil?.cargo === 'Admin';
   const [viewMode, setViewMode] = useState<'detailed' | 'minimal'>('detailed');
 
   useEffect(() => {
@@ -192,6 +197,22 @@ export default function Fidelidade() {
       setResgatandoId(null);
     }
   };
+
+  if (!showFidelidade) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center p-4">
+        <div className="w-20 h-20 bg-orange-100 dark:bg-orange-900/30 text-vanta-orange rounded-full flex items-center justify-center mb-6">
+          <Award className="w-10 h-10" />
+        </div>
+        <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-4 text-center">
+          Clube Vanta em Breve!
+        </h1>
+        <p className="text-gray-500 text-center max-w-md">
+          O melhor clube de vantagens está chegando. Prepare-se para acumular pontos e resgatar prêmios incríveis!
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">

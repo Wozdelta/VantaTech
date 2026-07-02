@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { Navigate } from 'react-router-dom';
-import { Users, ShoppingBag, DollarSign, Activity, ListOrdered, BellRing, Package, History, Award, Tag } from 'lucide-react';
+import { Navigate, Link } from 'react-router-dom';
+import { Users, ShoppingBag, DollarSign, Activity, ListOrdered, BellRing, Package, History, Award, Tag, LogOut, LayoutDashboard, Moon, Sun, ShieldCheck } from 'lucide-react';
 import AdminProducts from '../components/admin/AdminProducts';
 import AdminCategories from '../components/admin/AdminCategories';
 import AdminNotifications from '../components/admin/AdminNotifications';
@@ -12,16 +12,30 @@ import AdminEntradas from '../components/admin/AdminEntradas';
 import AdminSalesHistory from '../components/admin/AdminSalesHistory';
 import AdminFidelidade from '../components/admin/AdminFidelidade';
 import AdminCupons from '../components/admin/AdminCupons';
+import AdminControle from '../components/admin/AdminControle';
 
 export default function AdminDashboard() {
   const { user, perfil, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'products' | 'categories' | 'notifications' | 'attributes' | 'sales_history' | 'fidelidade' | 'cupons'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'products' | 'categories' | 'notifications' | 'attributes' | 'sales_history' | 'fidelidade' | 'cupons' | 'controle'>('overview');
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+
+  const toggleTheme = () => {
+    if (isDark) {
+      document.documentElement.classList.remove('dark');
+      setIsDark(false);
+    } else {
+      document.documentElement.classList.add('dark');
+      setIsDark(true);
+    }
+  };
+
   const [receitaMensal, setReceitaMensal] = useState(0);
   const [margemLucro, setMargemLucro] = useState(0);
   const [totalPedidos, setTotalPedidos] = useState(0);
   const [crescimentoPedidos, setCrescimentoPedidos] = useState(0);
   const [totalClientes, setTotalClientes] = useState(0);
   const [crescimentoClientes, setCrescimentoClientes] = useState(0);
+  const [topUser, setTopUser] = useState({ nome: 'Nenhum', pontos: 0 });
 
   useEffect(() => {
     async function fetchReceita() {
@@ -122,6 +136,18 @@ export default function AdminDashboard() {
             setCrescimentoClientes(0);
           }
         }
+
+        // Buscar top usuário em pontos
+        const { data: topUserDb } = await supabase
+          .from('perfis')
+          .select('nome_completo, pontos')
+          .order('pontos', { ascending: false })
+          .limit(1)
+          .single();
+        
+        if (topUserDb) {
+          setTopUser({ nome: topUserDb.nome_completo || 'Sem Nome', pontos: topUserDb.pontos || 0 });
+        }
       } catch (err) {
         console.error('Erro ao buscar receita:', err);
       }
@@ -169,158 +195,196 @@ export default function AdminDashboard() {
   }
 
   const stats = [
-    { name: 'Total de Clientes', value: totalClientes.toString(), icon: Users, change: `${crescimentoClientes > 0 ? '+' : ''}${crescimentoClientes.toFixed(0)}%`, changeType: crescimentoClientes >= 0 ? 'positive' : 'negative' },
-    { name: 'Total de pedidos', value: totalPedidos.toString(), icon: ShoppingBag, change: `${crescimentoPedidos > 0 ? '+' : ''}${crescimentoPedidos.toFixed(0)}%`, changeType: crescimentoPedidos >= 0 ? 'positive' : 'negative' },
-    { name: 'Receita Total', value: `R$ ${receitaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: DollarSign, change: `${margemLucro.toFixed(0)}%`, changeType: 'positive' },
-    { name: 'Acessos Ativos', value: '1', icon: Activity, change: 'Agora', changeType: 'neutral' },
+    { name: 'Total de Clientes', value: totalClientes.toString(), icon: Users, change: `${crescimentoClientes > 0 ? '+' : ''}${crescimentoClientes.toFixed(0)}%`, changeType: crescimentoClientes >= 0 ? 'positive' : 'negative', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30' },
+    { name: 'Total de pedidos', value: totalPedidos.toString(), icon: ShoppingBag, change: `${crescimentoPedidos > 0 ? '+' : ''}${crescimentoPedidos.toFixed(0)}%`, changeType: crescimentoPedidos >= 0 ? 'positive' : 'negative', color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-100 dark:bg-orange-900/30' },
+    { name: 'Receita Total', value: `R$ ${receitaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: DollarSign, change: `${margemLucro.toFixed(0)}%`, changeType: 'positive', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-100 dark:bg-green-900/30' },
+    { name: 'Maior Pontuador', value: topUser.nome.split(' ')[0], icon: Award, change: `${topUser.pontos} pts`, changeType: 'positive', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/30' },
   ];
 
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 flex flex-col gap-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Painel de Administração</h1>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Gerencie seus produtos, menu, clientes e notificações.
-            </p>
-          </div>
+  const navItems = [
+    { id: 'overview', label: 'Visão Geral', icon: Activity },
+    { id: 'orders', label: 'Pedidos', icon: ShoppingBag },
+    { id: 'products', label: 'Produtos', icon: Package },
+    { id: 'categories', label: 'Menu do Site', icon: ListOrdered },
+    { id: 'notifications', label: 'Avisos', icon: BellRing },
+    { id: 'fidelidade', label: 'Fidelidade', icon: Award },
+    { id: 'cupons', label: 'Cupons', icon: Tag },
+    { id: 'controle', label: 'Controle', icon: ShieldCheck },
+  ] as const;
 
-          <div className="flex overflow-x-auto justify-start md:justify-center bg-white dark:bg-gray-800 rounded-lg p-1 shadow-sm border border-gray-200 dark:border-gray-700 no-scrollbar w-full">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors ${activeTab === 'overview'
-                ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+  return (
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
+      
+      {/* Sidebar Desktop */}
+      <aside className="hidden lg:flex flex-col w-72 bg-white dark:bg-gray-800 border-r border-gray-100 dark:border-gray-700 h-full shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10">
+        <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-vanta-blue to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30 flex-shrink-0">
+            <LayoutDashboard className="w-5 h-5 text-white" />
+          </div>
+          <h2 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white">
+            Vanta<span className="text-vanta-blue">Admin</span>
+          </h2>
+        </div>
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id as any)}
+                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold transition-all duration-300 ${
+                  isActive 
+                    ? 'bg-vanta-blue text-white shadow-md shadow-blue-500/20 translate-x-1' 
+                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-white'
                 }`}
-            >
-              Visão Geral
-            </button>
-            <button
-              onClick={() => setActiveTab('orders')}
-              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${activeTab === 'orders'
-                ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-                }`}
-            >
-              <ShoppingBag className="w-4 h-4" /> Pedidos
-            </button>
-            <button
-              onClick={() => setActiveTab('products')}
-              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${activeTab === 'products'
-                ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-                }`}
-            >
-              <Package className="w-4 h-4" /> Produtos
-            </button>
-            <button
-              onClick={() => setActiveTab('categories')}
-              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${activeTab === 'categories'
-                ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-                }`}
-            >
-              <ListOrdered className="w-4 h-4" /> Menu do Site
-            </button>
-            <button
-              onClick={() => setActiveTab('notifications')}
-              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${activeTab === 'notifications'
-                ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-                }`}
-            >
-              <BellRing className="w-4 h-4" /> Disparar Avisos
-            </button>
-            <button
-              onClick={() => setActiveTab('attributes')}
-              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${activeTab === 'attributes'
-                ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-                }`}
-            >
-              Atributos
-            </button>
-            <button
-              onClick={() => setActiveTab('fidelidade')}
-              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${activeTab === 'fidelidade'
-                ? 'bg-vanta-orange/10 text-vanta-orange dark:bg-vanta-orange/20 dark:text-orange-400'
-                : 'text-gray-500 hover:text-vanta-orange dark:text-gray-400 dark:hover:text-orange-400'
-                }`}
-            >
-              <Award className="w-4 h-4" /> Fidelidade
-            </button>
-            <button
-              onClick={() => setActiveTab('cupons')}
-              className={`px-4 py-2 whitespace-nowrap text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${activeTab === 'cupons'
-                ? 'bg-vanta-blue/10 text-vanta-blue dark:bg-blue-900/20 dark:text-blue-400'
-                : 'text-gray-500 hover:text-vanta-blue dark:text-gray-400 dark:hover:text-blue-400'
-                }`}
-            >
-              <Tag className="w-4 h-4" /> Cupons
-            </button>
+              >
+                <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-gray-500'}`} />
+                {item.label}
+              </button>
+            );
+          })}
+        </nav>
+        <div className="p-4 border-t border-gray-100 dark:border-gray-700">
+          <Link
+            to="/"
+            className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-gray-100 dark:bg-gray-700/50 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            Voltar para a Loja
+          </Link>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        
+        {/* Mobile Nav */}
+        <div className="lg:hidden bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 p-4">
+          <div className="flex overflow-x-auto no-scrollbar gap-2 pb-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id as any)}
+                  className={`flex items-center gap-2 px-4 py-2 whitespace-nowrap rounded-lg text-sm font-bold transition-colors ${
+                    isActive 
+                      ? 'bg-vanta-blue text-white' 
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {item.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {activeTab === 'overview' && (
-          <>
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-              {stats.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <div key={item.name} className="bg-white dark:bg-gray-800 overflow-hidden shadow-soft rounded-xl">
-                    <div className="p-5">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          <Icon className="h-6 w-6 text-gray-400" aria-hidden="true" />
-                        </div>
-                        <div className="ml-5 w-0 flex-1">
-                          <dl>
-                            <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">{item.name}</dt>
-                            <dd>
-                              <div className="text-lg font-bold text-gray-900 dark:text-white">{item.value}</div>
-                            </dd>
-                          </dl>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-gray-50 dark:bg-gray-900/50 px-5 py-3">
-                      <div className="text-sm">
-                        <span className={`font-medium ${item.changeType === 'positive' ? 'text-green-600 dark:text-green-400' : 'text-gray-500'
-                          }`}>
-                          {item.change}
-                        </span>
-                        <span className="text-gray-500 dark:text-gray-400 ml-2">desde ontem</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Pedidos Recentes na Visão Geral */}
-            <div className="mt-8">
-              <AdminOrders />
-            </div>
-
-            {/* Controle de Entradas e Custos */}
-            <AdminEntradas />
-          </>
-        )}
-
-        {activeTab === 'orders' && (
-          <div className="space-y-8">
-            <AdminOrders />
-            <AdminSalesHistory />
+        {/* Topbar Desktop */}
+        <header className="hidden lg:flex items-center justify-between px-8 py-5 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-0">
+          <div>
+            <h1 className="text-2xl font-black text-gray-900 dark:text-white">
+              {navItems.find(i => i.id === activeTab)?.label}
+            </h1>
+            <p className="text-sm text-gray-500">
+              {new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
           </div>
-        )}
-        {activeTab === 'products' && <AdminProducts />}
-        {activeTab === 'categories' && <AdminCategories />}
-        {activeTab === 'notifications' && <AdminNotifications />}
-        {activeTab === 'attributes' && <AdminAttributes />}
-        {activeTab === 'fidelidade' && <AdminFidelidade />}
-        {activeTab === 'cupons' && <AdminCupons />}
+          <div className="flex items-center gap-4">
+             <button
+               onClick={toggleTheme}
+               className="p-2 text-gray-500 hover:text-vanta-blue dark:text-gray-400 dark:hover:text-vanta-orange bg-gray-100 dark:bg-gray-800 rounded-full transition-colors"
+               title="Alternar Tema"
+             >
+               {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+             </button>
+             <div className="px-4 py-2 bg-vanta-orange/10 text-vanta-orange rounded-full text-sm font-bold">
+               Olá, {perfil?.nome_completo?.split(' ')[0] || 'Admin'} 👋
+             </div>
+          </div>
+        </header>
+        
+        {/* Mobile Header (Sair) */}
+        <div className="lg:hidden flex justify-end px-4 py-2 bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700">
+          <Link
+            to="/"
+            className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 font-bold hover:text-vanta-blue"
+          >
+            <LogOut className="w-4 h-4" />
+            Voltar para a Loja
+          </Link>
+        </div>
+
+        {/* Scrollable Content */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-8">
+          <div className="w-full pb-12">
+            
+            {activeTab === 'overview' && (
+              <>
+                {/* Stats Grid Premium */}
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-10">
+                  {stats.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <div key={item.name} className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-gray-100 dark:border-gray-700/50 hover:-translate-y-1 transition-transform duration-300">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${item.bg}`}>
+                            <Icon className={`h-7 w-7 ${item.color}`} aria-hidden="true" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{item.name}</p>
+                            <p className="text-2xl font-black text-gray-900 dark:text-white mt-1">{item.value}</p>
+                          </div>
+                        </div>
+                        <div className="mt-4 flex items-center text-sm">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-md font-bold ${
+                            item.changeType === 'positive' 
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                              : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+                            }`}>
+                            {item.change}
+                          </span>
+                          <span className="text-gray-400 dark:text-gray-500 ml-2 font-medium">desde ontem</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="space-y-8">
+                  <AdminOrders />
+                  <AdminEntradas />
+                </div>
+              </>
+            )}
+
+            {activeTab === 'orders' && (
+              <div className="space-y-8">
+                <AdminOrders />
+                <AdminSalesHistory />
+              </div>
+            )}
+            
+            {activeTab === 'products' && <AdminProducts />}
+            
+            {activeTab === 'categories' && (
+              <div className="space-y-8">
+                <AdminCategories />
+                <AdminAttributes />
+              </div>
+            )}
+            
+            {activeTab === 'notifications' && <AdminNotifications />}
+            
+            {activeTab === 'fidelidade' && <AdminFidelidade />}
+            
+            {activeTab === 'cupons' && <AdminCupons />}
+            {activeTab === 'controle' && <AdminControle />}
+          </div>
+        </main>
       </div>
     </div>
   );

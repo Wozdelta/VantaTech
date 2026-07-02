@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAlert } from '../contexts/AlertContext';
+import { useSettings } from '../contexts/SettingsContext';
+import BlockScreen from '../components/common/BlockScreen';
 import { Package, Clock, ShoppingBag, Loader2, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -20,13 +22,16 @@ interface Pedido {
   status: string;
   criado_em: string;
   itens_pedido: ItemPedido[];
+  cupom_id?: string;
 }
 
 export default function Pedidos() {
-  const { user } = useAuth();
+  const { user, perfil } = useAuth();
   const { showAlert } = useAlert();
+  const { settings } = useSettings();
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(true);
+  const showPedidos = settings.acesso_pedidos === 'todos' || perfil?.cargo === 'Admin';
 
   useEffect(() => {
     async function fetchPedidos() {
@@ -124,7 +129,12 @@ export default function Pedidos() {
         </h1>
       </div>
       
-      {loading ? (
+      {!showPedidos ? (
+        <BlockScreen 
+          title="Pedidos Restritos" 
+          message="A área de Meus Pedidos está temporariamente fechada." 
+        />
+      ) : loading ? (
         <div className="flex flex-col items-center justify-center py-20">
           <Loader2 className="w-10 h-10 text-vanta-blue animate-spin mb-4" />
           <p className="text-gray-500">Buscando seus pedidos...</p>

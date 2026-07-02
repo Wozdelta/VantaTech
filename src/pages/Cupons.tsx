@@ -3,15 +3,20 @@ import { supabase } from '../lib/supabase';
 import { Tag, Search, Copy, CheckCircle, Info, Clock, DollarSign, Box } from 'lucide-react';
 import { useAlert } from '../contexts/AlertContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useSettings } from '../contexts/SettingsContext';
 
 export default function Cupons() {
   const [cupons, setCupons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isResgatando, setIsResgatando] = useState<string | null>(null);
+  const { settings } = useSettings();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const { showAlert } = useAlert();
   const { user, perfil } = useAuth();
   const [niveis, setNiveis] = useState<any[]>([]);
+
+  const showCupons = settings.cupons_ativo || perfil?.cargo === 'Admin';
 
   useEffect(() => {
     fetchCupons();
@@ -112,6 +117,22 @@ export default function Cupons() {
   };
 
   const filteredCupons = cupons.filter(c => c.codigo.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  if (!showCupons) {
+    return (
+      <div className="min-h-[70vh] flex flex-col items-center justify-center p-4">
+        <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 text-vanta-blue rounded-full flex items-center justify-center mb-6">
+          <Tag className="w-10 h-10" />
+        </div>
+        <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-4 text-center">
+          Meus Cupons em Breve!
+        </h1>
+        <p className="text-gray-500 text-center max-w-md">
+          Estamos preparando um novo sistema de cupons e descontos exclusivos para você. Fique de olho!
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-fade-in pb-20 md:pb-0">

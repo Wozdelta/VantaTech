@@ -265,14 +265,14 @@ export default function AdminFidelidade() {
       for (let i = 0; i < niveis.length; i++) {
         if (pontosAcumulados >= niveis[i].pontos_minimos) n = niveis[i];
       }
-      return { nome: n.nome, bg: 'bg-vanta-darkblue text-white' };
+      return { nome: n.nome, bg: 'text-white shadow-md', cor: n.cor_hex || '#1D8EFF' };
     }
     
     // Fallback caso não carregue os níveis do banco
-    if (pontosAcumulados >= 5000) return { nome: 'Diamante', bg: 'bg-cyan-900 text-white' };
-    if (pontosAcumulados >= 2500) return { nome: 'Ouro', bg: 'bg-yellow-700 text-white' };
-    if (pontosAcumulados >= 1000) return { nome: 'Prata', bg: 'bg-gray-600 text-white' };
-    return { nome: 'Bronze', bg: 'bg-orange-800 text-white' };
+    if (pontosAcumulados >= 5000) return { nome: 'Diamante', bg: 'bg-cyan-900 text-white shadow-md', cor: undefined };
+    if (pontosAcumulados >= 2500) return { nome: 'Ouro', bg: 'bg-yellow-700 text-white shadow-md', cor: undefined };
+    if (pontosAcumulados >= 1000) return { nome: 'Prata', bg: 'bg-gray-600 text-white shadow-md', cor: undefined };
+    return { nome: 'Bronze', bg: 'bg-orange-800 text-white shadow-md', cor: undefined };
   };
 
   return (
@@ -377,7 +377,10 @@ export default function AdminFidelidade() {
                       </div>
                     </div>
                     <div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${getNivelInfo(perfil.pontos_acumulados || 0).bg}`}>
+                      <span 
+                        className={`px-3 py-1 rounded-full text-xs font-bold ${getNivelInfo(perfil.pontos_acumulados || 0).bg}`}
+                        style={getNivelInfo(perfil.pontos_acumulados || 0).cor ? { backgroundColor: getNivelInfo(perfil.pontos_acumulados || 0).cor } : undefined}
+                      >
                         {getNivelInfo(perfil.pontos_acumulados || 0).nome}
                       </span>
                     </div>

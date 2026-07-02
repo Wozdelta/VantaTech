@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { supabase } from '@/lib/supabase';
 import { useAlert } from '@/contexts/AlertContext';
+import { useSettings } from '@/contexts/SettingsContext';
 import CartDrawer from './CartDrawer';
 
 export default function Navbar() {
@@ -18,6 +19,12 @@ export default function Navbar() {
   const navRef = useRef<HTMLElement>(null);
   const { user, perfil, signOut } = useAuth();
   const { cartCount, setIsCartOpen } = useCart();
+  const { settings } = useSettings();
+
+  const showFidelidade = settings.acesso_fidelidade === 'todos' || perfil?.cargo === 'Admin';
+  const showCupons = settings.acesso_cupons === 'todos' || perfil?.cargo === 'Admin';
+  const showEncomendas = settings.acesso_encomendas === 'todos' || perfil?.cargo === 'Admin';
+  const showAjuda = settings.acesso_ajuda === 'todos' || perfil?.cargo === 'Admin';
 
   useEffect(() => {
     fetchCategories();
@@ -263,8 +270,17 @@ export default function Navbar() {
       <div className="flex flex-col gap-1 px-1">
         <Link to="/perfil" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium">Configurar Perfil</Link>
         <Link to="/pedidos" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium">Meus Pedidos</Link>
-        <Link to="/cupons" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium">Meus Cupons</Link>
-        {perfil?.cargo === 'Admin' ? (
+        
+        {showCupons ? (
+          <Link to="/cupons" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium">Meus Cupons</Link>
+        ) : (
+          <div className="px-3 py-2 text-sm text-gray-400 dark:text-gray-600 rounded-md font-medium flex items-center justify-between cursor-not-allowed select-none">
+            <span>Meus Cupons</span>
+            <span className="text-[9px] font-bold bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-500 uppercase">Em breve</span>
+          </div>
+        )}
+
+        {showFidelidade ? (
           <Link to="/fidelidade" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-orange rounded-md transition-colors font-medium">Clube Vanta</Link>
         ) : (
           <div className="px-3 py-2 text-sm text-gray-400 dark:text-gray-600 rounded-md font-medium flex items-center justify-between cursor-not-allowed select-none">
@@ -272,7 +288,7 @@ export default function Navbar() {
             <span className="text-[9px] font-bold bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-500 uppercase">Em breve</span>
           </div>
         )}
-        {perfil?.cargo === 'Admin' ? (
+        {showEncomendas ? (
           <Link to="/encomendar" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-orange rounded-md transition-colors font-medium">Encomendar um Aparelho</Link>
         ) : (
           <div className="px-3 py-2 text-sm text-gray-400 dark:text-gray-600 rounded-md font-medium flex items-center justify-between cursor-not-allowed select-none">
@@ -280,12 +296,21 @@ export default function Navbar() {
             <span className="text-[9px] font-bold bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-500 uppercase">Em breve</span>
           </div>
         )}
+        
         {perfil?.cargo === 'Admin' && (
           <Link to="/admin" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-vanta-orange hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-md transition-colors font-semibold mt-1">
             Dashboard
           </Link>
         )}
-        <Link to="/ajuda" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium mt-1 border-t border-gray-100 dark:border-gray-800 pt-3">Ajuda</Link>
+        
+        {showAjuda ? (
+          <Link to="/ajuda" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium mt-1 border-t border-gray-100 dark:border-gray-800 pt-3">Ajuda</Link>
+        ) : (
+          <div className="px-3 py-2 text-sm text-gray-400 dark:text-gray-600 rounded-md font-medium flex items-center justify-between cursor-not-allowed select-none mt-1 border-t border-gray-100 dark:border-gray-800 pt-3">
+            <span>Ajuda</span>
+            <span className="text-[9px] font-bold bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-500 uppercase">Em breve</span>
+          </div>
+        )}
       </div>
       <div className="mt-2 pt-3 border-t border-gray-100 dark:border-gray-800 flex flex-col items-center">
          <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Contato</p>

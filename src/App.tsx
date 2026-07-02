@@ -12,6 +12,7 @@ import ProductDetails from './pages/ProductDetails';
 import Produtos from './pages/Produtos';
 import Cupons from './pages/Cupons';
 import { AlertProvider } from './contexts/AlertContext';
+import { SettingsProvider } from './contexts/SettingsContext';
 
 export default function App() {
   const location = useLocation();
@@ -50,20 +51,22 @@ export default function App() {
   }, [user]);
 
   return (
-    <AlertProvider>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Home />} />
-          <Route path="produtos" element={<Produtos />} />
-          <Route path="produto/:id" element={<ProductDetails />} />
-          <Route path="perfil" element={<Perfil />} />
-          <Route path="pedidos" element={<Pedidos />} />
-          <Route path="cupons" element={<Cupons />} />
-          <Route path="fidelidade" element={<Fidelidade />} />
-          <Route path="admin" element={<AdminDashboard />} />
-        </Route>
-      </Routes>
-    </AlertProvider>
+    <SettingsProvider>
+      <AlertProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="produtos" element={<Produtos />} />
+            <Route path="produto/:id" element={<ProductDetails />} />
+            <Route path="perfil" element={<Perfil />} />
+            <Route path="pedidos" element={<Pedidos />} />
+            <Route path="cupons" element={<Cupons />} />
+            <Route path="fidelidade" element={<Fidelidade />} />
+          </Route>
+        </Routes>
+      </AlertProvider>
+    </SettingsProvider>
   );
 }
