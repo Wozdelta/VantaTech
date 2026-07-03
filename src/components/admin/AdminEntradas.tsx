@@ -184,7 +184,7 @@ export default function AdminEntradas() {
               <TrendingUp className="w-5 h-5 text-green-500" />
               Entrada de Produtos (Lucro)
               {unfilledCount > 0 && (
-                <span className="flex items-center justify-center bg-orange-500 text-white text-xs font-bold w-6 h-6 rounded-md shadow-sm ml-2" title={`${unfilledCount} itens sem custo preenchido`}>
+                <span className="flex items-center justify-center bg-orange-500 text-white text-xs font-bold h-6 min-w-[24px] px-1.5 rounded-md shadow-sm ml-2" title={`${unfilledCount} itens sem custo preenchido`}>
                   {unfilledCount}
                 </span>
               )}
