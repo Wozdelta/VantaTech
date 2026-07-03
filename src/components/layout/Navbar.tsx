@@ -279,10 +279,12 @@ export default function Navbar() {
       )}
 
       <div className="flex flex-col px-2">
-        <Link to="/perfil" onClick={() => closeMenus()} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-vanta-blue rounded-xl transition-colors font-medium group">
-          <Settings className="w-4 h-4 text-gray-400 group-hover:text-vanta-blue transition-colors" />
-          Configurar Perfil
-        </Link>
+        {user && (
+          <>
+            <Link to="/perfil" onClick={() => closeMenus()} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-vanta-blue rounded-xl transition-colors font-medium group">
+              <Settings className="w-4 h-4 text-gray-400 group-hover:text-vanta-blue transition-colors" />
+              Configurar Perfil
+            </Link>
         <Link to="/pedidos" onClick={() => closeMenus()} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-vanta-blue rounded-xl transition-colors font-medium group">
           <Package className="w-4 h-4 text-gray-400 group-hover:text-vanta-blue transition-colors" />
           Meus Pedidos
@@ -323,6 +325,8 @@ export default function Navbar() {
             <span className="text-[9px] font-bold bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-500 uppercase">Em breve</span>
           </div>
         )}
+        </>
+        )}
         
         {perfil?.cargo === 'Admin' && (
           <Link to="/admin" onClick={() => closeMenus()} className="flex items-center gap-3 px-3 py-2.5 text-sm text-vanta-orange hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-xl transition-colors font-semibold mt-1 group">
@@ -332,12 +336,12 @@ export default function Navbar() {
         )}
         
         {showAjuda ? (
-          <Link to="/ajuda" onClick={() => closeMenus()} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-vanta-blue rounded-xl transition-colors font-medium mt-1 border-t border-gray-100 dark:border-gray-800 pt-3 group">
+          <Link to="/ajuda" onClick={() => closeMenus()} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-vanta-blue rounded-xl transition-colors font-medium group">
             <HelpCircle className="w-4 h-4 text-gray-400 group-hover:text-vanta-blue transition-colors" />
             Ajuda
           </Link>
         ) : (
-          <div className="flex items-center justify-between px-3 py-2.5 text-sm text-gray-400 dark:text-gray-600 rounded-xl font-medium cursor-not-allowed select-none mt-1 border-t border-gray-100 dark:border-gray-800 pt-3">
+          <div className="flex items-center justify-between px-3 py-2.5 text-sm text-gray-400 dark:text-gray-600 rounded-xl font-medium cursor-not-allowed select-none">
             <div className="flex items-center gap-3"><HelpCircle className="w-4 h-4 opacity-50" /> Ajuda</div>
             <span className="text-[9px] font-bold bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-500 uppercase">Em breve</span>
           </div>

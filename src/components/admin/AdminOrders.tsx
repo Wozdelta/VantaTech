@@ -365,10 +365,10 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      <div className="overflow-x-auto min-h-[380px]">
-        <table className="min-w-full text-left">
-          <thead className="bg-gray-50 dark:bg-gray-900/50 text-gray-500 dark:text-gray-400 text-xs uppercase font-bold tracking-wider">
-            <tr>
+      <div className="overflow-x-hidden lg:overflow-x-auto min-h-[380px]">
+        <table className="w-full text-left border-collapse block lg:table">
+          <thead className="hidden lg:table-header-group bg-gray-50 dark:bg-gray-900/50 text-gray-500 dark:text-gray-400 text-xs uppercase font-bold tracking-wider">
+            <tr className="lg:table-row border-b border-gray-100 dark:border-gray-700">
               <th className="px-6 py-4 relative whitespace-nowrap">
                   <button 
                     onClick={() => setOpenDropdown(openDropdown === 'data' ? null : 'data')}
@@ -468,26 +468,27 @@ export default function AdminOrders() {
               <th className="px-6 py-4 text-right whitespace-nowrap">Ações</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-700/50">
+          <tbody className="block lg:table-row-group divide-y divide-gray-100 dark:divide-gray-700/50">
             {errorMsg ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-12 text-center">
+              <tr className="block lg:table-row">
+                <td colSpan={5} className="block lg:table-cell px-6 py-12 text-center">
                   <div className="bg-red-50 text-red-500 p-4 rounded-xl border border-red-100 inline-block font-bold">
                     Erro no Supabase: {errorMsg}
                   </div>
                 </td>
               </tr>
             ) : filteredOrders.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+              <tr className="block lg:table-row">
+                <td colSpan={5} className="block lg:table-cell px-6 py-12 text-center text-gray-500">
                   Nenhum pedido encontrado.
                 </td>
               </tr>
             ) : (
               paginatedOrders.map((pedido) => (
-                <tr key={pedido.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex flex-col">
+                <tr key={pedido.id} className="block lg:table-row hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors p-4 lg:p-0">
+                  <td className="block lg:table-cell px-0 py-3 lg:px-6 lg:py-4 whitespace-nowrap border-b border-gray-50 dark:border-gray-800 lg:border-0 flex justify-between items-center lg:items-start lg:justify-start">
+                    <span className="lg:hidden text-xs font-bold text-gray-500 uppercase mr-4">Pedido</span>
+                    <div className="flex flex-col text-right lg:text-left">
                       <span className="text-sm font-bold text-vanta-blue mb-1">
                         #{pedido.numero}
                       </span>
@@ -499,29 +500,33 @@ export default function AdminOrders() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="block lg:table-cell px-0 py-3 lg:px-6 lg:py-4 whitespace-nowrap border-b border-gray-50 dark:border-gray-800 lg:border-0">
+                    <span className="lg:hidden text-xs font-bold text-gray-500 uppercase mr-4 mb-3 block">Produtos</span>
                     <div className="flex flex-col gap-2">
                       {pedido.itens_pedido.map((item) => (
                         <div key={item.id} className="flex items-center gap-3">
                           <img src={item.imagem_url || '/placeholder.png'} alt={item.produto_nome} className="w-8 h-8 rounded object-cover bg-gray-100" />
                           <div>
-                            <p className="text-sm font-bold text-gray-900 dark:text-white break-words">{item.produto_nome}</p>
+                            <p className="text-sm font-bold text-gray-900 dark:text-white whitespace-normal">{item.produto_nome}</p>
                             <p className="text-xs text-gray-500">{item.quantidade}x R$ {item.produto_preco.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                           </div>
                         </div>
                       ))}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">
-                    R$ {pedido.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  <td className="block lg:table-cell px-0 py-3 lg:px-6 lg:py-4 text-sm font-bold text-gray-900 dark:text-white border-b border-gray-50 dark:border-gray-800 lg:border-0 flex justify-between items-center lg:items-start lg:justify-start">
+                    <span className="lg:hidden text-xs font-bold text-gray-500 uppercase mr-4">Total</span>
+                    <span>R$ {pedido.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="block lg:table-cell px-0 py-3 lg:px-6 lg:py-4 whitespace-nowrap border-b border-gray-50 dark:border-gray-800 lg:border-0 flex justify-between items-center lg:items-start lg:justify-start">
+                    <span className="lg:hidden text-xs font-bold text-gray-500 uppercase mr-4">Status</span>
                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${getStatusColor(pedido.status)}`}>
                       {getStatusIcon(pedido.status)}
                       {pedido.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right whitespace-nowrap">
+                  <td className="block lg:table-cell px-0 py-3 lg:px-6 lg:py-4 lg:text-right whitespace-nowrap flex justify-between items-center lg:justify-end">
+                    <span className="lg:hidden text-xs font-bold text-gray-500 uppercase mr-4">Ações</span>
                     <div className="flex items-center justify-end gap-2">
                       {updating === pedido.id ? (
                         <div className="px-3 py-1.5 flex items-center justify-center text-sm font-medium text-gray-500">

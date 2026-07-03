@@ -225,25 +225,27 @@ export default function AdminEntradas() {
           Nenhum produto encontrado.
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
+        <div className="overflow-x-hidden lg:overflow-x-auto">
+          <table className="w-full text-left border-collapse block lg:table">
+            <thead className="hidden lg:table-header-group">
               <tr className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aparelho</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Detalhes</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Valor Venda</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider lg:text-right">Valor Venda</th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Valor Pago (Custo)</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Lucro</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider lg:text-right">Lucro</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+            <tbody className="block lg:table-row-group divide-y divide-gray-100 dark:divide-gray-700">
               {paginatedItems.map((item) => (
-                <tr key={`${item.productId}-${item.variantIndex}`} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                <tr key={`${item.productId}-${item.variantIndex}`} className="block lg:table-row hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors p-4 lg:p-0">
+                  <td className="block lg:table-cell px-0 py-3 lg:px-6 lg:py-4 whitespace-nowrap border-b border-gray-50 dark:border-gray-800 lg:border-0 flex justify-between items-center lg:items-start lg:justify-start">
+                    <span className="lg:hidden text-xs font-bold text-gray-500 uppercase mr-4">Aparelho</span>
                     <span className="text-sm font-bold text-gray-900 dark:text-white">{item.nome}</span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex flex-col">
+                  <td className="block lg:table-cell px-0 py-3 lg:px-6 lg:py-4 whitespace-nowrap border-b border-gray-50 dark:border-gray-800 lg:border-0 flex justify-between items-center lg:items-start lg:justify-start">
+                    <span className="lg:hidden text-xs font-bold text-gray-500 uppercase mr-4">Detalhes</span>
+                    <div className="flex flex-col text-right lg:text-left">
                       <span className="text-sm text-gray-700 dark:text-gray-300">Cor: <span className="font-medium">{item.cor}</span></span>
                       {(item.armazenamento || item.bateria) && (
                         <span className="text-xs text-gray-500">
@@ -252,13 +254,15 @@ export default function AdminEntradas() {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                  <td className="block lg:table-cell px-0 py-3 lg:px-6 lg:py-4 whitespace-nowrap lg:text-right border-b border-gray-50 dark:border-gray-800 lg:border-0 flex justify-between items-center lg:items-start lg:justify-end">
+                    <span className="lg:hidden text-xs font-bold text-gray-500 uppercase mr-4">Venda</span>
                     <span className="text-sm font-bold text-gray-900 dark:text-white">
                       R$ {item.precoVenda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="relative w-32">
+                  <td className="block lg:table-cell px-0 py-3 lg:px-6 lg:py-4 whitespace-nowrap border-b border-gray-50 dark:border-gray-800 lg:border-0 flex justify-between items-center lg:items-start lg:justify-start">
+                    <span className="lg:hidden text-xs font-bold text-gray-500 uppercase mr-4">Custo</span>
+                    <div className="relative w-32 lg:w-full max-w-[128px]">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <DollarSign className="h-4 w-4 text-gray-400" />
                       </div>
@@ -273,7 +277,8 @@ export default function AdminEntradas() {
                       />
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                  <td className="block lg:table-cell px-0 py-3 lg:px-6 lg:py-4 whitespace-nowrap lg:text-right flex justify-between items-center lg:items-start lg:justify-end">
+                    <span className="lg:hidden text-xs font-bold text-gray-500 uppercase mr-4">Lucro</span>
                     <span className={`text-sm font-bold ${item.lucro > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`}>
                       R$ {item.lucro.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </span>
