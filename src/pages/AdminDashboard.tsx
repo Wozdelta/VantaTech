@@ -14,10 +14,11 @@ import AdminFidelidade from '../components/admin/AdminFidelidade';
 import AdminCupons from '../components/admin/AdminCupons';
 import AdminControle from '../components/admin/AdminControle';
 import AdminEncomendas from '../components/admin/AdminEncomendas';
+import AdminTabelaPrecos from '../components/admin/AdminTabelaPrecos';
 
 export default function AdminDashboard() {
   const { user, perfil, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'products' | 'categories' | 'notifications' | 'attributes' | 'sales_history' | 'fidelidade' | 'cupons' | 'controle' | 'encomendas'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'products' | 'categories' | 'notifications' | 'attributes' | 'sales_history' | 'fidelidade' | 'cupons' | 'controle' | 'encomendas' | 'tabela_precos'>('overview');
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
 
   const toggleTheme = () => {
@@ -245,6 +246,7 @@ export default function AdminDashboard() {
     { id: 'fidelidade', label: 'Fidelidade', icon: Award },
     { id: 'cupons', label: 'Cupons', icon: Tag },
     { id: 'encomendas', label: 'Encomendas', icon: PackageSearch, badge: pendingEncomendasCount },
+    { id: 'tabela_precos', label: 'Tabela de Preços', icon: DollarSign },
     { id: 'controle', label: 'Controle', icon: ShieldCheck },
   ] as const;
 
@@ -437,6 +439,7 @@ export default function AdminDashboard() {
             
             {activeTab === 'cupons' && <AdminCupons />}
             {activeTab === 'encomendas' && <AdminEncomendas />}
+            {activeTab === 'tabela_precos' && <AdminTabelaPrecos />}
             {activeTab === 'controle' && <AdminControle />}
           </div>
         </main>

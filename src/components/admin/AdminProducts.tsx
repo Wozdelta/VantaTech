@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
 import { Plus, Trash2, Image as ImageIcon, Loader2, X, Edit, UploadCloud, Palette, Smartphone, Package, Search, ChevronDown, Check } from 'lucide-react';
+import { Reorder } from 'framer-motion';
 import RichTextEditor from '../ui/RichTextEditor';
 
 type Product = {
@@ -87,30 +88,7 @@ export default function AdminProducts() {
   const [filterPreco, setFilterPreco] = useState('');
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
-  // Drag and drop referências
-  const dragItem = useRef<number | null>(null);
-  const dragOverItem = useRef<number | null>(null);
-
-  const handleDragStart = (e: React.DragEvent, index: number) => {
-    dragItem.current = index;
-    if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragEnter = (e: React.DragEvent, index: number) => {
-    if (dragItem.current !== null && dragItem.current !== index) {
-      const newImages = [...images];
-      const draggedItemContent = newImages[dragItem.current];
-      newImages.splice(dragItem.current, 1);
-      newImages.splice(index, 0, draggedItemContent);
-      setImages(newImages);
-      dragItem.current = index;
-    }
-  };
-
-  const handleDragEnd = () => {
-    dragItem.current = null;
-    dragOverItem.current = null;
-  };
+  // Drag and drop referências (Removidas, usando framer-motion)
 
   useEffect(() => {
     fetchProducts();
@@ -804,20 +782,26 @@ export default function AdminProducts() {
                 <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Galeria de Fotos</h4>
                 <p className="text-sm text-gray-500 mb-6">Suba as fotos e selecione a cor de cada uma logo abaixo da miniatura.</p>
 
-                <div className="flex flex-wrap gap-4">
-                  {images.map((img, index) => (
-                    <div 
-                      key={img.id} 
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, index)}
-                      onDragEnter={(e) => handleDragEnter(e, index)}
-                      onDragEnd={handleDragEnd}
-                      onDragOver={(e) => e.preventDefault()}
-                      className="relative bg-white dark:bg-gray-900 p-3 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm w-56 flex flex-col group gap-2 cursor-move hover:border-vanta-blue transition-colors"
+                <div className="flex flex-wrap gap-4 items-start">
+                  <Reorder.Group axis="x" values={images} onReorder={setImages} className="flex flex-wrap gap-4">
+                  {images.map((img) => (
+                    <Reorder.Item
+                      key={img.id}
+                      value={img}
+                      id={img.id}
+                      drag
+                      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                      whileDrag={{ 
+                        scale: 1.05, 
+                        boxShadow: '0px 10px 30px rgba(0,0,0,0.15)', 
+                        opacity: 0.85, 
+                        zIndex: 50 
+                      }}
+                      className="relative bg-white dark:bg-gray-900 p-3 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm w-56 flex flex-col group gap-2 cursor-grab active:cursor-grabbing hover:border-vanta-blue transition-colors"
                     >
                       <button type="button" onClick={() => handleRemoveImage(img.id)} className="absolute -top-3 -right-3 bg-red-500 text-white p-1.5 rounded-full shadow hover:bg-red-600 z-10 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-4 h-4" /></button>
                       <div className="h-28 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800">
-                        <img src={img.preview} alt="" className="max-h-full max-w-full object-contain" />
+                        <img draggable={false} src={img.preview} alt="" className="max-h-full max-w-full object-contain pointer-events-none" />
                       </div>
                       
                       {productType === 'aparelho' && (
@@ -885,8 +869,9 @@ export default function AdminProducts() {
                           </div>
                         </>
                       )}
-                    </div>
+                    </Reorder.Item>
                   ))}
+                  </Reorder.Group>
 
                   <div className="flex flex-col items-center gap-2">
                     <label className="w-36 h-44 flex flex-col items-center justify-center bg-white dark:bg-gray-900 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl cursor-pointer hover:border-vanta-blue hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-colors group">
