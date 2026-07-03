@@ -36,14 +36,6 @@ export default function HeroBanner() {
               Comprar Agora
               <ArrowRight className="w-5 h-5" />
             </Link>
-            
-            <Link 
-              to="/produtos" 
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 text-vanta-darkblue dark:text-white font-bold text-lg rounded-full bg-transparent border-2 border-gray-200 dark:border-gray-700 hover:border-vanta-blue dark:hover:border-vanta-blue hover:text-vanta-blue dark:hover:text-vanta-blue hover:-translate-y-1 transition-all duration-300"
-            >
-              <Search className="w-5 h-5" />
-              Explorar Catálogo
-            </Link>
           </div>
 
 
