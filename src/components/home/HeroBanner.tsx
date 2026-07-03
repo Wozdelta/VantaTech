@@ -20,7 +20,8 @@ export default function HeroBanner() {
 
           
           <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold text-vanta-darkblue dark:text-white leading-[1.05] tracking-tight transition-colors duration-300">
-            Melhores valores da<br/>
+            Melhores valores da{' '}
+            <br className="hidden sm:block" />
             <span className="text-vanta-orange">região de Araraquara</span>
           </h1>
           

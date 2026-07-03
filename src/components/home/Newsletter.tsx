@@ -47,7 +47,7 @@ export default function Newsletter() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Digite seu melhor e-mail"
+              placeholder="Digite seu e-mail"
               required
               className="w-full h-16 pl-14 pr-[140px] rounded-full border border-white/10 bg-white/5 backdrop-blur-xl text-white placeholder-blue-200/50 outline-none focus:bg-white focus:text-gray-900 focus:placeholder-gray-400 focus:border-white transition-all duration-500 shadow-[0_8px_32px_rgba(0,0,0,0.2)] focus:shadow-[0_8px_32px_rgba(29,142,255,0.3)]"
             />
