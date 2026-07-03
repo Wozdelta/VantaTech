@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Bell, ShoppingCart, User, Menu, X, Smartphone, Trash2, Moon, Sun } from 'lucide-react';
+import { Search, Bell, ShoppingCart, User, Menu, X, Smartphone, Trash2, Moon, Sun, Settings, Package, Ticket, Crown, LayoutDashboard, HelpCircle, LogOut } from 'lucide-react';
 import { FaWhatsapp, FaInstagram } from 'react-icons/fa6';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -241,83 +241,122 @@ export default function Navbar() {
   );
 
   const UserContent = (
-    <>
-      <div className="p-2 border-b border-gray-100 dark:border-gray-800 mb-2">
-        {user ? (
-          <div className="text-center py-2">
-            <p className="text-sm font-bold text-gray-900 dark:text-white">
+    <div className="py-2">
+      {user ? (
+        <div className="px-4 pb-4 mb-2 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-vanta-blue to-blue-400 p-[2px] shrink-0">
+            <div className="w-full h-full bg-white dark:bg-gray-900 rounded-full flex items-center justify-center overflow-hidden">
+              {perfil?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture ? (
+                <img src={perfil?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <User className="w-6 h-6 text-gray-400" />
+              )}
+            </div>
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <p className="text-sm font-bold text-gray-900 dark:text-white truncate">
               Olá, {perfil?.nome_completo?.split(' ')[0] || user.user_metadata?.nome_completo?.split(' ')[0] || user.user_metadata?.full_name?.split(' ')[0] || user.user_metadata?.name?.split(' ')[0] || 'Usuário'}
             </p>
-            {perfil?.cargo === 'Admin' && (
-              <span className="inline-block mt-1 px-2 py-0.5 bg-vanta-orange/10 text-vanta-orange text-[10px] font-bold rounded uppercase">
+            {perfil?.cargo === 'Admin' ? (
+              <span className="inline-block mt-0.5 px-2 py-0.5 bg-vanta-orange/10 text-vanta-orange text-[10px] font-bold rounded-md uppercase tracking-wider">
                 Admin
               </span>
+            ) : (
+              <p className="text-xs text-gray-500 truncate">{user.email}</p>
             )}
-            <button 
-              onClick={() => {
-                signOut();
-                closeMenus();
-              }}
-              className="block w-full mt-3 text-center py-2 bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 text-sm font-bold rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
-            >
-              Sair
-            </button>
           </div>
-        ) : (
+        </div>
+      ) : (
+        <div className="px-4 pb-4 mb-2 border-b border-gray-100 dark:border-gray-800">
           <Link 
             to="/login" 
             onClick={() => closeMenus()}
-            className="block w-full text-center py-2 bg-vanta-blue text-white text-sm font-bold rounded-lg hover:bg-vanta-darkblue transition-colors"
+            className="flex items-center justify-center w-full py-2.5 bg-vanta-blue text-white text-sm font-bold rounded-xl hover:bg-vanta-darkblue transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
           >
             Fazer Login
           </Link>
-        )}
-      </div>
-      <div className="flex flex-col gap-1 px-1">
-        <Link to="/perfil" onClick={() => closeMenus()} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium">Configurar Perfil</Link>
-        <Link to="/pedidos" onClick={() => closeMenus()} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium">Meus Pedidos</Link>
+        </div>
+      )}
+
+      <div className="flex flex-col px-2">
+        <Link to="/perfil" onClick={() => closeMenus()} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-vanta-blue rounded-xl transition-colors font-medium group">
+          <Settings className="w-4 h-4 text-gray-400 group-hover:text-vanta-blue transition-colors" />
+          Configurar Perfil
+        </Link>
+        <Link to="/pedidos" onClick={() => closeMenus()} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-vanta-blue rounded-xl transition-colors font-medium group">
+          <Package className="w-4 h-4 text-gray-400 group-hover:text-vanta-blue transition-colors" />
+          Meus Pedidos
+        </Link>
         
         {showCupons ? (
-          <Link to="/cupons" onClick={() => closeMenus()} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium">Meus Cupons</Link>
+          <Link to="/cupons" onClick={() => closeMenus()} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-vanta-blue rounded-xl transition-colors font-medium group">
+            <Ticket className="w-4 h-4 text-gray-400 group-hover:text-vanta-blue transition-colors" />
+            Meus Cupons
+          </Link>
         ) : (
-          <div className="px-3 py-2 text-sm text-gray-400 dark:text-gray-600 rounded-md font-medium flex items-center justify-between cursor-not-allowed select-none">
-            <span>Meus Cupons</span>
+          <div className="flex items-center justify-between px-3 py-2.5 text-sm text-gray-400 dark:text-gray-600 rounded-xl font-medium cursor-not-allowed select-none">
+            <div className="flex items-center gap-3"><Ticket className="w-4 h-4 opacity-50" /> Meus Cupons</div>
             <span className="text-[9px] font-bold bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-500 uppercase">Em breve</span>
           </div>
         )}
 
         {showFidelidade ? (
-          <Link to="/fidelidade" onClick={() => closeMenus()} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-orange rounded-md transition-colors font-medium">Clube Vanta</Link>
+          <Link to="/fidelidade" onClick={() => closeMenus()} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-vanta-orange rounded-xl transition-colors font-medium group">
+            <Crown className="w-4 h-4 text-gray-400 group-hover:text-vanta-orange transition-colors" />
+            Clube Vanta
+          </Link>
         ) : (
-          <div className="px-3 py-2 text-sm text-gray-400 dark:text-gray-600 rounded-md font-medium flex items-center justify-between cursor-not-allowed select-none">
-            <span>Clube Vanta</span>
+          <div className="flex items-center justify-between px-3 py-2.5 text-sm text-gray-400 dark:text-gray-600 rounded-xl font-medium cursor-not-allowed select-none">
+            <div className="flex items-center gap-3"><Crown className="w-4 h-4 opacity-50" /> Clube Vanta</div>
             <span className="text-[9px] font-bold bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-500 uppercase">Em breve</span>
           </div>
         )}
+        
         {showEncomendas ? (
-          <Link to="/encomendar" onClick={() => closeMenus()} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-orange rounded-md transition-colors font-medium">Encomendar um Aparelho</Link>
+          <Link to="/encomendar" onClick={() => closeMenus()} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-vanta-blue rounded-xl transition-colors font-medium group">
+            <Smartphone className="w-4 h-4 text-gray-400 group-hover:text-vanta-blue transition-colors" />
+            Encomendar um Aparelho
+          </Link>
         ) : (
-          <div className="px-3 py-2 text-sm text-gray-400 dark:text-gray-600 rounded-md font-medium flex items-center justify-between cursor-not-allowed select-none">
-            <span>Encomendar um Aparelho</span>
+          <div className="flex items-center justify-between px-3 py-2.5 text-sm text-gray-400 dark:text-gray-600 rounded-xl font-medium cursor-not-allowed select-none">
+            <div className="flex items-center gap-3"><Smartphone className="w-4 h-4 opacity-50" /> Encomendar um Aparelho</div>
             <span className="text-[9px] font-bold bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-500 uppercase">Em breve</span>
           </div>
         )}
         
         {perfil?.cargo === 'Admin' && (
-          <Link to="/admin" onClick={() => closeMenus()} className="px-3 py-2 text-sm text-vanta-orange hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-md transition-colors font-semibold mt-1">
+          <Link to="/admin" onClick={() => closeMenus()} className="flex items-center gap-3 px-3 py-2.5 text-sm text-vanta-orange hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-xl transition-colors font-semibold mt-1 group">
+            <LayoutDashboard className="w-4 h-4 text-vanta-orange/70 group-hover:text-vanta-orange transition-colors" />
             Dashboard
           </Link>
         )}
         
         {showAjuda ? (
-          <Link to="/ajuda" onClick={() => closeMenus()} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium mt-1 border-t border-gray-100 dark:border-gray-800 pt-3">Ajuda</Link>
+          <Link to="/ajuda" onClick={() => closeMenus()} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-vanta-blue rounded-xl transition-colors font-medium mt-1 border-t border-gray-100 dark:border-gray-800 pt-3 group">
+            <HelpCircle className="w-4 h-4 text-gray-400 group-hover:text-vanta-blue transition-colors" />
+            Ajuda
+          </Link>
         ) : (
-          <div className="px-3 py-2 text-sm text-gray-400 dark:text-gray-600 rounded-md font-medium flex items-center justify-between cursor-not-allowed select-none mt-1 border-t border-gray-100 dark:border-gray-800 pt-3">
-            <span>Ajuda</span>
+          <div className="flex items-center justify-between px-3 py-2.5 text-sm text-gray-400 dark:text-gray-600 rounded-xl font-medium cursor-not-allowed select-none mt-1 border-t border-gray-100 dark:border-gray-800 pt-3">
+            <div className="flex items-center gap-3"><HelpCircle className="w-4 h-4 opacity-50" /> Ajuda</div>
             <span className="text-[9px] font-bold bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-500 uppercase">Em breve</span>
           </div>
         )}
+
+        {user && (
+          <button 
+            onClick={() => {
+              signOut();
+              closeMenus();
+            }}
+            className="flex items-center gap-3 px-3 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors font-semibold mt-1 group text-left"
+          >
+            <LogOut className="w-4 h-4 text-red-400 group-hover:text-red-500 transition-colors" />
+            Sair da conta
+          </button>
+        )}
       </div>
+
       <div className="mt-2 pt-3 border-t border-gray-100 dark:border-gray-800 flex flex-col items-center">
          <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Contato</p>
          <div className="flex items-center justify-center gap-6 w-full">
@@ -329,7 +368,7 @@ export default function Navbar() {
            </a>
          </div>
       </div>
-    </>
+    </div>
   );
 
   const DarkModeToggle = (
