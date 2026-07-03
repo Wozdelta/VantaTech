@@ -517,7 +517,7 @@ export default function ProductDetails() {
                   R$ {displayPrecoAntigo.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>
               )}
-              <p className="text-sm text-gray-500 mt-2">Em até 18x com juros no cartão de crédito.</p>
+              <p className="text-sm text-gray-500 mt-2">Em até 12x com juros no cartão de crédito.</p>
             </div>
 
             {/* Seletor de Cores */}

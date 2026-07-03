@@ -6,19 +6,19 @@ import { useAlert } from '@/contexts/AlertContext';
 import { FaWhatsapp } from 'react-icons/fa6';
 import { supabase } from '@/lib/supabase';
 
-const MP_RATES = {
-  1: 0,
-  2: 0.0253,
-  3: 0.0283,
-  4: 0.0473,
-  5: 0.0483,
-  6: 0.0493,
-  7: 0.0623,
-  8: 0.0642,
-  9: 0.0711,
-  10: 0.0779,
-  11: 0.0901,
-  12: 0.1001
+const TAXAS_CARTAO = {
+  1: 3.15,
+  2: 5.39,
+  3: 6.12,
+  4: 6.85,
+  5: 7.57,
+  6: 8.28,
+  7: 8.99,
+  8: 9.69,
+  9: 10.38,
+  10: 11.06,
+  11: 11.74,
+  12: 12.4
 };
 
 // VantaTech coordinates (Avenida Luiz Antonio Correa da Silva, 269 - Vila Xavier)
@@ -35,7 +35,7 @@ function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon
     Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const d = R * c; 
+  const d = R * c;
   return d;
 }
 
@@ -52,10 +52,10 @@ export default function CartDrawer() {
 
   const [pagamento, setPagamento] = useState('PIX');
   const [showPagamento, setShowPagamento] = useState(false);
-  
+
   const [parcelas, setParcelas] = useState(1);
   const [showParcelas, setShowParcelas] = useState(false);
-  
+
   const [endereco, setEndereco] = useState({
     cep: '',
     rua: '',
@@ -71,14 +71,14 @@ export default function CartDrawer() {
   const [distanciaKm, setDistanciaKm] = useState(0);
   const [isCalculatingFrete, setIsCalculatingFrete] = useState(false);
   const [freteError, setFreteError] = useState('');
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Cupom State
   const [cupomCode, setCupomCode] = useState('');
   const [cupomAplicado, setCupomAplicado] = useState<any>(null);
   const [isApplyingCupom, setIsApplyingCupom] = useState(false);
-  const [cupomMessage, setCupomMessage] = useState<{text: string, type: 'error' | 'success'} | null>(null);
+  const [cupomMessage, setCupomMessage] = useState<{ text: string, type: 'error' | 'success' } | null>(null);
 
   useEffect(() => {
     if (perfil) {
@@ -119,7 +119,7 @@ export default function CartDrawer() {
       if (!expDateStr.endsWith('Z') && !expDateStr.includes('+') && !expDateStr.includes('-')) {
         expDateStr += 'Z';
       }
-      
+
       if (new Date(expDateStr) < new Date()) {
         setCupomAplicado(null);
         setCupomMessage({ text: 'Seu cupom acabou de expirar!', type: 'error' });
@@ -148,26 +148,28 @@ export default function CartDrawer() {
   const isPix = pagamento === 'PIX';
   // O desconto pix é aplicado sobre o subtotal já subtraindo o cupom
   const pixDiscount = isPix ? Math.max(0, cartTotal - cupomDiscount) * 0.05 : 0;
-  const currentRate = MP_RATES[parcelas as keyof typeof MP_RATES] || 0;
-  
+  const currentRate = TAXAS_CARTAO[parcelas as keyof typeof TAXAS_CARTAO] || 0;
+
   // Frete é somado ANTES do juros do cartão, e os descontos são aplicados só no valor dos produtos
   const baseValueForInstallments = Math.max(0, cartTotal - cupomDiscount) + frete;
-  const finalTotal = isPix 
-    ? (Math.max(0, cartTotal - cupomDiscount) - pixDiscount + frete) 
-    : baseValueForInstallments * (1 + currentRate);
-    
+  const finalTotal = isPix
+    ? (Math.max(0, cartTotal - cupomDiscount) - pixDiscount + frete)
+    : pagamento === 'Cartão de Crédito'
+      ? baseValueForInstallments / (1 - (currentRate / 100))
+      : baseValueForInstallments;
+
   const installmentValue = finalTotal / parcelas;
   const interestValue = finalTotal - baseValueForInstallments;
 
   const handleCepChange = async (value: string) => {
     setEndereco({ ...endereco, cep: value });
     const rawCep = value.replace(/\D/g, '');
-    
+
     if (rawCep.length === 8) {
       try {
         const res = await fetch(`https://viacep.com.br/ws/${rawCep}/json/`);
         const data = await res.json();
-        
+
         if (!data.erro) {
           setEndereco(prev => ({
             ...prev,
@@ -186,7 +188,7 @@ export default function CartDrawer() {
 
   const calculateShippingAndProceed = async () => {
     const { cep, rua, numero, bairro, cidade, estado } = endereco;
-    
+
     // Validar se todos os campos (exceto complemento) estão preenchidos
     if (!cep || !rua || !numero || !bairro || !cidade || !estado) {
       showAlert({ title: 'Atenção', message: 'Preencha todos os campos obrigatórios do endereço para continuar.', type: 'warning' });
@@ -256,7 +258,7 @@ export default function CartDrawer() {
   const handleCheckout = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
-    
+
     if (user) {
       try {
         const umMinutoAtras = new Date(Date.now() - 60000).toISOString();
@@ -308,37 +310,37 @@ export default function CartDrawer() {
 
         if (soldItems && soldItems.length > 0) {
           const unavailableItems = items.filter(item => {
-             return soldItems.some(soldItem => {
-               if (soldItem.produto_id !== item.productId) return false;
-               
-               const status = (soldItem.pedidos as any).status;
-               const orderUserId = (soldItem.pedidos as any).user_id;
-               
-               // Bloqueio global (para todos) apenas se for Aparelho e já estiver vendido/enviado
-               const isBlockedGlobally = !item.isItem && (status === 'Enviado' || status === 'Entregue');
-               
-               // Bloqueio por usuário: não deixa criar outro igual se já tiver um pendente
-               const isBlockedForUser = orderUserId === user.id && status === 'Pendente';
+            return soldItems.some(soldItem => {
+              if (soldItem.produto_id !== item.productId) return false;
 
-               if (!isBlockedGlobally && !isBlockedForUser) return false;
+              const status = (soldItem.pedidos as any).status;
+              const orderUserId = (soldItem.pedidos as any).user_id;
 
-               const corMatch = soldItem.produto_nome.match(/Cor:\s*([^-]+)/i);
-               const storageMatch = soldItem.produto_nome.match(/Cor:\s*[^-]+\s*-\s*(.+)$/i);
-               
-               const soldColor = corMatch && corMatch[1] ? corMatch[1].trim().toLowerCase() : '';
-               const soldStorage = storageMatch && storageMatch[1] ? storageMatch[1].trim().toLowerCase() : '';
+              // Bloqueio global (para todos) apenas se for Aparelho e já estiver vendido/enviado
+              const isBlockedGlobally = !item.isItem && (status === 'Enviado' || status === 'Entregue');
 
-               const itemColor = (item.color || '').toLowerCase();
-               const itemStorage = (item.storage || '').toLowerCase();
+              // Bloqueio por usuário: não deixa criar outro igual se já tiver um pendente
+              const isBlockedForUser = orderUserId === user.id && status === 'Pendente';
 
-               if (soldColor && soldStorage) {
-                 return soldColor === itemColor && soldStorage === itemStorage;
-               } else if (soldColor) {
-                 return soldColor === itemColor;
-               }
-               
-               return true;
-             });
+              if (!isBlockedGlobally && !isBlockedForUser) return false;
+
+              const corMatch = soldItem.produto_nome.match(/Cor:\s*([^-]+)/i);
+              const storageMatch = soldItem.produto_nome.match(/Cor:\s*[^-]+\s*-\s*(.+)$/i);
+
+              const soldColor = corMatch && corMatch[1] ? corMatch[1].trim().toLowerCase() : '';
+              const soldStorage = storageMatch && storageMatch[1] ? storageMatch[1].trim().toLowerCase() : '';
+
+              const itemColor = (item.color || '').toLowerCase();
+              const itemStorage = (item.storage || '').toLowerCase();
+
+              if (soldColor && soldStorage) {
+                return soldColor === itemColor && soldStorage === itemStorage;
+              } else if (soldColor) {
+                return soldColor === itemColor;
+              }
+
+              return true;
+            });
           });
 
           if (unavailableItems.length > 0) {
@@ -370,7 +372,7 @@ export default function CartDrawer() {
           parcelas: pagamento === 'Cartão de Crédito' ? parcelas : 1,
           endereco_entrega: (endereco.cep || endereco.rua) ? endereco : null
         };
-        
+
         if (cupomAplicado) {
           payloadPedido.cupom_id = cupomAplicado.id;
           payloadPedido.desconto_cupom = cupomDiscount;
@@ -390,7 +392,7 @@ export default function CartDrawer() {
             let nomeDetalhado = item.name;
             if (item.color) nomeDetalhado += ` - Cor: ${item.color}`;
             if (item.storage) nomeDetalhado += ` - ${item.storage}`;
-            
+
             return {
               pedido_id: pedido.id,
               produto_id: item.productId,
@@ -412,14 +414,14 @@ export default function CartDrawer() {
       }
     }
 
-    const text = items.map(item => 
+    const text = items.map(item =>
       `*${item.quantity}x ${item.name}*\n     Cor: ${item.color || 'Padrão'} | Armazenamento: ${item.storage || 'Padrão'}\n     Valor: ${formatPrice(item.price * item.quantity)}`
     ).join('\n\n');
-    
+
     let message = `*NOVO PEDIDO - VANTATECH*\n\n`;
     message += `*PRODUTOS:*\n${text}\n\n`;
     message += `---------------------------------------\n\n`;
-    
+
     if (endereco.cep || endereco.rua) {
       message += `*ENDEREÇO DE ENTREGA:*\n${endereco.rua}, ${endereco.numero}\nBairro: ${endereco.bairro}\n${endereco.cidade} - ${endereco.estado}\nCEP: ${endereco.cep}\n\n`;
       message += `---------------------------------------\n\n`;
@@ -470,7 +472,7 @@ export default function CartDrawer() {
     clearCart();
     removeCupom();
     const url = `https://wa.me/5516997700430?text=${encodeURIComponent(message)}`;
-    
+
     setIsSubmitting(false);
     window.open(url, '_blank');
   };
@@ -500,7 +502,7 @@ export default function CartDrawer() {
         if (!expDateStr.endsWith('Z') && !expDateStr.includes('+') && !expDateStr.includes('-')) {
           expDateStr += 'Z';
         }
-        
+
         if (new Date(expDateStr) < new Date()) {
           throw new Error('Este cupom expirou.');
         }
@@ -515,7 +517,7 @@ export default function CartDrawer() {
             .eq('user_id', user.id)
             .eq('cupom_id', data.id)
             .limit(1);
-            
+
           if (!erroUso && jaUsou && jaUsou.length > 0) {
             throw new Error('Você já utilizou este cupom em uma compra anterior.');
           }
@@ -558,7 +560,7 @@ export default function CartDrawer() {
         if (!user || !perfil) {
           throw new Error('Você precisa estar logado para usar este cupom restrito a membros do Clube.');
         }
-        
+
         const { data: nivelData, error: nivelError } = await supabase
           .from('niveis_fidelidade')
           .select('nome, pontos_minimos')
@@ -591,36 +593,36 @@ export default function CartDrawer() {
 
   return (
     <>
-      <div 
+      <div
         className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] transition-opacity animate-in fade-in duration-300"
         onClick={() => setIsCartOpen(false)}
       />
 
       <div className="fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-gray-900 z-[70] shadow-2xl flex flex-col animate-in slide-in-from-right duration-300 border-l border-gray-100 dark:border-gray-800">
-        
+
         <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800 shrink-0">
           <div className="flex items-center gap-3 text-vanta-darkblue dark:text-white">
             {step === 1 ? (
               <ShoppingBag className="w-5 h-5" />
             ) : (
-              <button 
+              <button
                 onClick={() => {
                   setStep((prev) => (prev - 1) as 1 | 2);
                   setFreteError('');
-                }} 
+                }}
                 className="p-1.5 -ml-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
             )}
-            
+
             <h2 className="text-lg font-black tracking-tight">
               {step === 1 && "Meu Carrinho"}
               {step === 2 && "Endereço de Entrega"}
               {step === 3 && "Pagamento"}
             </h2>
           </div>
-          <button 
+          <button
             onClick={() => setIsCartOpen(false)}
             className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors"
           >
@@ -644,7 +646,7 @@ export default function CartDrawer() {
                 <p className="text-lg font-bold text-gray-900 dark:text-white">Sua sacola está vazia</p>
                 <p className="text-sm text-gray-500 mt-1">Adicione produtos para continuar.</p>
               </div>
-              <button 
+              <button
                 onClick={() => setIsCartOpen(false)}
                 className="px-6 py-2.5 bg-vanta-blue/10 text-vanta-blue font-bold rounded-xl mt-4 hover:bg-vanta-blue hover:text-white transition-colors"
               >
@@ -664,7 +666,7 @@ export default function CartDrawer() {
                       <div className="w-20 h-20 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 flex items-center justify-center p-2 flex-shrink-0">
                         <img src={item.image || '/placeholder.png'} alt={item.name} className="w-full h-full object-contain" />
                       </div>
-                      
+
                       <div className="flex-1 flex flex-col justify-between">
                         <div>
                           <h4 className="text-sm font-bold text-gray-900 dark:text-white leading-tight break-words mb-0.5">
@@ -674,12 +676,12 @@ export default function CartDrawer() {
                             {item.color || 'Cor Única'}{item.storage ? ` • ${item.storage}` : ''}
                           </div>
                         </div>
-                        
+
                         <div className="flex items-end justify-between mt-2">
                           <div className="text-vanta-blue dark:text-blue-400 font-bold text-base">
                             {formatPrice(item.price * item.quantity)}
                           </div>
-                          
+
                           <div className="flex items-center gap-3">
                             {(item.isItem && !item.storage) && (
                               <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 border border-gray-200 dark:border-gray-700">
@@ -698,11 +700,10 @@ export default function CartDrawer() {
                                     updateQuantity(item.id, item.quantity + 1);
                                   }}
                                   disabled={typeof item.maxQuantity === 'number' && item.quantity >= item.maxQuantity}
-                                  className={`w-6 h-6 flex items-center justify-center rounded transition-colors ${
-                                    typeof item.maxQuantity === 'number' && item.quantity >= item.maxQuantity
+                                  className={`w-6 h-6 flex items-center justify-center rounded transition-colors ${typeof item.maxQuantity === 'number' && item.quantity >= item.maxQuantity
                                       ? 'text-gray-300 cursor-not-allowed'
                                       : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
-                                  }`}
+                                    }`}
                                   title={typeof item.maxQuantity === 'number' && item.quantity >= item.maxQuantity ? 'Estoque máximo atingido' : ''}
                                 >
                                   <span className="font-bold leading-none select-none text-base mb-0.5">+</span>
@@ -710,7 +711,7 @@ export default function CartDrawer() {
                               </div>
                             )}
 
-                            <button 
+                            <button
                               onClick={() => removeFromCart(item.id)}
                               className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
                               title="Remover produto"
@@ -748,73 +749,73 @@ export default function CartDrawer() {
                       <div className="grid grid-cols-3 gap-3">
                         <div className="col-span-1">
                           <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">CEP</label>
-                          <input 
+                          <input
                             id="cep"
                             name="cep"
-                            type="text" 
-                            value={endereco.cep} 
+                            type="text"
+                            value={endereco.cep}
                             onChange={e => handleCepChange(e.target.value)}
-                            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white outline-none focus:border-vanta-blue transition-colors" 
+                            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white outline-none focus:border-vanta-blue transition-colors"
                             placeholder="00000-000"
                           />
                         </div>
                         <div className="col-span-2">
                           <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Rua</label>
-                          <input 
+                          <input
                             id="rua"
                             name="rua"
-                            type="text" 
-                            value={endereco.rua} 
-                            onChange={e => setEndereco({...endereco, rua: e.target.value})}
-                            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white outline-none focus:border-vanta-blue transition-colors" 
+                            type="text"
+                            value={endereco.rua}
+                            onChange={e => setEndereco({ ...endereco, rua: e.target.value })}
+                            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white outline-none focus:border-vanta-blue transition-colors"
                           />
                         </div>
                       </div>
                       <div className="grid grid-cols-3 gap-3">
                         <div className="col-span-1">
                           <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Número</label>
-                          <input 
+                          <input
                             id="numero"
                             name="numero"
-                            type="text" 
-                            value={endereco.numero} 
-                            onChange={e => setEndereco({...endereco, numero: e.target.value})}
-                            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white outline-none focus:border-vanta-blue transition-colors" 
+                            type="text"
+                            value={endereco.numero}
+                            onChange={e => setEndereco({ ...endereco, numero: e.target.value })}
+                            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white outline-none focus:border-vanta-blue transition-colors"
                           />
                         </div>
                         <div className="col-span-2">
                           <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Bairro</label>
-                          <input 
+                          <input
                             id="bairro"
                             name="bairro"
-                            type="text" 
-                            value={endereco.bairro} 
-                            onChange={e => setEndereco({...endereco, bairro: e.target.value})}
-                            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white outline-none focus:border-vanta-blue transition-colors" 
+                            type="text"
+                            value={endereco.bairro}
+                            onChange={e => setEndereco({ ...endereco, bairro: e.target.value })}
+                            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white outline-none focus:border-vanta-blue transition-colors"
                           />
                         </div>
                       </div>
                       <div className="grid grid-cols-3 gap-3">
                         <div className="col-span-2">
                           <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Cidade</label>
-                          <input 
+                          <input
                             id="cidade"
                             name="cidade"
-                            type="text" 
-                            value={endereco.cidade} 
-                            onChange={e => setEndereco({...endereco, cidade: e.target.value})}
-                            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white outline-none focus:border-vanta-blue transition-colors" 
+                            type="text"
+                            value={endereco.cidade}
+                            onChange={e => setEndereco({ ...endereco, cidade: e.target.value })}
+                            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white outline-none focus:border-vanta-blue transition-colors"
                           />
                         </div>
                         <div className="col-span-1">
                           <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Estado</label>
-                          <input 
+                          <input
                             id="estado"
                             name="estado"
-                            type="text" 
-                            value={endereco.estado} 
-                            onChange={e => setEndereco({...endereco, estado: e.target.value})}
-                            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white outline-none focus:border-vanta-blue transition-colors" 
+                            type="text"
+                            value={endereco.estado}
+                            onChange={e => setEndereco({ ...endereco, estado: e.target.value })}
+                            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white outline-none focus:border-vanta-blue transition-colors"
                             placeholder="UF"
                           />
                         </div>
@@ -831,17 +832,17 @@ export default function CartDrawer() {
                       <CreditCard className="w-5 h-5 text-vanta-blue" />
                       <h3 className="font-bold text-base">Forma de Pagamento</h3>
                     </div>
-                    
+
                     <div className="relative mb-5">
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Selecione uma opção</label>
-                      <button 
+                      <button
                         onClick={() => setShowPagamento(!showPagamento)}
                         className="w-full flex items-center justify-between gap-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 text-sm font-bold text-gray-900 dark:text-white outline-none focus:border-vanta-blue transition-all"
                       >
                         <span>{pagamento}</span>
                         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showPagamento ? 'rotate-180' : ''}`} />
                       </button>
-                      
+
                       {showPagamento && (
                         <>
                           <div className="fixed inset-0 z-[60]" onClick={() => setShowPagamento(false)} />
@@ -853,11 +854,10 @@ export default function CartDrawer() {
                                   setPagamento(option);
                                   setShowPagamento(false);
                                 }}
-                                className={`w-full text-left px-4 py-3.5 text-sm font-bold transition-colors ${
-                                  pagamento === option 
-                                    ? 'bg-vanta-blue/10 text-vanta-blue' 
+                                className={`w-full text-left px-4 py-3.5 text-sm font-bold transition-colors ${pagamento === option
+                                    ? 'bg-vanta-blue/10 text-vanta-blue'
                                     : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-                                }`}
+                                  }`}
                               >
                                 {option}
                               </button>
@@ -870,21 +870,21 @@ export default function CartDrawer() {
                     {pagamento === 'Cartão de Crédito' && (
                       <div className="relative animate-in fade-in duration-300">
                         <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Quantidade de Parcelas</label>
-                        <button 
+                        <button
                           onClick={() => setShowParcelas(!showParcelas)}
                           className="w-full flex items-center justify-between gap-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3 text-sm font-bold text-vanta-blue outline-none focus:border-vanta-blue transition-all"
                         >
-                          <span>{parcelas}x de {formatPrice((baseValueForInstallments * (1 + (MP_RATES[parcelas as keyof typeof MP_RATES] || 0))) / parcelas)}</span>
+                          <span>{parcelas}x de {formatPrice((baseValueForInstallments / (1 - ((TAXAS_CARTAO[parcelas as keyof typeof TAXAS_CARTAO] || 0) / 100))) / parcelas)}</span>
                           <ChevronDown className={`w-4 h-4 text-vanta-blue transition-transform ${showParcelas ? 'rotate-180' : ''}`} />
                         </button>
-                        
+
                         {showParcelas && (
                           <>
                             <div className="fixed inset-0 z-[60]" onClick={() => setShowParcelas(false)} />
                             <div className="absolute left-0 right-0 top-full mt-2 w-full max-h-64 overflow-y-auto custom-scrollbar bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] z-[70] animate-in fade-in zoom-in-95 duration-200">
-                              {Object.entries(MP_RATES).map(([numStr, rate]) => {
+                              {Object.entries(TAXAS_CARTAO).map(([numStr, rate]) => {
                                 const num = parseInt(numStr);
-                                const parValue = (baseValueForInstallments * (1 + rate)) / num;
+                                const parValue = (baseValueForInstallments / (1 - (rate / 100))) / num;
                                 return (
                                   <button
                                     key={num}
@@ -892,11 +892,10 @@ export default function CartDrawer() {
                                       setParcelas(num);
                                       setShowParcelas(false);
                                     }}
-                                    className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors ${
-                                      parcelas === num 
-                                        ? 'bg-vanta-blue/10 text-vanta-blue font-bold' 
+                                    className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors ${parcelas === num
+                                        ? 'bg-vanta-blue/10 text-vanta-blue font-bold'
                                         : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-                                    }`}
+                                      }`}
                                   >
                                     <span>{num}x</span>
                                     <span>{formatPrice(parValue)}</span>
@@ -917,7 +916,7 @@ export default function CartDrawer() {
 
         {items.length > 0 && (
           <div className="p-5 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 shrink-0 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.05)] relative z-40">
-            
+
             {/* Cupom Section (Sempre Visível) */}
             <div className="mb-4">
               {cupomAplicado ? (
@@ -946,11 +945,10 @@ export default function CartDrawer() {
                         setCupomCode(e.target.value.toUpperCase());
                         setCupomMessage(null);
                       }}
-                      className={`flex-1 px-3 py-2 text-sm border rounded-xl bg-gray-50 dark:bg-gray-800 focus:ring-2 outline-none uppercase font-bold transition-all ${
-                        cupomMessage?.type === 'error' 
-                          ? 'border-red-300 dark:border-red-500/50 focus:ring-red-500/20 focus:border-red-500' 
+                      className={`flex-1 px-3 py-2 text-sm border rounded-xl bg-gray-50 dark:bg-gray-800 focus:ring-2 outline-none uppercase font-bold transition-all ${cupomMessage?.type === 'error'
+                          ? 'border-red-300 dark:border-red-500/50 focus:ring-red-500/20 focus:border-red-500'
                           : 'border-gray-200 dark:border-gray-700 focus:ring-vanta-blue/20 focus:border-vanta-blue'
-                      }`}
+                        }`}
                     />
                     <button
                       onClick={applyCupom}
@@ -975,7 +973,7 @@ export default function CartDrawer() {
                 <span className="text-gray-500 font-medium text-sm">Subtotal</span>
                 <span className="text-sm font-bold text-gray-500">{formatPrice(cartTotal)}</span>
               </div>
-              
+
               {cupomAplicado && (
                 <div className="flex items-center justify-between text-green-600 dark:text-green-400">
                   <span className="font-medium text-sm">Desconto Cupom</span>
@@ -996,14 +994,14 @@ export default function CartDrawer() {
                   <span className="text-sm font-bold text-green-500">Grátis</span>
                 </div>
               )}
-              
+
               {step === 3 && pagamento === 'Cartão de Crédito' && parcelas > 1 && (
                 <div className="flex items-center justify-between text-orange-500 animate-in slide-in-from-top-1 duration-300">
                   <span className="font-medium text-xs">Juros (Maquininha)</span>
                   <span className="text-xs font-bold">+ {formatPrice(interestValue)}</span>
                 </div>
               )}
-              
+
               {step === 3 && pagamento === 'PIX' && (
                 <div className="flex items-center justify-between text-green-500 animate-in slide-in-from-top-1 duration-300">
                   <span className="font-medium text-xs">Desconto PIX (5%)</span>
@@ -1018,9 +1016,9 @@ export default function CartDrawer() {
                 </span>
               </div>
             </div>
-            
+
             {step === 1 && (
-              <button 
+              <button
                 onClick={() => setStep(2)}
                 className="w-full bg-vanta-blue hover:bg-blue-600 text-white py-3.5 rounded-xl font-bold flex items-center justify-center transition-all hover:-translate-y-1 hover:shadow-lg"
               >
@@ -1029,7 +1027,7 @@ export default function CartDrawer() {
             )}
 
             {step === 2 && (
-              <button 
+              <button
                 onClick={calculateShippingAndProceed}
                 disabled={isCalculatingFrete}
                 className="w-full bg-vanta-blue hover:bg-blue-600 disabled:bg-vanta-blue/50 text-white py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all hover:-translate-y-1 hover:shadow-lg"
@@ -1046,7 +1044,7 @@ export default function CartDrawer() {
             )}
 
             {step === 3 && (
-              <button 
+              <button
                 onClick={handleCheckout}
                 disabled={isSubmitting}
                 className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-70 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all hover:-translate-y-1 hover:shadow-[0_10px_20px_rgba(34,197,94,0.3)]"
@@ -1066,7 +1064,7 @@ export default function CartDrawer() {
             )}
 
             {step === 1 && (
-              <button 
+              <button
                 onClick={clearCart}
                 className="w-full mt-3 py-1.5 text-xs text-gray-400 font-medium hover:text-gray-900 dark:hover:text-white transition-colors"
               >

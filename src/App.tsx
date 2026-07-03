@@ -11,6 +11,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import ProductDetails from './pages/ProductDetails';
 import Produtos from './pages/Produtos';
 import Cupons from './pages/Cupons';
+import Encomendar from './pages/Encomendar';
 import { AlertProvider } from './contexts/AlertContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 
@@ -64,6 +65,7 @@ export default function App() {
             <Route path="pedidos" element={<Pedidos />} />
             <Route path="cupons" element={<Cupons />} />
             <Route path="fidelidade" element={<Fidelidade />} />
+            <Route path="encomendar" element={<Encomendar />} />
           </Route>
         </Routes>
       </AlertProvider>

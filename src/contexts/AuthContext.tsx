@@ -17,6 +17,9 @@ interface Perfil {
   avatar_url?: string;
   pontos?: number;
   pontos_acumulados?: number;
+  termos_encomenda_aceitos?: boolean;
+  termos_encomenda_ip?: string;
+  termos_encomenda_data?: string;
 }
 
 interface AuthContextType {

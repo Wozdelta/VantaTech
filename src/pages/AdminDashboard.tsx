@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
-import { Users, ShoppingBag, DollarSign, Activity, ListOrdered, BellRing, Package, History, Award, Tag, LogOut, LayoutDashboard, Moon, Sun, ShieldCheck } from 'lucide-react';
+import { Users, ShoppingBag, DollarSign, Activity, ListOrdered, BellRing, Package, History, Award, Tag, LogOut, LayoutDashboard, Moon, Sun, ShieldCheck, PackageSearch } from 'lucide-react';
 import AdminProducts from '../components/admin/AdminProducts';
 import AdminCategories from '../components/admin/AdminCategories';
 import AdminNotifications from '../components/admin/AdminNotifications';
@@ -13,10 +13,11 @@ import AdminSalesHistory from '../components/admin/AdminSalesHistory';
 import AdminFidelidade from '../components/admin/AdminFidelidade';
 import AdminCupons from '../components/admin/AdminCupons';
 import AdminControle from '../components/admin/AdminControle';
+import AdminEncomendas from '../components/admin/AdminEncomendas';
 
 export default function AdminDashboard() {
   const { user, perfil, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'products' | 'categories' | 'notifications' | 'attributes' | 'sales_history' | 'fidelidade' | 'cupons' | 'controle'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'products' | 'categories' | 'notifications' | 'attributes' | 'sales_history' | 'fidelidade' | 'cupons' | 'controle' | 'encomendas'>('overview');
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
 
   const toggleTheme = () => {
@@ -36,6 +37,40 @@ export default function AdminDashboard() {
   const [totalClientes, setTotalClientes] = useState(0);
   const [crescimentoClientes, setCrescimentoClientes] = useState(0);
   const [topUser, setTopUser] = useState({ nome: 'Nenhum', pontos: 0 });
+  
+  const [pendingPedidosCount, setPendingPedidosCount] = useState(0);
+  const [pendingEncomendasCount, setPendingEncomendasCount] = useState(0);
+
+  useEffect(() => {
+    if (perfil?.cargo !== 'Admin') return;
+    
+    const fetchCounts = async () => {
+      const { count: pedidosCount } = await supabase
+        .from('pedidos')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'Pendente');
+      
+      const { count: encomendasCount } = await supabase
+        .from('encomendas_pedidos')
+        .select('*', { count: 'exact', head: true })
+        .in('status', ['Pendente', 'Pagamento pendente']);
+
+      setPendingPedidosCount(pedidosCount || 0);
+      setPendingEncomendasCount(encomendasCount || 0);
+    };
+
+    fetchCounts();
+
+    const channel = supabase
+      .channel('counts-updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, fetchCounts)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'encomendas_pedidos' }, fetchCounts)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [perfil]);
 
   useEffect(() => {
     async function fetchReceita() {
@@ -203,12 +238,13 @@ export default function AdminDashboard() {
 
   const navItems = [
     { id: 'overview', label: 'Visão Geral', icon: Activity },
-    { id: 'orders', label: 'Pedidos', icon: ShoppingBag },
+    { id: 'orders', label: 'Pedidos', icon: ShoppingBag, badge: pendingPedidosCount },
     { id: 'products', label: 'Produtos', icon: Package },
     { id: 'categories', label: 'Menu do Site', icon: ListOrdered },
     { id: 'notifications', label: 'Avisos', icon: BellRing },
     { id: 'fidelidade', label: 'Fidelidade', icon: Award },
     { id: 'cupons', label: 'Cupons', icon: Tag },
+    { id: 'encomendas', label: 'Encomendas', icon: PackageSearch, badge: pendingEncomendasCount },
     { id: 'controle', label: 'Controle', icon: ShieldCheck },
   ] as const;
 
@@ -240,7 +276,16 @@ export default function AdminDashboard() {
                 }`}
               >
                 <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-gray-500'}`} />
-                {item.label}
+                <span className="flex-1 text-left">{item.label}</span>
+                {/* @ts-ignore */}
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                    isActive ? 'bg-white text-vanta-blue' : 'bg-red-500 text-white'
+                  }`}>
+                    {/* @ts-ignore */}
+                    {item.badge}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -277,6 +322,15 @@ export default function AdminDashboard() {
                 >
                   <Icon className="w-4 h-4" />
                   {item.label}
+                  {/* @ts-ignore */}
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] leading-none ${
+                      isActive ? 'bg-white text-vanta-blue' : 'bg-red-500 text-white'
+                    }`}>
+                      {/* @ts-ignore */}
+                      {item.badge}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -382,6 +436,7 @@ export default function AdminDashboard() {
             {activeTab === 'fidelidade' && <AdminFidelidade />}
             
             {activeTab === 'cupons' && <AdminCupons />}
+            {activeTab === 'encomendas' && <AdminEncomendas />}
             {activeTab === 'controle' && <AdminControle />}
           </div>
         </main>

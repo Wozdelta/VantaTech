@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { User, Mail, Shield, MapPin, Loader2, Check, Camera, Edit2, Trash2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -10,6 +11,7 @@ export default function Perfil() {
   const { user, perfil, refreshPerfil, loading } = useAuth();
   const { showAlert } = useAlert();
   const { settings } = useSettings();
+  const [searchParams, setSearchParams] = useSearchParams();
   const userName = perfil?.nome_completo || user?.user_metadata?.nome_completo || user?.user_metadata?.full_name || user?.user_metadata?.name || 'Usuário';
   const userAvatar = perfil?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
 
@@ -57,6 +59,51 @@ export default function Perfil() {
       setEditAvatar(perfil.avatar_url || userAvatar);
     }
   }, [perfil, userName, userAvatar]);
+
+  // Processa o retorno do pagamento da InfinitePay
+  useEffect(() => {
+    const orderNsu = searchParams.get('order_nsu');
+    const slug = searchParams.get('slug');
+
+    if (orderNsu && slug) {
+      const confirmPayment = async () => {
+        try {
+          // Atualiza o status da encomenda para Em Andamento
+          const { error } = await supabase
+            .from('encomendas_pedidos')
+            .update({ status: 'Em Andamento' })
+            .eq('id', orderNsu);
+
+          if (!error) {
+            showAlert({ type: 'success', message: 'Pagamento recebido! O status da encomenda foi atualizado.' });
+
+            // Buscar ID do Admin para enviar a mensagem automática
+            const { data: adminData } = await supabase
+              .from('perfis')
+              .select('id')
+              .eq('cargo', 'Admin')
+              .limit(1)
+              .single();
+
+            if (adminData) {
+              await supabase.from('encomendas_mensagens').insert([{
+                encomenda_id: orderNsu,
+                user_id: adminData.id,
+                mensagem: "Agora que o pagamento foi aprovado, o código de rastreio será liberado em até 10 dias e você pode localizar seu pedido na mesma aba 'Encomendar Produto'.\n\nEsse chat será deletado em 3 horas. Você tem mais alguma dúvida?"
+              }]);
+            }
+          }
+          
+          // Limpa a URL para evitar atualizações repetidas
+          setSearchParams({});
+        } catch (err) {
+          console.error('Erro ao atualizar status do pagamento:', err);
+        }
+      };
+      
+      confirmPayment();
+    }
+  }, [searchParams, setSearchParams, showAlert]);
 
   const showSuccess = (msg: string) => {
     setSuccessMsg(msg);
