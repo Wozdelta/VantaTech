@@ -154,6 +154,11 @@ export default function Navbar() {
 
   const unreadCount = notifications.filter(n => !n.lida).length;
 
+  const closeMenus = () => {
+    setActiveDropdown(null);
+    setMobileMenuOpen(false);
+  };
+
   const NotificationsContent = (
     <>
       <div className="flex items-center justify-between mb-4 border-b border-gray-100 dark:border-gray-800 pb-3">
@@ -251,7 +256,7 @@ export default function Navbar() {
             <button 
               onClick={() => {
                 signOut();
-                setActiveDropdown(null);
+                closeMenus();
               }}
               className="block w-full mt-3 text-center py-2 bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 text-sm font-bold rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
             >
@@ -261,7 +266,7 @@ export default function Navbar() {
         ) : (
           <Link 
             to="/login" 
-            onClick={() => setActiveDropdown(null)}
+            onClick={() => closeMenus()}
             className="block w-full text-center py-2 bg-vanta-blue text-white text-sm font-bold rounded-lg hover:bg-vanta-darkblue transition-colors"
           >
             Fazer Login
@@ -269,11 +274,11 @@ export default function Navbar() {
         )}
       </div>
       <div className="flex flex-col gap-1 px-1">
-        <Link to="/perfil" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium">Configurar Perfil</Link>
-        <Link to="/pedidos" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium">Meus Pedidos</Link>
+        <Link to="/perfil" onClick={() => closeMenus()} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium">Configurar Perfil</Link>
+        <Link to="/pedidos" onClick={() => closeMenus()} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium">Meus Pedidos</Link>
         
         {showCupons ? (
-          <Link to="/cupons" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium">Meus Cupons</Link>
+          <Link to="/cupons" onClick={() => closeMenus()} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium">Meus Cupons</Link>
         ) : (
           <div className="px-3 py-2 text-sm text-gray-400 dark:text-gray-600 rounded-md font-medium flex items-center justify-between cursor-not-allowed select-none">
             <span>Meus Cupons</span>
@@ -282,7 +287,7 @@ export default function Navbar() {
         )}
 
         {showFidelidade ? (
-          <Link to="/fidelidade" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-orange rounded-md transition-colors font-medium">Clube Vanta</Link>
+          <Link to="/fidelidade" onClick={() => closeMenus()} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-orange rounded-md transition-colors font-medium">Clube Vanta</Link>
         ) : (
           <div className="px-3 py-2 text-sm text-gray-400 dark:text-gray-600 rounded-md font-medium flex items-center justify-between cursor-not-allowed select-none">
             <span>Clube Vanta</span>
@@ -290,7 +295,7 @@ export default function Navbar() {
           </div>
         )}
         {showEncomendas ? (
-          <Link to="/encomendar" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-orange rounded-md transition-colors font-medium">Encomendar um Aparelho</Link>
+          <Link to="/encomendar" onClick={() => closeMenus()} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-orange rounded-md transition-colors font-medium">Encomendar um Aparelho</Link>
         ) : (
           <div className="px-3 py-2 text-sm text-gray-400 dark:text-gray-600 rounded-md font-medium flex items-center justify-between cursor-not-allowed select-none">
             <span>Encomendar um Aparelho</span>
@@ -299,13 +304,13 @@ export default function Navbar() {
         )}
         
         {perfil?.cargo === 'Admin' && (
-          <Link to="/admin" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-vanta-orange hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-md transition-colors font-semibold mt-1">
+          <Link to="/admin" onClick={() => closeMenus()} className="px-3 py-2 text-sm text-vanta-orange hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-md transition-colors font-semibold mt-1">
             Dashboard
           </Link>
         )}
         
         {showAjuda ? (
-          <Link to="/ajuda" onClick={() => setActiveDropdown(null)} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium mt-1 border-t border-gray-100 dark:border-gray-800 pt-3">Ajuda</Link>
+          <Link to="/ajuda" onClick={() => closeMenus()} className="px-3 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-vanta-blue rounded-md transition-colors font-medium mt-1 border-t border-gray-100 dark:border-gray-800 pt-3">Ajuda</Link>
         ) : (
           <div className="px-3 py-2 text-sm text-gray-400 dark:text-gray-600 rounded-md font-medium flex items-center justify-between cursor-not-allowed select-none mt-1 border-t border-gray-100 dark:border-gray-800 pt-3">
             <span>Ajuda</span>
@@ -425,18 +430,18 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       <div className={cn(
-        "md:hidden absolute top-[75px] left-0 w-full bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 shadow-lg overflow-hidden transition-all duration-300 ease-in-out",
-        mobileMenuOpen ? "max-h-[1000px] opacity-100 overflow-visible" : "max-h-0 opacity-0 overflow-hidden"
+        "md:hidden absolute top-[75px] left-0 w-full bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 shadow-lg overflow-y-auto transition-all duration-300 ease-in-out",
+        mobileMenuOpen ? "max-h-[85vh] opacity-100" : "max-h-0 opacity-0"
       )}>
-        <div className="p-4 space-y-4">
-          <div className="flex justify-around py-4 items-center">
+        <div className="p-4 flex flex-col">
+          <div className="flex justify-around pb-4 border-b border-gray-100 dark:border-gray-800 items-center">
              {DarkModeToggle}
              <ActionIcon icon={Bell} label="Notificações" badge={unreadCount} isOpen={activeDropdown === 'notificacoes_mobile'} onClick={() => toggleDropdown('notificacoes_mobile')} align="center">
                {NotificationsContent}
              </ActionIcon>
-             <ActionIcon icon={User} label="Minha Conta" avatarUrl={perfil?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture} isOpen={activeDropdown === 'user_mobile'} onClick={() => toggleDropdown('user_mobile')} align="right">
-               {UserContent}
-             </ActionIcon>
+          </div>
+          <div className="pt-2">
+            {UserContent}
           </div>
         </div>
       </div>

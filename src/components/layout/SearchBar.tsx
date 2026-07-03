@@ -153,16 +153,16 @@ export default function SearchBar({ className, onSearch }: { className?: string;
           ) : (
             <div className="p-4">
               <div className="px-2 mb-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Categorias Populares</div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="flex flex-col sm:grid sm:grid-cols-2 gap-1.5 sm:gap-2">
                 {categories.map(({ name, icon: Icon }) => (
                   <Link
                     key={name}
                     to={`/produtos?categoria=${encodeURIComponent(name.toLowerCase())}`}
                     onClick={() => { setIsOpen(false); if (onSearch) onSearch(); }}
-                    className="flex items-center p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors"
+                    className="flex items-center p-2.5 sm:p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors"
                   >
                     <Icon className="w-4 h-4 mr-3 text-vanta-blue shrink-0" />
-                    {name}
+                    <span>{name}</span>
                   </Link>
                 ))}
               </div>
