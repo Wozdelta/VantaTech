@@ -312,7 +312,7 @@ export default function AdminEntradas() {
           </table>
         </div>
 
-<div className={`p-4 grid ${viewMode === 'cards' ? 'block' : 'hidden'} lg:hidden grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-gray-50/50 dark:bg-gray-900/20">
+<div className={`p-4 grid ${viewMode === 'cards' ? 'block' : 'hidden'} lg:hidden grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-gray-50/50 dark:bg-gray-900/20`}>
           {paginatedItems.map((item) => (
             <div key={`${item.productId}-${item.variantIndex}`} className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-700 flex flex-col gap-4 relative overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
               {/* Header */}
@@ -337,9 +337,8 @@ export default function AdminEntradas() {
                     <span className="text-gray-500 font-medium">Capacidade</span>
                     <span className="font-bold text-gray-900 dark:text-gray-200">{item.armazenamento}</span>
                   </div>
-          
-      </>
-
+                )}
+                
                 {item.bateria && (
                   <div className="flex justify-between text-xs">
                     <span className="text-gray-500 font-medium">Saúde Bateria</span>
@@ -376,6 +375,7 @@ export default function AdminEntradas() {
             </div>
           ))}
         </div>
+      </>
       )}
 
       {!loading && totalPages > 1 && (

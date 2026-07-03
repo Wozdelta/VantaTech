@@ -627,7 +627,7 @@ export default function AdminOrders() {
       </div>
 
 
-<div className={`p-4 grid ${viewMode === 'cards' ? 'block' : 'hidden'} lg:hidden grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-gray-50/50 dark:bg-gray-900/20 min-h-[380px]">
+<div className={`p-4 grid ${viewMode === 'cards' ? 'block' : 'hidden'} lg:hidden grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-gray-50/50 dark:bg-gray-900/20 min-h-[380px]`}>
         {errorMsg ? (
           <div className="col-span-full text-center py-12">
             <div className="bg-red-50 text-red-500 p-4 rounded-xl border border-red-100 inline-block font-bold">
@@ -698,9 +698,7 @@ export default function AdminOrders() {
                         </option>
                       ))}
                     </select>
-            
-      </>
-
+                    )}
                   
                   <button
                     onClick={() => setSelectedOrder(pedido)}
@@ -724,8 +722,7 @@ export default function AdminOrders() {
           ))
         )}
       </div>
-
-      )}
+      </>
 
       {totalPages > 1 && (
         <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
