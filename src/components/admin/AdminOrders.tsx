@@ -383,7 +383,7 @@ export default function AdminOrders() {
         </div>
         
         {/* Filtros em dropdown para Mobile e Desktop */}
-        <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex lg:hidden flex-wrap gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           <select
             value={filterData}
             onChange={(e) => setFilterData(e.target.value)}
@@ -418,16 +418,111 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      {viewMode === 'table' ? (
-
-      <div className="overflow-x-auto min-h-[380px]">
+      
+      <>
+<div className={`overflow-x-auto min-h-[380px] ${viewMode === 'table' ? 'block' : 'hidden'} lg:block`}>
         <table className="w-full text-left border-collapse">
           <thead className="bg-gray-50 dark:bg-gray-900/50 text-gray-500 dark:text-gray-400 text-xs uppercase font-bold tracking-wider">
             <tr className="border-b border-gray-100 dark:border-gray-700">
-              <th className="px-6 py-4 whitespace-nowrap">Pedido / Data</th>
+              <th className="px-6 py-4 relative whitespace-nowrap">
+                  <span className="lg:hidden">Pedido / Data</span>
+                  <button 
+                    onClick={() => setOpenDropdown(openDropdown === 'data' ? null : 'data')}
+                    className="hidden lg:flex items-center gap-1 font-bold text-gray-500 hover:text-gray-900 dark:hover:text-gray-300 uppercase tracking-wider transition-colors focus:outline-none"
+                  >
+                    Pedido / Data
+                    {filterData !== 'mais_recente' && <span className="w-1.5 h-1.5 rounded-full bg-vanta-blue ml-0.5"></span>}
+                    <ChevronDown className={`w-3.5 h-3.5 ml-0.5 transition-transform ${openDropdown === 'data' ? 'rotate-180' : ''}`} />
+                  </button>
+                  {openDropdown === 'data' && (
+                    <div className="hidden lg:block">
+                      <div className="fixed inset-0 z-40" onClick={() => setOpenDropdown(null)}></div>
+                      <div className="absolute top-full left-4 mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-2 z-50 overflow-hidden text-sm font-normal normal-case">
+                        <button onClick={() => { setFilterData('mais_recente'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Mais Recente</span>
+                          {filterData === 'mais_recente' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                        <button onClick={() => { setFilterData('mais_antigo'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Mais Antigo</span>
+                          {filterData === 'mais_antigo' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+              </th>
               <th className="px-6 py-4 whitespace-nowrap">Produtos</th>
-              <th className="px-6 py-4 whitespace-nowrap">Total</th>
-              <th className="px-6 py-4 whitespace-nowrap">Status</th>
+              <th className="px-6 py-4 relative whitespace-nowrap">
+                  <span className="lg:hidden">Total</span>
+                  <button 
+                    onClick={() => setOpenDropdown(openDropdown === 'total' ? null : 'total')}
+                    className="hidden lg:flex items-center gap-1 font-bold text-gray-500 hover:text-gray-900 dark:hover:text-gray-300 uppercase tracking-wider transition-colors focus:outline-none"
+                  >
+                    Total
+                    {filterTotal && <span className="w-1.5 h-1.5 rounded-full bg-vanta-blue ml-0.5"></span>}
+                    <ChevronDown className={`w-3.5 h-3.5 ml-0.5 transition-transform ${openDropdown === 'total' ? 'rotate-180' : ''}`} />
+                  </button>
+                  {openDropdown === 'total' && (
+                    <div className="hidden lg:block">
+                      <div className="fixed inset-0 z-40" onClick={() => setOpenDropdown(null)}></div>
+                      <div className="absolute top-full left-4 mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-2 z-50 overflow-hidden text-sm font-normal normal-case">
+                        <button onClick={() => { setFilterTotal(''); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Padrão</span>
+                          {!filterTotal && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                        <button onClick={() => { setFilterTotal('maior'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Maior Valor</span>
+                          {filterTotal === 'maior' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                        <button onClick={() => { setFilterTotal('menor'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Menor Valor</span>
+                          {filterTotal === 'menor' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+              </th>
+              <th className="px-6 py-4 relative whitespace-nowrap">
+                  <span className="lg:hidden">Status</span>
+                  <button 
+                    onClick={() => setOpenDropdown(openDropdown === 'status' ? null : 'status')}
+                    className="hidden lg:flex items-center gap-1 font-bold text-gray-500 hover:text-gray-900 dark:hover:text-gray-300 uppercase tracking-wider transition-colors focus:outline-none"
+                  >
+                    Status
+                    {filterStatus && <span className="w-1.5 h-1.5 rounded-full bg-vanta-blue ml-0.5"></span>}
+                    <ChevronDown className={`w-3.5 h-3.5 ml-0.5 transition-transform ${openDropdown === 'status' ? 'rotate-180' : ''}`} />
+                  </button>
+                  {openDropdown === 'status' && (
+                    <div className="hidden lg:block">
+                      <div className="fixed inset-0 z-40" onClick={() => setOpenDropdown(null)}></div>
+                      <div className="absolute top-full left-4 mt-1 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 py-2 z-50 overflow-hidden text-sm font-normal normal-case">
+                        <button onClick={() => { setFilterStatus(''); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Todos</span>
+                          {!filterStatus && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                        <button onClick={() => { setFilterStatus('pendente'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Pendente</span>
+                          {filterStatus === 'pendente' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                        <button onClick={() => { setFilterStatus('pago'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Pago</span>
+                          {filterStatus === 'pago' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                        <button onClick={() => { setFilterStatus('enviado'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Enviado</span>
+                          {filterStatus === 'enviado' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                        <button onClick={() => { setFilterStatus('entregue'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Entregue</span>
+                          {filterStatus === 'entregue' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                        <button onClick={() => { setFilterStatus('cancelado'); setOpenDropdown(null); }} className="w-full text-left px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between text-gray-700 dark:text-gray-300">
+                          <span>Cancelado</span>
+                          {filterStatus === 'cancelado' && <Check className="w-4 h-4 text-vanta-blue" />}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+              </th>
               <th className="px-6 py-4 text-right whitespace-nowrap">Ações</th>
             </tr>
           </thead>
@@ -531,9 +626,8 @@ export default function AdminOrders() {
         </table>
       </div>
 
-      ) : (
 
-      <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-gray-50/50 dark:bg-gray-900/20 min-h-[380px]">
+<div className={`p-4 grid ${viewMode === 'cards' ? 'block' : 'hidden'} lg:hidden grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-gray-50/50 dark:bg-gray-900/20 min-h-[380px]">
         {errorMsg ? (
           <div className="col-span-full text-center py-12">
             <div className="bg-red-50 text-red-500 p-4 rounded-xl border border-red-100 inline-block font-bold">
@@ -604,7 +698,9 @@ export default function AdminOrders() {
                         </option>
                       ))}
                     </select>
-                  )}
+            
+      </>
+
                   
                   <button
                     onClick={() => setSelectedOrder(pedido)}
