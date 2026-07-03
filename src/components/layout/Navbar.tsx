@@ -394,14 +394,11 @@ export default function Navbar() {
           {/* Mobile Actions */}
           <div className="flex md:hidden items-center gap-1">
             <ActionIcon 
-              icon={Bell} 
-              label="Notificações" 
-              badge={unreadCount}
-              isOpen={activeDropdown === 'notificacoes_mobile_header'}
-              onClick={() => toggleDropdown('notificacoes_mobile_header')}
-            >
-              {NotificationsContent}
-            </ActionIcon>
+              icon={ShoppingCart} 
+              label="Carrinho" 
+              badge={cartCount}
+              onClick={() => setIsCartOpen(true)}
+            />
             <button 
               className="p-2 text-gray-600 dark:text-gray-300 hover:text-vanta-blue transition-colors"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -432,21 +429,11 @@ export default function Navbar() {
         mobileMenuOpen ? "max-h-[1000px] opacity-100 overflow-visible" : "max-h-0 opacity-0 overflow-hidden"
       )}>
         <div className="p-4 space-y-4">
-          <div className="grid grid-cols-2 gap-2">
-            {categories.map((category) => (
-              <Link
-                key={category}
-                to={`/produtos?categoria=${encodeURIComponent(category.toLowerCase())}`}
-                className="flex items-center p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                <Smartphone className="w-4 h-4 mr-2 text-vanta-blue" />
-                {category}
-              </Link>
-            ))}
-          </div>
-          <div className="flex justify-around pt-4 pb-6 border-t border-gray-100 dark:border-gray-800 items-center">
+          <div className="flex justify-around py-4 items-center">
              {DarkModeToggle}
-             <ActionIcon icon={ShoppingCart} label="Carrinho" badge={cartCount} onClick={() => setIsCartOpen(true)} align="center" />
+             <ActionIcon icon={Bell} label="Notificações" badge={unreadCount} isOpen={activeDropdown === 'notificacoes_mobile'} onClick={() => toggleDropdown('notificacoes_mobile')} align="center">
+               {NotificationsContent}
+             </ActionIcon>
              <ActionIcon icon={User} label="Minha Conta" avatarUrl={perfil?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture} isOpen={activeDropdown === 'user_mobile'} onClick={() => toggleDropdown('user_mobile')} align="right">
                {UserContent}
              </ActionIcon>
