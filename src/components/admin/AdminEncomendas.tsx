@@ -17,7 +17,7 @@ export default function AdminEncomendas() {
     try {
       const { data, error } = await supabase
         .from('encomendas_pedidos')
-        .select('*, perfis(*)')
+        .select('*, perfis(*), encomendas_mensagens(mensagem, criado_em)')
         .order('criado_em', { ascending: false });
         
       if (error) throw error;
@@ -178,13 +178,24 @@ export default function AdminEncomendas() {
                       </select>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => setActiveChat(enc)}
-                        className="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-vanta-blue/10 text-vanta-blue hover:bg-vanta-blue hover:text-white rounded-lg transition-colors font-bold text-xs"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                        Chat
-                      </button>
+                      {(() => {
+                        const approvalMsg = enc.encomendas_mensagens?.find((m: any) => m.mensagem.includes('Agora que o pagamento foi aprovado'));
+                        const isExpired = approvalMsg && (Date.now() - new Date(approvalMsg.criado_em).getTime()) > 3 * 60 * 60 * 1000;
+                        
+                        if (isExpired || enc.status === 'Concluído' || enc.status === 'Cancelado') {
+                          return <span className="text-xs text-gray-400 font-medium">Chat Encerrado</span>;
+                        }
+
+                        return (
+                          <button
+                            onClick={() => setActiveChat(enc)}
+                            className="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-vanta-blue/10 text-vanta-blue hover:bg-vanta-blue hover:text-white rounded-lg transition-colors font-bold text-xs"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            Chat
+                          </button>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}

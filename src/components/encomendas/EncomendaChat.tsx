@@ -3,6 +3,7 @@ import { X, Send, MessageCircle, DollarSign, FileText, CheckCircle, Clock, Shiel
 import CheckoutButton from './CheckoutButton';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAlert } from '../../contexts/AlertContext';
 
 interface EncomendaChatProps {
   encomenda: any;
@@ -11,6 +12,7 @@ interface EncomendaChatProps {
 
 export default function EncomendaChat({ encomenda, onClose }: EncomendaChatProps) {
   const { user, perfil } = useAuth();
+  const { showAlert } = useAlert();
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -19,7 +21,17 @@ export default function EncomendaChat({ encomenda, onClose }: EncomendaChatProps
   const [isEditingDetails, setIsEditingDetails] = useState(false);
   const [encomendaDetails, setEncomendaDetails] = useState(encomenda);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Formatador de tempo para o timer (HH:MM:SS)
+  const formatTime = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const h = Math.floor(totalSeconds / 3600);
+    const m = Math.floor((totalSeconds % 3600) / 60);
+    const s = totalSeconds % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
 
   const fetchMessages = async () => {
     try {
@@ -67,7 +79,45 @@ export default function EncomendaChat({ encomenda, onClose }: EncomendaChatProps
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+
+    // Hack de segurança: se a mensagem de aprovação for recente (menos de 1 minuto),
+    // forçamos o status local para 'Em Andamento' para o Card atualizar na hora.
+    const approvalMsg = messages.find(m => m.mensagem.includes('Agora que o pagamento foi aprovado'));
+    
+    if (approvalMsg) {
+      const msgTime = new Date(approvalMsg.criado_em).getTime();
+      const isRecent = Date.now() - msgTime < 60000; // 1 minuto
+      
+      if (isRecent && encomendaDetails?.status !== 'Em Andamento' && encomendaDetails?.status !== 'Concluído') {
+        setEncomendaDetails(prev => ({ ...prev, status: 'Em Andamento' }));
+      }
+      
+      // O timer só roda se o status for Em Andamento (evita bugar se o admin voltar o status para testar de novo)
+      if (encomendaDetails?.status === 'Em Andamento' || isRecent) {
+        const expireTime = msgTime + 3 * 60 * 60 * 1000;
+        
+        const interval = setInterval(async () => {
+          const now = Date.now();
+          const diff = expireTime - now;
+          
+          if (diff <= 0) {
+            clearInterval(interval);
+            // O tempo acabou! Apagar conversas e fechar o chat
+            await supabase.from('encomendas_mensagens').delete().eq('encomenda_id', encomenda.id);
+            onClose();
+          } else {
+            setTimeLeft(diff);
+          }
+        }, 1000);
+        
+        return () => clearInterval(interval);
+      } else {
+        setTimeLeft(null);
+      }
+    } else {
+      setTimeLeft(null);
+    }
+  }, [messages, encomendaDetails?.status, encomenda.id, onClose]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,6 +176,40 @@ export default function EncomendaChat({ encomenda, onClose }: EncomendaChatProps
       fetchMessages();
     } catch (err) {
       console.error('Erro ao enviar orçamento:', err);
+    }
+  };
+
+  const handleManualApproval = async () => {
+    if (!user) return;
+    
+    const confirmed = await showAlert({
+      title: 'Aprovar Manualmente',
+      message: 'Tem certeza que deseja marcar esta encomenda como PAGA manualmente? O cliente será notificado na hora.',
+      type: 'warning',
+      showConfirm: true
+    });
+    
+    if (!confirmed) return;
+    
+    try {
+      const { error } = await supabase
+        .from('encomendas_pedidos')
+        .update({ status: 'Em Andamento' })
+        .eq('id', encomenda.id);
+        
+      if (error) throw error;
+      
+      await supabase.from('encomendas_mensagens').insert([{
+        encomenda_id: encomenda.id,
+        user_id: user.id,
+        mensagem: "Agora que o pagamento foi aprovado, o código de rastreio será liberado em até 10 dias e você pode localizar seu pedido na mesma aba 'Encomendar Produto'.\n\nEsse chat será deletado em 3 horas. Você tem mais alguma dúvida?"
+      }]);
+      
+      // O hack de segurança já vai detectar a mensagem recém-criada e atualizar o UI no próximo fetch
+      fetchMessages();
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao aprovar manualmente');
     }
   };
 
@@ -376,7 +460,15 @@ export default function EncomendaChat({ encomenda, onClose }: EncomendaChatProps
               <MessageCircle className="w-5 h-5 text-vanta-blue" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-gray-900 dark:text-white">Chat da Encomenda</h2>
+              <h2 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-3">
+                Chat da Encomenda
+                {timeLeft !== null && (
+                  <span className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2.5 py-1 rounded-md text-xs font-bold border border-red-200 dark:border-red-800 flex items-center gap-1.5 animate-pulse" title="Tempo restante antes do chat ser deletado permanentemente">
+                    <Clock className="w-3.5 h-3.5" />
+                    {formatTime(timeLeft)} para apagar as mensagens
+                  </span>
+                )}
+              </h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {encomenda.marca} {encomenda.modelo}
               </p>
@@ -453,7 +545,7 @@ export default function EncomendaChat({ encomenda, onClose }: EncomendaChatProps
                                 </span>
                               </div>
                               
-                              {encomenda.status === 'Em Andamento' || encomenda.status === 'Concluído' ? (
+                              {encomendaDetails?.status === 'Em Andamento' || encomendaDetails?.status === 'Concluído' ? (
                                 <div className="w-full py-3.5 bg-green-500/20 text-green-400 font-black rounded-xl flex items-center justify-center gap-2 cursor-not-allowed border border-green-500/30">
                                   <CheckCircle className="w-5 h-5" />
                                   PAGAMENTO APROVADO
@@ -543,9 +635,17 @@ export default function EncomendaChat({ encomenda, onClose }: EncomendaChatProps
                   }}
                   onError={(err) => alert('Erro: ' + err)}
                 />
+                
+                <button
+                  onClick={handleManualApproval}
+                  className="w-full py-2.5 mt-2 bg-transparent border-2 border-green-500/20 hover:border-green-500 text-green-600 dark:text-green-500 font-bold rounded-xl transition-all flex items-center justify-center gap-2 text-sm"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Aprovar Manualmente
+                </button>
               </div>
             </div>
-          ) : perfil?.cargo === 'Admin' && (
+          ) : perfil?.cargo === 'Admin' && encomendaDetails.status === 'Pendente' ? (
             <div className="w-80 bg-gray-50/80 dark:bg-gray-900/50 p-6 overflow-y-auto custom-scrollbar flex flex-col border-l border-gray-100 dark:border-gray-700">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
@@ -652,7 +752,7 @@ export default function EncomendaChat({ encomenda, onClose }: EncomendaChatProps
                 </button>
               </div>
             </div>
-          )}
+          ) : null}
         </div>
 
       </div>

@@ -60,15 +60,33 @@ export default function Perfil() {
     }
   }, [perfil, userName, userAvatar]);
 
+  // Flag para evitar race condition
+  const isProcessingRef = useRef(false);
+
   // Processa o retorno do pagamento da InfinitePay
   useEffect(() => {
     const orderNsu = searchParams.get('order_nsu');
     const slug = searchParams.get('slug');
 
-    if (orderNsu && slug) {
+    if (orderNsu && slug && !isProcessingRef.current) {
+      isProcessingRef.current = true;
+      
       const confirmPayment = async () => {
         try {
-          // Atualiza o status da encomenda para Em Andamento
+          // 1. Verifica se a encomenda já foi atualizada antes
+          const { data: orderData } = await supabase
+            .from('encomendas_pedidos')
+            .select('status')
+            .eq('id', orderNsu)
+            .single();
+
+          if (orderData?.status === 'Em Andamento' || orderData?.status === 'Concluído') {
+            // Já foi processado antes, apenas limpa a URL e sai
+            setSearchParams({});
+            return;
+          }
+
+          // 2. Atualiza o status da encomenda para Em Andamento
           const { error } = await supabase
             .from('encomendas_pedidos')
             .update({ status: 'Em Andamento' })
@@ -86,11 +104,22 @@ export default function Perfil() {
               .single();
 
             if (adminData) {
-              await supabase.from('encomendas_mensagens').insert([{
-                encomenda_id: orderNsu,
-                user_id: adminData.id,
-                mensagem: "Agora que o pagamento foi aprovado, o código de rastreio será liberado em até 10 dias e você pode localizar seu pedido na mesma aba 'Encomendar Produto'.\n\nEsse chat será deletado em 3 horas. Você tem mais alguma dúvida?"
-              }]);
+              // 3. Verifica se a mensagem já existe (proteção extra contra o React StrictMode disparar duas vezes rápido)
+              const { data: existingMsg } = await supabase
+                .from('encomendas_mensagens')
+                .select('id')
+                .eq('encomenda_id', orderNsu)
+                .ilike('mensagem', 'Agora que o pagamento foi aprovado%')
+                .limit(1)
+                .maybeSingle();
+
+              if (!existingMsg) {
+                await supabase.from('encomendas_mensagens').insert([{
+                  encomenda_id: orderNsu,
+                  user_id: adminData.id,
+                  mensagem: "Agora que o pagamento foi aprovado, o código de rastreio será liberado em até 10 dias e você pode localizar seu pedido na mesma aba 'Encomendar Produto'.\n\nEsse chat será deletado em 3 horas. Você tem mais alguma dúvida?"
+                }]);
+              }
             }
           }
           
@@ -98,6 +127,11 @@ export default function Perfil() {
           setSearchParams({});
         } catch (err) {
           console.error('Erro ao atualizar status do pagamento:', err);
+        } finally {
+          // Permite processar novamente se a URL mudar no futuro (embora a gente limpe a URL, então não vai)
+          setTimeout(() => {
+            isProcessingRef.current = false;
+          }, 2000);
         }
       };
       

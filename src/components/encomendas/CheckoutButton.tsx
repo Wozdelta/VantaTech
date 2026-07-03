@@ -39,8 +39,10 @@ export default function CheckoutButton({
             description: `Sinal: ${nomeProduto}`
           }
         ],
-        redirect_url: 'https://vantatech-one.vercel.app/perfil',
-        webhook_url: 'https://vantatech-one.vercel.app/api/webhook'
+        // Usando window.location.origin o link sempre vai voltar para o site correto:
+        // Se estiver testando no PC, volta pro PC. Se estiver no ar, volta pro ar.
+        redirect_url: window.location.origin + '/perfil',
+        webhook_url: window.location.origin + '/api/webhook'
       };
 
       // Sempre enviamos o nome do cliente se existir
