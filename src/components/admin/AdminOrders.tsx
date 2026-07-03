@@ -365,7 +365,7 @@ export default function AdminOrders() {
           />
         </div>
         
-                <div className="lg:hidden flex bg-gray-100 dark:bg-gray-900 p-1.5 rounded-xl">
+                <div className="lg:hidden inline-flex w-fit bg-gray-100 dark:bg-gray-900 p-1.5 rounded-xl mt-4">
           <button
             onClick={() => setViewMode('table')}
             className={`flex items-center justify-center px-3 py-2 rounded-lg transition-all ${viewMode === 'table' ? 'bg-white dark:bg-gray-800 text-vanta-blue shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
