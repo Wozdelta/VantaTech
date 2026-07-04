@@ -109,15 +109,40 @@ export default function TrackingModal({ codigo, onClose }: TrackingModalProps) {
             <div className="flex flex-col items-center justify-center py-8 text-center px-4">
               <AlertCircle className="w-12 h-12 text-vanta-orange mb-4 opacity-80" />
               <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-6">{error}</p>
-              <a 
-                href={`https://linketrack.com/track?codigo=${codigo}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-6 py-2.5 bg-vanta-blue text-white rounded-xl font-bold text-sm hover:bg-vanta-darkblue transition-colors flex items-center gap-2 shadow-md"
-              >
-                <Package className="w-4 h-4" />
-                Rastrear no site oficial
-              </a>
+              
+              {!/^[A-Za-z]{2}\d{9}[A-Za-z]{2}$/.test(codigo) ? (
+                <div className="flex flex-col gap-3 w-full sm:w-auto">
+                  <span className="text-xs text-gray-500 font-bold uppercase tracking-wider">Tente o Rastreio Global:</span>
+                  <a 
+                    href={`https://t.17track.net/pt#nums=${codigo}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-6 py-2.5 bg-[#ff6b00] text-white rounded-xl font-bold text-sm hover:bg-[#e05e00] transition-colors flex items-center justify-center gap-2 shadow-md w-full"
+                  >
+                    <Package className="w-4 h-4" />
+                    Rastrear no 17Track
+                  </a>
+                  <a 
+                    href={`https://global.cainiao.com/newDetail.htm?mailNoList=${codigo}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-6 py-2.5 bg-[#0042f0] text-white rounded-xl font-bold text-sm hover:bg-[#0036c4] transition-colors flex items-center justify-center gap-2 shadow-md w-full"
+                  >
+                    <Truck className="w-4 h-4" />
+                    Rastrear na Cainiao
+                  </a>
+                </div>
+              ) : (
+                <a 
+                  href={`https://linketrack.com/track?codigo=${codigo}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 py-2.5 bg-vanta-blue text-white rounded-xl font-bold text-sm hover:bg-vanta-darkblue transition-colors flex items-center gap-2 shadow-md"
+                >
+                  <Package className="w-4 h-4" />
+                  Rastrear no site oficial
+                </a>
+              )}
             </div>
           ) : trackingData?.eventos?.length ? (
             <div className="relative pl-6 border-l-2 border-gray-100 dark:border-gray-700 space-y-8 my-4">
