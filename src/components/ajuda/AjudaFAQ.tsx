@@ -1,9 +1,10 @@
-import { ChevronDown, Ticket } from 'lucide-react';
+import { ChevronDown, Ticket, Package, CreditCard, User, Smartphone, Truck } from 'lucide-react';
 import * as Accordion from '@radix-ui/react-accordion';
 
 export const FAQ_DATA = [
   {
     categoria: 'Pedidos',
+    icon: Package,
     items: [
       { pergunta: 'Como acompanhar meu pedido?', resposta: 'Você pode acompanhar seu pedido na aba "Meus Pedidos" no seu perfil. Lá você encontra o status atualizado em tempo real.' },
       { pergunta: 'Meu pedido está atrasado', resposta: 'Caso seu pedido tenha passado do prazo de entrega, por favor, abra um ticket informando o número do pedido para nossa equipe investigar.' },
@@ -13,6 +14,7 @@ export const FAQ_DATA = [
   },
   {
     categoria: 'Pagamentos',
+    icon: CreditCard,
     items: [
       { pergunta: 'PIX', resposta: 'Pagamentos via PIX são aprovados na hora. O código PIX tem validade de 30 minutos.' },
       { pergunta: 'Cartão', resposta: 'Aceitamos as principais bandeiras. Pagamentos no cartão podem passar por uma análise de segurança que leva até 48h.' },
@@ -22,6 +24,7 @@ export const FAQ_DATA = [
   },
   {
     categoria: 'Conta',
+    icon: User,
     items: [
       { pergunta: 'Alterar senha', resposta: 'Acesse "Meu Perfil" > "Segurança" para redefinir sua senha, ou use a opção "Esqueci minha senha" na tela de login.' },
       { pergunta: 'Alterar endereço', resposta: 'Você pode gerenciar seus endereços na aba "Meu Perfil". O endereço de pedidos já realizados não pode ser alterado.' },
@@ -30,6 +33,7 @@ export const FAQ_DATA = [
   },
   {
     categoria: 'Produtos',
+    icon: Smartphone,
     items: [
       { pergunta: 'Garantia', resposta: 'Todos os nossos aparelhos possuem garantia padrão de 90 dias contra defeitos de fabricação.' },
       { pergunta: 'Estado do aparelho', resposta: 'Trabalhamos com aparelhos Seminovos em condições excelentes e aparelhos Novos lacrados. A condição é descrita na página de cada produto.' },
@@ -38,6 +42,7 @@ export const FAQ_DATA = [
   },
   {
     categoria: 'Encomendas',
+    icon: Truck,
     items: [
       { pergunta: 'Como funciona', resposta: 'A encomenda permite reservar aparelhos que não estão no estoque imediato. Nossa equipe fará a importação ou busca com fornecedores.' },
       { pergunta: 'Prazo', resposta: 'O prazo médio para encomendas varia entre 15 e 30 dias úteis, dependendo do modelo solicitado.' },
@@ -52,31 +57,34 @@ export default function AjudaFAQ({ onOpenTicket }: { onOpenTicket: () => void })
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {FAQ_DATA.map((secao, idx) => (
-          <div key={idx} className="bg-white dark:bg-gray-800 rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 dark:border-gray-700">
-            <h3 className="text-xl font-black text-gray-900 dark:text-white mb-6 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-sm">
-                {idx + 1}
+          <div key={idx} className="bg-white dark:bg-gray-800/80 rounded-2xl p-7 shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-vanta-blue/10 flex items-center justify-center text-vanta-blue shadow-inner border border-blue-100/50 dark:border-vanta-blue/20">
+                <secao.icon className="w-6 h-6" />
               </div>
-              {secao.categoria}
-            </h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
+                {secao.categoria}
+              </h3>
+            </div>
             
-            <Accordion.Root type="single" collapsible className="space-y-3">
+            <Accordion.Root type="single" collapsible className="w-full">
               {secao.items.map((item, itemIdx) => (
                 <Accordion.Item 
                   key={itemIdx} 
                   value={`${idx}-${itemIdx}`}
-                  className="bg-gray-50 dark:bg-gray-900/50 rounded-2xl overflow-hidden border border-transparent data-[state=open]:border-vanta-blue/20 transition-colors"
+                  id={`faq-${idx}-${itemIdx}`}
+                  className="border-b border-gray-100 dark:border-gray-700/50 last:border-0 group transition-colors duration-300"
                 >
                   <Accordion.Header>
-                    <Accordion.Trigger className="w-full flex items-center justify-between p-4 text-left group">
-                      <span className="font-bold text-gray-700 dark:text-gray-300 group-data-[state=open]:text-vanta-blue transition-colors">
+                    <Accordion.Trigger className="w-full flex items-center justify-between py-4 text-left outline-none">
+                      <span className="font-semibold text-gray-700 dark:text-gray-300 group-data-[state=open]:text-vanta-blue transition-colors text-[15px]">
                         {item.pergunta}
                       </span>
-                      <ChevronDown className="w-5 h-5 text-gray-400 group-data-[state=open]:text-vanta-blue group-data-[state=open]:rotate-180 transition-all duration-300" />
+                      <ChevronDown className="w-5 h-5 text-gray-400 group-data-[state=open]:text-vanta-blue group-data-[state=open]:rotate-180 transition-transform duration-300 ease-[cubic-bezier(0.87,_0,_0.13,_1)]" />
                     </Accordion.Trigger>
                   </Accordion.Header>
                   <Accordion.Content className="overflow-hidden text-sm data-[state=open]:animate-slideDown data-[state=closed]:animate-slideUp">
-                    <div className="p-4 pt-0 text-gray-500 dark:text-gray-400 leading-relaxed">
+                    <div className="pb-4 pt-1 text-gray-500 dark:text-gray-400 leading-relaxed pr-6">
                       {item.resposta}
                     </div>
                   </Accordion.Content>

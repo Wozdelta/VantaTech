@@ -1,10 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { Ticket, Search, Clock, CheckCircle2, MessageCircle, XCircle, ArrowLeft, Send, ShieldAlert, FileText, Loader2, ChevronRight } from 'lucide-react';
 import AjudaTicketForm from './AjudaTicketForm';
 import { useAlert } from '../../contexts/AlertContext';
+
+const formatDate = (dateString: string) => {
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(new Date(dateString)).replace(' de ', ' ');
+};
 
 export default function AjudaMeusTickets({ user, perfil }: { user: any, perfil: any }) {
   const { showAlert } = useAlert();
@@ -68,7 +75,7 @@ export default function AjudaMeusTickets({ user, perfil }: { user: any, perfil: 
     try {
       const { data, error } = await supabase
         .from('ticket_messages')
-        .select('*, sender:perfis(nome_completo, avatar_url, cargo)')
+        .select('*')
         .eq('ticket_id', ticketId)
         .order('criado_em', { ascending: true });
 
@@ -107,10 +114,9 @@ export default function AjudaMeusTickets({ user, perfil }: { user: any, perfil: 
       if (admins && admins.length > 0) {
         await supabase.from('notificacoes').insert(
           admins.map(admin => ({
-            user_id: admin.id,
+            usuario_id: admin.id,
             titulo: 'Nova Resposta no Ticket',
             mensagem: `Ticket #${selectedTicket.id.split('-')[0].toUpperCase()}`,
-            tipo: 'sistema',
             lida: false
           }))
         );
@@ -187,7 +193,7 @@ export default function AjudaMeusTickets({ user, perfil }: { user: any, perfil: 
                 </span>
               </div>
               <p className="text-xs text-gray-500 font-medium">
-                Ticket #{selectedTicket.id.split('-')[0].toUpperCase()} • {format(new Date(selectedTicket.criado_em), "dd MMM 'às' HH:mm", { locale: ptBR })}
+                Ticket #{selectedTicket.id.split('-')[0].toUpperCase()} • {formatDate(selectedTicket.criado_em)}
               </p>
             </div>
           </div>
@@ -212,11 +218,11 @@ export default function AjudaMeusTickets({ user, perfil }: { user: any, perfil: 
           {messages.map((msg) => (
             <div key={msg.id} className={`flex gap-3 max-w-[85%] ${msg.sender_id === user.id ? 'ml-auto flex-row-reverse' : ''}`}>
               <div className="flex-shrink-0">
-                {msg.sender?.avatar_url ? (
-                  <img src={msg.sender.avatar_url} alt="Avatar" className="w-8 h-8 rounded-full object-cover" />
+                {!msg.is_admin && perfil?.avatar_url ? (
+                  <img src={perfil.avatar_url} alt="Avatar" className="w-8 h-8 rounded-full object-cover shadow-sm border border-gray-100" />
                 ) : (
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm ${msg.is_admin ? 'bg-vanta-blue' : 'bg-gray-400'}`}>
-                    {msg.sender?.nome_completo?.charAt(0) || '?'}
+                    {msg.is_admin ? 'V' : (perfil?.nome_completo?.charAt(0) || '?')}
                   </div>
                 )}
               </div>
@@ -224,22 +230,22 @@ export default function AjudaMeusTickets({ user, perfil }: { user: any, perfil: 
               <div className={`flex flex-col gap-1 ${msg.sender_id === user.id ? 'items-end' : 'items-start'}`}>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
-                    {msg.sender?.nome_completo || 'Usuário'}
+                    {msg.is_admin ? 'Suporte VantaTech' : (perfil?.nome_completo || 'Você')}
                   </span>
                   {msg.is_admin && (
-                    <span className="text-[10px] bg-vanta-blue text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-                      Suporte
+                    <span className="text-[10px] bg-vanta-blue/10 text-vanta-blue px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                      Oficial
                     </span>
                   )}
                   <span className="text-xs text-gray-400">
-                    {format(new Date(msg.criado_em), 'HH:mm', { locale: ptBR })}
+                    {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(msg.criado_em))}
                   </span>
                 </div>
                 
                 <div className={`p-4 rounded-2xl text-sm whitespace-pre-wrap shadow-sm ${
                   msg.sender_id === user.id 
                     ? 'bg-vanta-blue text-white rounded-tr-sm' 
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-tl-sm'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-sm border border-gray-200/50 dark:border-gray-700/50'
                 }`}>
                   {msg.conteudo}
                 </div>
@@ -273,6 +279,13 @@ export default function AjudaMeusTickets({ user, perfil }: { user: any, perfil: 
               >
                 Abrir novo ticket
               </button>
+            </div>
+          ) : !messages.some(m => m.is_admin) ? (
+            <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-200 dark:border-yellow-700/30">
+              <p className="text-sm text-yellow-700 dark:text-yellow-500 font-medium flex items-center justify-center gap-2">
+                <Clock className="w-4 h-4" />
+                Aguarde um administrador analisar seu chamado e enviar a primeira resposta.
+              </p>
             </div>
           ) : (
             <div className="relative flex items-end gap-2">
@@ -376,7 +389,7 @@ export default function AjudaMeusTickets({ user, perfil }: { user: any, perfil: 
                   <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-3.5 h-3.5" />
-                    {format(new Date(ticket.atualizado_em), "dd MMM, HH:mm", { locale: ptBR })}
+                    {formatDate(ticket.atualizado_em)}
                   </span>
                 </div>
               </div>

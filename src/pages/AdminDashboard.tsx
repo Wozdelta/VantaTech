@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
+// Forcing Vite recompilation
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
-import { Users, ShoppingBag, DollarSign, Activity, ListOrdered, BellRing, Package, History, Award, Tag, LogOut, LayoutDashboard, Moon, Sun, ShieldCheck, PackageSearch } from 'lucide-react';
+import { Users, ShoppingBag, DollarSign, Activity, ListOrdered, BellRing, Package, History, Award, Tag, LogOut, LayoutDashboard, Moon, Sun, ShieldCheck, PackageSearch, MessageCircle } from 'lucide-react';
 import AdminProducts from '../components/admin/AdminProducts';
 import AdminCategories from '../components/admin/AdminCategories';
 import AdminNotifications from '../components/admin/AdminNotifications';
@@ -69,12 +70,16 @@ export default function AdminDashboard() {
       setPendingPedidosCount(regularC);
       setPendingFidelidadeCount(fidelidadeC);
       
-      const { count: encomendasCount } = await supabase
-        .from('encomendas_pedidos')
-        .select('*', { count: 'exact', head: true })
-        .in('status', ['Pendente', 'Pagamento pendente']);
+      try {
+        const { count: encomendasCount } = await supabase
+          .from('encomendas_pedidos')
+          .select('*', { count: 'exact', head: true })
+          .in('status', ['Pendente', 'Pagamento pendente']);
 
-      setPendingEncomendasCount(encomendasCount || 0);
+        setPendingEncomendasCount(encomendasCount || 0);
+      } catch (err) {
+        setPendingEncomendasCount(0);
+      }
       
       try {
         const { count } = await supabase.from('tickets').select('id', { count: 'exact', head: true }).eq('status', 'Aberto');
@@ -265,7 +270,7 @@ export default function AdminDashboard() {
     { id: 'products', label: 'Produtos', icon: Package },
     { id: 'categories', label: 'Menu do Site', icon: ListOrdered },
     { id: 'notifications', label: 'Avisos', icon: BellRing },
-    { id: 'tickets', label: 'Suporte', icon: Ticket, badge: pendingTicketsCount },
+    { id: 'tickets', label: 'Suporte', icon: MessageCircle, badge: pendingTicketsCount },
     { id: 'fidelidade', label: 'Fidelidade', icon: Award, badge: pendingFidelidadeCount },
     { id: 'cupons', label: 'Cupons', icon: Tag },
     { id: 'encomendas', label: 'Encomendas', icon: PackageSearch, badge: pendingEncomendasCount },

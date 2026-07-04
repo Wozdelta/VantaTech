@@ -1,10 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Ticket, Search, Filter, MessageCircle, Clock, ShieldAlert, Send, ArrowLeft, CheckCircle2, User, ChevronRight } from 'lucide-react';
+import { Ticket, Search, Filter, MessageCircle, Clock, ShieldAlert, Send, ArrowLeft, CheckCircle2, User, ChevronRight, Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+
+const formatDate = (dateString: string) => {
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(new Date(dateString)).replace(' de ', ' ');
+};
 
 export default function AdminTickets() {
   const { user } = useAuth();
@@ -42,7 +49,7 @@ export default function AdminTickets() {
     try {
       const { data, error } = await supabase
         .from('tickets')
-        .select('*, user:perfis(nome_completo, email, whatsapp, avatar_url)')
+        .select('*')
         .order('atualizado_em', { ascending: false });
 
       if (error) {
@@ -52,10 +59,33 @@ export default function AdminTickets() {
         throw error;
       }
       
-      setTickets(data || []);
+      let finalTickets = data || [];
+      
+      if (finalTickets.length > 0) {
+        const userIds = [...new Set(finalTickets.map(t => t.user_id))];
+        const { data: perfisData } = await supabase
+          .from('perfis')
+          .select('*')
+          .in('id', userIds);
+          
+        if (perfisData) {
+          const perfisMap = perfisData.reduce((acc: any, p: any) => {
+            acc[p.id] = p;
+            return acc;
+          }, {});
+          
+          finalTickets = finalTickets.map(t => ({
+            ...t,
+            user: perfisMap[t.user_id] || null
+          }));
+        }
+      }
+      
+      setTickets(finalTickets);
       setTableExists(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      showAlert({ type: 'error', message: err?.message || 'Erro ao carregar tickets. Veja o console.' });
     } finally {
       setLoading(false);
     }
@@ -65,7 +95,7 @@ export default function AdminTickets() {
     try {
       const { data, error } = await supabase
         .from('ticket_messages')
-        .select('*, sender:perfis(nome_completo, avatar_url, cargo)')
+        .select('*')
         .eq('ticket_id', ticketId)
         .order('criado_em', { ascending: true });
 
@@ -95,16 +125,37 @@ export default function AdminTickets() {
 
       // Notifica o usuário
       await supabase.from('notificacoes').insert({
-        user_id: userId,
+        usuario_id: userId,
         titulo: 'Status do Chamado Atualizado',
         mensagem: `Seu ticket "${ticketAssunto}" agora está: ${newStatus}`,
-        tipo: 'sistema',
         lida: false
       });
 
     } catch (err) {
       console.error(err);
       showAlert({ type: 'error', message: 'Erro ao atualizar status.' });
+    }
+  };
+
+  const handleDeleteTicket = async (ticketId: string) => {
+    if (!window.confirm("Tem certeza que deseja apagar este ticket permanentemente? Esta ação não pode ser desfeita.")) return;
+
+    try {
+      const { error } = await supabase
+        .from('tickets')
+        .delete()
+        .eq('id', ticketId);
+
+      if (error) throw error;
+
+      showAlert({ type: 'success', message: 'Ticket apagado com sucesso' });
+      setTickets(prev => prev.filter(t => t.id !== ticketId));
+      if (selectedTicket?.id === ticketId) {
+        setSelectedTicket(null);
+      }
+    } catch (err) {
+      console.error(err);
+      showAlert({ type: 'error', message: 'Erro ao apagar ticket' });
     }
   };
 
@@ -142,10 +193,9 @@ export default function AdminTickets() {
       
       // Notifica usuário
       await supabase.from('notificacoes').insert({
-        user_id: selectedTicket.user_id,
+        usuario_id: selectedTicket.user_id,
         titulo: 'Nova Resposta no Suporte',
         mensagem: `A VantaTech respondeu ao seu ticket: ${selectedTicket.assunto}`,
-        tipo: 'sistema',
         lida: false
       });
 
@@ -237,6 +287,13 @@ export default function AdminTickets() {
                 </option>
               ))}
             </select>
+            <button
+              onClick={() => handleDeleteTicket(selectedTicket.id)}
+              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-colors border border-transparent hover:border-red-200 dark:hover:border-red-800/50"
+              title="Apagar Chamado"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
@@ -248,34 +305,40 @@ export default function AdminTickets() {
           {messages.map((msg) => (
             <div key={msg.id} className={`flex gap-3 max-w-[85%] ${msg.is_admin ? 'ml-auto flex-row-reverse' : ''}`}>
               <div className="flex-shrink-0">
-                {msg.sender?.avatar_url ? (
-                  <img src={msg.sender.avatar_url} alt="Avatar" className="w-8 h-8 rounded-full object-cover" />
-                ) : (
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm ${msg.is_admin ? 'bg-vanta-blue' : 'bg-gray-400'}`}>
-                    {msg.sender?.nome_completo?.charAt(0) || '?'}
+                {msg.is_admin ? (
+                  <div className="w-8 h-8 bg-vanta-blue text-white rounded-full flex items-center justify-center font-bold text-xs shadow-sm">
+                    V
                   </div>
+                ) : (
+                  selectedTicket?.user?.avatar_url ? (
+                    <img src={selectedTicket.user.avatar_url} alt="Avatar" className="w-8 h-8 rounded-full object-cover shadow-sm border border-gray-100" />
+                  ) : (
+                    <div className="w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center font-bold text-xs shadow-sm">
+                      {selectedTicket?.user?.nome_completo?.charAt(0) || '?'}
+                    </div>
+                  )
                 )}
               </div>
               
               <div className={`flex flex-col gap-1 ${msg.is_admin ? 'items-end' : 'items-start'}`}>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
-                    {msg.sender?.nome_completo || 'Usuário'}
+                    {msg.is_admin ? 'Equipe VantaTech' : (selectedTicket?.user?.nome_completo || 'Cliente')}
                   </span>
                   {msg.is_admin && (
-                    <span className="text-[10px] bg-vanta-blue text-white px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-                      Equipe
+                    <span className="text-[10px] bg-vanta-blue/10 text-vanta-blue px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                      Suporte
                     </span>
                   )}
                   <span className="text-xs text-gray-400">
-                    {format(new Date(msg.criado_em), 'dd MMM, HH:mm', { locale: ptBR })}
+                    {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(msg.criado_em))}
                   </span>
                 </div>
                 
                 <div className={`p-4 rounded-2xl text-sm whitespace-pre-wrap shadow-sm ${
                   msg.is_admin 
                     ? 'bg-vanta-blue text-white rounded-tr-sm' 
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-tl-sm'
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-sm border border-gray-200/50 dark:border-gray-700/50'
                 }`}>
                   {msg.conteudo}
                 </div>
@@ -473,17 +536,26 @@ export default function AdminTickets() {
                     </td>
                     <td className="p-4">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {format(new Date(ticket.atualizado_em), "dd MMM, HH:mm", { locale: ptBR })}
+                        {formatDate(ticket.atualizado_em)}
                       </div>
                     </td>
                     <td className="p-4 text-center">
-                      <button
-                        onClick={() => setSelectedTicket(ticket)}
-                        className="p-2 text-gray-400 hover:text-vanta-blue hover:bg-vanta-blue/10 rounded-xl transition-colors mx-auto"
-                        title="Responder Chamado"
-                      >
-                        <MessageCircle className="w-5 h-5" />
-                      </button>
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => setSelectedTicket(ticket)}
+                          className="p-2 text-gray-400 hover:text-vanta-blue hover:bg-vanta-blue/10 rounded-xl transition-colors"
+                          title="Responder Chamado"
+                        >
+                          <MessageCircle className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTicket(ticket.id)}
+                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-colors"
+                          title="Apagar Chamado"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

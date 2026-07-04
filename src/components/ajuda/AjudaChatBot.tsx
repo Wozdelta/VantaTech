@@ -19,6 +19,7 @@ export default function AjudaChatBot({ onOpenTicket }: { onOpenTicket: () => voi
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [failCount, setFailCount] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -28,20 +29,80 @@ export default function AjudaChatBot({ onOpenTicket }: { onOpenTicket: () => voi
   }, [messages, isTyping]);
 
   const findAnswer = (query: string) => {
-    const normalizedQuery = query.toLowerCase();
-    
+    const normalizedQuery = query.toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove acentos
+      .replace(/[^\w\s]/gi, ''); // remove pontuação
+
+    // Intents hardcoded para conversas simples
+    const intents = [
+      {
+        keywords: ['oi', 'ola', 'bom dia', 'boa tarde', 'boa noite', 'opa'],
+        response: 'Olá! Sou o assistente virtual da VantaTech. Tudo bem? Como posso te ajudar hoje?'
+      },
+      {
+        keywords: ['obrigado', 'obrigada', 'valeu', 'agradeco', 'perfeito', 'tchau'],
+        response: 'Por nada! Estou sempre aqui se precisar de mais alguma coisa. Tenha um excelente dia!'
+      },
+      {
+        keywords: ['comprar', 'fazer pedido', 'como faco para comprar', 'adicionar ao carrinho'],
+        response: 'Para comprar, basta navegar pelos nossos Produtos, escolher o aparelho desejado e clicar em "Adicionar ao Carrinho". Depois é só finalizar a compra no checkout!'
+      },
+      {
+        keywords: ['cade', 'compra nao', 'nao ta aparecendo', 'onde esta', 'nao aparece', 'nao encontro', 'sumiu', 'acompanhar'],
+        response: 'Você pode acompanhar seus pedidos e pagamentos na aba "Meus Pedidos" no seu perfil. Lá fica o status em tempo real. Se o seu pedido não estiver aparecendo, pode ser um atraso temporário do sistema de pagamentos. Gostaria de abrir um ticket para nossa equipe de suporte investigar?',
+        isAction: true
+      },
+      {
+        keywords: ['atrasado', 'demorando', 'nao chegou', 'prazo'],
+        response: 'Caso seu pedido tenha passado do prazo de entrega ou de aprovação, recomendo abrir um ticket de suporte para nossa equipe investigar imediatamente o que houve.',
+        isAction: true
+      },
+      {
+        keywords: ['cancelar', 'cancelamento', 'desistir'],
+        response: 'O cancelamento pode ser feito até 24h após a compra, desde que o produto não tenha sido enviado. Acesse a aba "Meus Pedidos" e clique em "Cancelar".'
+      },
+      {
+        keywords: ['reembolso', 'devolucao', 'estorno', 'devolver'],
+        response: 'O reembolso é processado na mesma forma de pagamento original em até 7 dias úteis após a aprovação do cancelamento ou devolução.'
+      },
+      {
+        keywords: ['garantia', 'defeito', 'quebrado', 'estragou', 'parou de funcionar'],
+        response: 'Todos os nossos aparelhos possuem garantia padrão de 90 dias contra defeitos de fabricação. Para acionar a garantia, por favor, abra um ticket detalhando o defeito que ocorreu.',
+        isAction: true
+      },
+      {
+        keywords: ['ajuda', 'suporte', 'atendente', 'humano', 'falar com pessoa', 'preciso de ajuda', 'problema'],
+        response: 'Eu sou um assistente virtual treinado para tirar dúvidas rápidas, mas se o seu problema for complexo, posso te direcionar para a nossa equipe. Gostaria de abrir um ticket de suporte?',
+        isAction: true
+      }
+    ];
+
+    // Checar intents primeiro
+    for (const intent of intents) {
+      if (intent.keywords.some(k => normalizedQuery.includes(k))) {
+        return { text: intent.response, isAction: intent.isAction };
+      }
+    }
+
     // Flatten FAQ
     const allFaqs = FAQ_DATA.flatMap(c => c.items);
     
-    // Procurar a melhor correspondência (muito básico)
+    // Stop words comuns em português
+    const stopWords = ['como', 'para', 'qual', 'quando', 'onde', 'porque', 'por que', 'quem', 'com', 'meu', 'minha', 'seu', 'sua', 'que', 'dos', 'das'];
+    
     let bestMatch = null;
     let maxScore = 0;
     
     for (const faq of allFaqs) {
-      const qWords = faq.pergunta.toLowerCase().split(' ');
+      const qWords = faq.pergunta.toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^\w\s]/gi, '')
+        .split(' ')
+        .filter(w => w.length > 2 && !stopWords.includes(w));
+        
       let score = 0;
       for (const w of qWords) {
-        if (w.length > 3 && normalizedQuery.includes(w)) {
+        if (normalizedQuery.includes(w)) {
           score++;
         }
       }
@@ -52,7 +113,7 @@ export default function AjudaChatBot({ onOpenTicket }: { onOpenTicket: () => voi
     }
     
     if (maxScore > 0 && bestMatch) {
-      return bestMatch;
+      return { text: bestMatch, isAction: false };
     }
     
     return null;
@@ -74,15 +135,28 @@ export default function AjudaChatBot({ onOpenTicket }: { onOpenTicket: () => voi
         setMessages(prev => [...prev, {
           id: Date.now().toString(),
           type: 'bot',
-          text: answer
+          text: answer.text,
+          isAction: answer.isAction
         }]);
+        setFailCount(0); // Reseta a contagem de falhas
       } else {
-        setMessages(prev => [...prev, {
-          id: Date.now().toString(),
-          type: 'bot',
-          text: 'Não consegui encontrar uma resposta precisa para esse problema em nossa base de conhecimento.',
-          isAction: true
-        }]);
+        const newFailCount = failCount + 1;
+        setFailCount(newFailCount);
+
+        if (newFailCount >= 3) {
+          setMessages(prev => [...prev, {
+            id: Date.now().toString(),
+            type: 'bot',
+            text: 'Não consegui encontrar uma resposta precisa para esse problema na base de conhecimento após algumas tentativas.',
+            isAction: true
+          }]);
+        } else {
+          setMessages(prev => [...prev, {
+            id: Date.now().toString(),
+            type: 'bot',
+            text: 'Desculpe, não entendi muito bem. Poderia reformular a sua pergunta usando outras palavras?'
+          }]);
+        }
       }
       setIsTyping(false);
     }, 1500);

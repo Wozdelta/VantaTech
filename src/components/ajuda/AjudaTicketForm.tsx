@@ -20,12 +20,12 @@ export default function AjudaTicketForm({ onSuccess }: { onSuccess: () => void }
   useEffect(() => {
     if (user) {
       supabase.from('pedidos')
-        .select('id')
+        .select('id, numero')
         .eq('user_id', user.id)
         .order('criado_em', { ascending: false })
         .then(({ data }) => {
           if (data) {
-            setPedidos(data.map(p => ({ id: p.id, code: p.id.split('-')[0].toUpperCase() })));
+            setPedidos(data.map(p => ({ id: p.id, code: String(p.numero) })));
           }
         });
     }
@@ -81,10 +81,9 @@ export default function AjudaTicketForm({ onSuccess }: { onSuccess: () => void }
         if (admins && admins.length > 0) {
           await supabase.from('notificacoes').insert(
             admins.map(admin => ({
-              user_id: admin.id,
-              titulo: 'Novo Ticket Aberto',
-              mensagem: `Ticket: ${formData.assunto}`,
-              tipo: 'sistema',
+              usuario_id: admin.id,
+              titulo: 'Novo Ticket Criado',
+              mensagem: `Assunto: ${formData.assunto}`,
               lida: false
             }))
           );

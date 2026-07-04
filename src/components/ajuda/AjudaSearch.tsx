@@ -7,10 +7,12 @@ export default function AjudaSearch({ onOpenTicket }: { onOpenTicket: () => void
   const [showResults, setShowResults] = useState(false);
 
   // Busca plana em todos os itens de FAQ
-  const allFaqs = FAQ_DATA.flatMap(categoria => 
-    categoria.items.map(item => ({
+  const allFaqs = FAQ_DATA.flatMap((categoria, idx) => 
+    categoria.items.map((item, itemIdx) => ({
       ...item,
-      categoria: categoria.categoria
+      categoria: categoria.categoria,
+      idx,
+      itemIdx
     }))
   );
 
@@ -20,10 +22,12 @@ export default function AjudaSearch({ onOpenTicket }: { onOpenTicket: () => void
 
   return (
     <div className="relative z-20">
-      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 md:p-10 shadow-sm border border-gray-100 dark:border-gray-700 text-center relative overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 md:p-10 shadow-sm border border-gray-100 dark:border-gray-700 text-center relative">
         {/* BG Decoration */}
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-vanta-blue/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-vanta-orange/5 rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
+          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-vanta-blue/5 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-vanta-orange/5 rounded-full blur-3xl"></div>
+        </div>
         
         <div className="relative z-10 max-w-2xl mx-auto space-y-6">
           <h2 className="text-2xl md:text-3xl font-black text-gray-900 dark:text-white">
@@ -60,8 +64,22 @@ export default function AjudaSearch({ onOpenTicket }: { onOpenTicket: () => void
                     <button
                       key={idx}
                       onClick={() => {
-                        // Poderia abrir um modal com a resposta ou scrolar até o FAQ
-                        alert(`Resposta:\n${item.resposta}`);
+                        setShowResults(false);
+                        const element = document.getElementById(`faq-${item.idx}-${item.itemIdx}`);
+                        if (element) {
+                          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          // Open the accordion if it's closed
+                          const trigger = element.querySelector('button');
+                          if (trigger && trigger.getAttribute('data-state') === 'closed') {
+                            trigger.click();
+                          }
+                          // Add a highlight effect
+                          element.style.transition = 'background-color 0.3s';
+                          element.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+                          setTimeout(() => {
+                            element.style.backgroundColor = 'transparent';
+                          }, 2000);
+                        }
                       }}
                       className="w-full flex flex-col items-start gap-1 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-xl transition-colors text-left group"
                     >
