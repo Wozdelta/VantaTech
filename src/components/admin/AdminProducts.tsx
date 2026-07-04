@@ -801,7 +801,7 @@ export default function AdminProducts() {
                     >
                       <button type="button" onClick={() => handleRemoveImage(img.id)} className="absolute -top-3 -right-3 bg-red-500 text-white p-1.5 rounded-full shadow hover:bg-red-600 z-10 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-4 h-4" /></button>
                       <div className="h-28 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800">
-                        <img draggable={false} src={img.preview} alt="" className="max-h-full max-w-full object-contain pointer-events-none" />
+                        <img src={img.preview} draggable={false} alt="" className="max-h-full max-w-full object-contain pointer-events-none select-none" />
                       </div>
                       
                       {productType === 'aparelho' && (

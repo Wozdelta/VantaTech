@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { DollarSign, Plus, Save, Trash2, Edit2, X, Tag, ChevronDown, ChevronUp, Search, TrendingUp, Layers, GripVertical } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
-import { Reorder, useDragControls } from 'framer-motion';
 
 interface Marca {
   id: string;
@@ -34,220 +33,6 @@ const SUGESTOES_VARIEDADES = [
   "Normal 128GB", "Normal 256GB"
 ];
 
-// --- Sub-componente para permitir o uso do useDragControls por item ---
-const GrupoItem = ({ 
-  grupo, 
-  isExpanded, 
-  marcaNome, 
-  toggleGroup, 
-  setAddingVariantTo, 
-  handleDeleteGroup, 
-  handleDeleteVariant, 
-  addingVariantTo, 
-  newVariant, 
-  setNewVariant, 
-  showSuggestions, 
-  setShowSuggestions, 
-  handleSaveVariant 
-}: any) => {
-  const controls = useDragControls();
-
-  return (
-    <Reorder.Item 
-      value={grupo}
-      id={grupo.id}
-      dragListener={false} // Desabilita o arrastar no corpo todo
-      dragControls={controls} // Ativa o controle manual
-      transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-      whileDrag={{ scale: 1.02, boxShadow: '0px 10px 30px rgba(0,0,0,0.15)', zIndex: 50, opacity: 0.95 }}
-      className={`bg-white dark:bg-gray-800 rounded-2xl transition-all duration-300 ${isExpanded ? 'shadow-lg border-vanta-blue/50' : 'shadow-sm border-gray-100 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'} border overflow-hidden relative`}
-    >
-      {/* Header do Accordion */}
-      <div 
-        onClick={() => toggleGroup(grupo.id)}
-        className="px-6 py-5 cursor-pointer flex items-center justify-between group"
-      >
-        <div className="flex items-center gap-4">
-          <div 
-            onPointerDown={(e) => { e.stopPropagation(); controls.start(e); }}
-            onClick={(e) => e.stopPropagation()}
-            style={{ touchAction: 'none' }}
-            className="text-gray-300 hover:text-gray-500 transition-colors mr-1 cursor-grab active:cursor-grabbing p-1 -ml-2"
-          >
-            <GripVertical className="w-5 h-5" />
-          </div>
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isExpanded ? 'bg-vanta-blue text-white' : 'bg-gray-100 dark:bg-gray-900 text-gray-500 group-hover:bg-vanta-blue/10 group-hover:text-vanta-blue'}`}>
-            {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-          </div>
-          <div>
-            <h3 className="text-lg font-black text-gray-900 dark:text-white leading-none mb-1.5">{grupo.nome}</h3>
-            <div className="flex items-center gap-3 text-xs">
-              <span className="font-bold text-gray-500 bg-gray-100 dark:bg-gray-900 px-2 py-0.5 rounded-md flex items-center gap-1">
-                <Tag className="w-3 h-3" /> {marcaNome}
-              </span>
-              <span className="font-medium text-gray-400">
-                {grupo.variacoes.length} variaç{grupo.variacoes.length === 1 ? 'ão' : 'ões'}
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={(e) => { e.stopPropagation(); setAddingVariantTo(grupo.id); if (!isExpanded) toggleGroup(grupo.id); }}
-            className="p-2 text-vanta-blue hover:bg-vanta-blue/10 rounded-xl transition-colors font-bold text-sm hidden sm:flex items-center gap-1"
-          >
-            <Plus className="w-4 h-4" /> Variedade
-          </button>
-          <button 
-            onClick={(e) => handleDeleteGroup(grupo.id, e)}
-            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Conteúdo Expandido (Variedades) */}
-      {isExpanded && (
-        <div className="border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/20 p-6 animate-slide-down">
-          
-          {grupo.variacoes.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                    <th className="pb-3 px-4">Modelo / Variedade</th>
-                    <th className="pb-3 px-4">Custo</th>
-                    <th className="pb-3 px-4">Venda</th>
-                    <th className="pb-3 px-4">Lucro</th>
-                    <th className="pb-3 px-4 text-right">Ação</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                  {grupo.variacoes.map((variacao: any) => {
-                    const lucroReal = variacao.valor_venda - variacao.valor_pago;
-                    const margem = variacao.valor_pago > 0 ? ((lucroReal / variacao.valor_pago) * 100).toFixed(0) : '100';
-                    
-                    return (
-                      <tr key={variacao.id} className="hover:bg-white dark:hover:bg-gray-800 transition-colors group/row">
-                        <td className="py-3 px-4 font-bold text-gray-900 dark:text-white text-sm">
-                          {variacao.nome}
-                        </td>
-                        <td className="py-3 px-4 font-medium text-gray-500 dark:text-gray-400 text-sm">
-                          {Number(variacao.valor_pago).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                        </td>
-                        <td className="py-3 px-4 font-black text-gray-900 dark:text-white text-sm">
-                          {Number(variacao.valor_venda).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex flex-col">
-                            <span className="font-bold text-green-600 dark:text-green-400 text-sm flex items-center gap-1">
-                              <TrendingUp className="w-3.5 h-3.5" />
-                              {lucroReal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                            </span>
-                            <span className="text-[10px] font-bold text-gray-400 uppercase">Margem: {margem}%</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <button 
-                            onClick={() => handleDeleteVariant(grupo.id, variacao.id)}
-                            className="p-1.5 text-gray-400 hover:text-red-500 opacity-0 group-hover/row:opacity-100 transition-all rounded-lg"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="text-center py-6 text-sm text-gray-500 italic">
-              Nenhuma variação cadastrada ainda.
-            </div>
-          )}
-
-          {/* Formulário In-line de Nova Variação */}
-          {addingVariantTo === grupo.id ? (
-            <div className="mt-4 bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col md:flex-row items-end gap-3 animate-fade-in">
-              <div className="w-full md:flex-1 relative">
-                <label className="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Variedade (Ex: Pro 128GB)</label>
-                <input 
-                  type="text" 
-                  value={newVariant.nome} 
-                  onChange={e => {
-                    setNewVariant({...newVariant, nome: e.target.value});
-                    setShowSuggestions(true);
-                  }}
-                  onFocus={() => setShowSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                  className="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-vanta-blue" 
-                  placeholder="Nome da variação" 
-                />
-                
-                {/* Dropdown de Sugestões */}
-                {showSuggestions && newVariant.nome && (
-                  (() => {
-                    const variacoesExistentes = grupo.variacoes.map((v:any) => v.nome.toLowerCase());
-                    const sugestoesFiltradas = SUGESTOES_VARIEDADES.filter(sug => 
-                      sug.toLowerCase().includes(newVariant.nome.toLowerCase()) && 
-                      !variacoesExistentes.includes(sug.toLowerCase())
-                    ).slice(0, 5);
-
-                    if (sugestoesFiltradas.length === 0) return null;
-
-                    return (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl shadow-xl z-10 overflow-hidden animate-slide-down">
-                        {sugestoesFiltradas.map(sug => (
-                          <button
-                            key={sug}
-                            className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-gray-700 dark:text-gray-300 border-b border-gray-50 dark:border-gray-700/50 last:border-0"
-                            onClick={() => {
-                              setNewVariant({...newVariant, nome: sug});
-                              setShowSuggestions(false);
-                            }}
-                          >
-                            {sug}
-                          </button>
-                        ))}
-                      </div>
-                    );
-                  })()
-                )}
-              </div>
-              <div className="w-full md:w-32">
-                <label className="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Valor Pago (Custo)</label>
-                <input type="number" value={newVariant.valor_pago} onChange={e => setNewVariant({...newVariant, valor_pago: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-vanta-blue" placeholder="R$ 0,00" />
-              </div>
-              <div className="w-full md:w-32">
-                <label className="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Valor Venda</label>
-                <input type="number" value={newVariant.valor_venda} onChange={e => setNewVariant({...newVariant, valor_venda: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-vanta-blue" placeholder="R$ 0,00" />
-              </div>
-              <div className="flex items-center gap-2 w-full md:w-auto mt-4 md:mt-0">
-                <button onClick={() => setAddingVariantTo(null)} className="p-2.5 text-gray-400 hover:text-red-500 bg-gray-50 dark:bg-gray-900 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors flex-1 md:flex-none flex justify-center">
-                  <X className="w-5 h-5" />
-                </button>
-                <button onClick={() => handleSaveVariant(grupo.id)} className="p-2.5 text-white bg-green-500 hover:bg-green-600 rounded-xl transition-colors flex-1 md:flex-none flex justify-center shadow-md">
-                  <Save className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button 
-              onClick={() => setAddingVariantTo(grupo.id)}
-              className="mt-4 w-full py-3 border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-vanta-blue hover:text-vanta-blue text-gray-400 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
-            >
-              <Plus className="w-4 h-4" /> Adicionar Derivado / Variação
-            </button>
-          )}
-        </div>
-      )}
-    </Reorder.Item>
-  );
-};
-
-
 export default function AdminTabelaPrecos() {
   const { showAlert } = useAlert();
   const [grupos, setGrupos] = useState<Grupo[]>([]);
@@ -258,6 +43,7 @@ export default function AdminTabelaPrecos() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMarcaId, setSelectedMarcaId] = useState<string>('all');
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
+  const dragGroupItem = useRef<number | null>(null);
   
   // Create States
   const [isAddingGroup, setIsAddingGroup] = useState(false);
@@ -275,7 +61,7 @@ export default function AdminTabelaPrecos() {
     try {
       const [marcasRes, gruposRes, variacoesRes] = await Promise.all([
         supabase.from('marcas').select('*').order('nome'),
-        supabase.from('tabela_precos_grupos').select('*').order('ordem', { ascending: true }).order('nome'),
+        supabase.from('tabela_precos_grupos').select('*').order('ordem', { ascending: true, nullsFirst: false }).order('nome'),
         supabase.from('tabela_precos_variacoes').select('*').order('valor_venda')
       ]);
 
@@ -294,7 +80,7 @@ export default function AdminTabelaPrecos() {
       setMarcas(marcasData);
       setGrupos(gruposTree);
     } catch (err) {
-      console.error('Erro ao buscar dados:', err);
+      console.error('Erro ao buscar dados (As tabelas existem?):', err);
     } finally {
       setLoading(false);
     }
@@ -306,17 +92,49 @@ export default function AdminTabelaPrecos() {
     );
   };
 
+  const handleGroupDragStart = (e: React.DragEvent, index: number) => {
+    if (searchTerm || selectedMarcaId !== 'all') return;
+    dragGroupItem.current = index;
+    if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleGroupDragEnter = (e: React.DragEvent, index: number) => {
+    if (searchTerm || selectedMarcaId !== 'all') return;
+    if (dragGroupItem.current !== null && dragGroupItem.current !== index) {
+      const newGrupos = [...grupos];
+      const draggedItemContent = newGrupos[dragGroupItem.current];
+      newGrupos.splice(dragGroupItem.current, 1);
+      newGrupos.splice(index, 0, draggedItemContent);
+      setGrupos(newGrupos);
+      dragGroupItem.current = index;
+    }
+  };
+
+  const handleGroupDragEnd = async () => {
+    if (dragGroupItem.current === null || searchTerm || selectedMarcaId !== 'all') {
+      dragGroupItem.current = null;
+      return;
+    }
+    
+    dragGroupItem.current = null;
+    
+    try {
+      await Promise.all(grupos.map((g, index) => 
+        supabase.from('tabela_precos_grupos').update({ ordem: index }).eq('id', g.id)
+      ));
+    } catch (err) {
+      console.error('Erro ao salvar ordem:', err);
+    }
+  };
+
   const handleSaveGroup = async () => {
     if (!newGroup.nome || !newGroup.marca_id) {
       showAlert({ type: 'warning', message: 'Preencha o Nome e a Marca do aparelho base.' });
       return;
     }
     try {
-      // Adiciona o novo grupo sempre na última posição da ordem
-      const novaOrdem = grupos.length;
-      
       const { data, error } = await supabase.from('tabela_precos_grupos')
-        .insert([{ nome: newGroup.nome, marca_id: newGroup.marca_id, ordem: novaOrdem }])
+        .insert([{ nome: newGroup.nome, marca_id: newGroup.marca_id }])
         .select()
         .single();
       
@@ -324,7 +142,8 @@ export default function AdminTabelaPrecos() {
       showAlert({ type: 'success', message: 'Aparelho Base criado!' });
       setIsAddingGroup(false);
       setNewGroup({ nome: '', marca_id: '' });
-      setGrupos(prev => [...prev, { ...data, variacoes: [] }]);
+      // Adicionar à lista imediatamente
+      setGrupos(prev => [...prev, { ...data, variacoes: [] }].sort((a, b) => a.nome.localeCompare(b.nome)));
       setExpandedGroups(prev => [...prev, data.id]);
     } catch (err) {
       console.error(err);
@@ -408,35 +227,6 @@ export default function AdminTabelaPrecos() {
                         g.variacoes.some(v => v.nome.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchMarca && matchSearch;
   });
-
-  const handleReorderGrupos = async (newOrder: Grupo[]) => {
-    // Se tiver filtro ativo, apenas reordena visualmente sem estragar os outros
-    if (searchTerm !== '' || selectedMarcaId !== 'all') {
-      const updatedGrupos = [...grupos];
-      let newOrderIndex = 0;
-      for (let i = 0; i < updatedGrupos.length; i++) {
-        if (newOrder.some(g => g.id === updatedGrupos[i].id)) {
-          updatedGrupos[i] = newOrder[newOrderIndex];
-          newOrderIndex++;
-        }
-      }
-      setGrupos(updatedGrupos);
-      return;
-    }
-    
-    // Sem filtros, salva a nova ordem localmente e no banco de dados
-    setGrupos(newOrder);
-    
-    try {
-      // Salva no banco de dados silenciosamente
-      const updates = newOrder.map((grupo, index) => 
-        supabase.from('tabela_precos_grupos').update({ ordem: index }).eq('id', grupo.id)
-      );
-      await Promise.all(updates);
-    } catch (err) {
-      console.error("Erro ao salvar ordem no banco:", err);
-    }
-  };
 
   return (
     <div className="space-y-8 animate-fade-in pb-20">
@@ -555,26 +345,204 @@ export default function AdminTabelaPrecos() {
           <p className="text-gray-500 text-sm mt-1">Crie um novo aparelho base para começar a montar sua tabela.</p>
         </div>
       ) : (
-        <Reorder.Group axis="y" values={filteredGrupos} onReorder={handleReorderGrupos} className="space-y-4">
-          {filteredGrupos.map(grupo => (
-            <GrupoItem 
-              key={grupo.id}
-              grupo={grupo}
-              isExpanded={expandedGroups.includes(grupo.id)}
-              marcaNome={marcas.find(m => m.id === grupo.marca_id)?.nome || 'Sem marca'}
-              toggleGroup={toggleGroup}
-              setAddingVariantTo={setAddingVariantTo}
-              handleDeleteGroup={handleDeleteGroup}
-              handleDeleteVariant={handleDeleteVariant}
-              addingVariantTo={addingVariantTo}
-              newVariant={newVariant}
-              setNewVariant={setNewVariant}
-              showSuggestions={showSuggestions}
-              setShowSuggestions={setShowSuggestions}
-              handleSaveVariant={handleSaveVariant}
-            />
-          ))}
-        </Reorder.Group>
+        <div className="space-y-4">
+          {filteredGrupos.map((grupo, index) => {
+            const isExpanded = expandedGroups.includes(grupo.id);
+            const marcaNome = marcas.find(m => m.id === grupo.marca_id)?.nome || 'Sem marca';
+            const isDragEnabled = !searchTerm && selectedMarcaId === 'all' && !isExpanded;
+            
+            return (
+              <div 
+                key={grupo.id} 
+                draggable={isDragEnabled}
+                onDragStart={(e) => handleGroupDragStart(e, index)}
+                onDragEnter={(e) => handleGroupDragEnter(e, index)}
+                onDragEnd={handleGroupDragEnd}
+                onDragOver={(e) => e.preventDefault()}
+                className={`bg-white dark:bg-gray-800 rounded-2xl transition-all duration-300 ${isExpanded ? 'shadow-lg border-vanta-blue/50 z-10' : 'shadow-sm border-gray-100 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'} border overflow-hidden relative`}
+              >
+                
+                {/* Header do Accordion */}
+                <div 
+                  onClick={() => toggleGroup(grupo.id)}
+                  className="px-6 py-5 cursor-pointer flex items-center justify-between group"
+                >
+                  <div className="flex items-center gap-4">
+                    {isDragEnabled && (
+                      <GripVertical className="w-5 h-5 text-gray-300 dark:text-gray-500 cursor-move hover:text-vanta-blue transition-colors mr-2" />
+                    )}
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isExpanded ? 'bg-vanta-blue text-white' : 'bg-gray-100 dark:bg-gray-900 text-gray-500 group-hover:bg-vanta-blue/10 group-hover:text-vanta-blue'}`}>
+                      {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-black text-gray-900 dark:text-white leading-none mb-1.5">{grupo.nome}</h3>
+                      <div className="flex items-center gap-3 text-xs">
+                        <span className="font-bold text-gray-500 bg-gray-100 dark:bg-gray-900 px-2 py-0.5 rounded-md flex items-center gap-1">
+                          <Tag className="w-3 h-3" /> {marcaNome}
+                        </span>
+                        <span className="font-medium text-gray-400">
+                          {grupo.variacoes.length} variaç{grupo.variacoes.length === 1 ? 'ão' : 'ões'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setAddingVariantTo(grupo.id); if (!isExpanded) toggleGroup(grupo.id); }}
+                      className="p-2 text-vanta-blue hover:bg-vanta-blue/10 rounded-xl transition-colors font-bold text-sm hidden sm:flex items-center gap-1"
+                    >
+                      <Plus className="w-4 h-4" /> Variedade
+                    </button>
+                    <button 
+                      onClick={(e) => handleDeleteGroup(grupo.id, e)}
+                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Conteúdo Expandido (Variedades) */}
+                {isExpanded && (
+                  <div className="border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/20 p-6 animate-slide-down">
+                    
+                    {grupo.variacoes.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                              <th className="pb-3 px-4">Modelo / Variedade</th>
+                              <th className="pb-3 px-4">Custo</th>
+                              <th className="pb-3 px-4">Venda</th>
+                              <th className="pb-3 px-4">Lucro</th>
+                              <th className="pb-3 px-4 text-right">Ação</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                            {grupo.variacoes.map(variacao => {
+                              const lucroReal = variacao.valor_venda - variacao.valor_pago;
+                              const margem = variacao.valor_pago > 0 ? ((lucroReal / variacao.valor_pago) * 100).toFixed(0) : '100';
+                              
+                              return (
+                                <tr key={variacao.id} className="hover:bg-white dark:hover:bg-gray-800 transition-colors group/row">
+                                  <td className="py-3 px-4 font-bold text-gray-900 dark:text-white text-sm">
+                                    {variacao.nome}
+                                  </td>
+                                  <td className="py-3 px-4 font-medium text-gray-500 dark:text-gray-400 text-sm">
+                                    {Number(variacao.valor_pago).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                  </td>
+                                  <td className="py-3 px-4 font-black text-gray-900 dark:text-white text-sm">
+                                    {Number(variacao.valor_venda).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <div className="flex flex-col">
+                                      <span className="font-bold text-green-600 dark:text-green-400 text-sm flex items-center gap-1">
+                                        <TrendingUp className="w-3.5 h-3.5" />
+                                        {lucroReal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                      </span>
+                                      <span className="text-[10px] font-bold text-gray-400 uppercase">Margem: {margem}%</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4 text-right">
+                                    <button 
+                                      onClick={() => handleDeleteVariant(grupo.id, variacao.id)}
+                                      className="p-1.5 text-gray-400 hover:text-red-500 opacity-0 group-hover/row:opacity-100 transition-all rounded-lg"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="text-center py-6 text-sm text-gray-500 italic">
+                        Nenhuma variação cadastrada ainda.
+                      </div>
+                    )}
+
+                    {/* Formulário In-line de Nova Variação */}
+                    {addingVariantTo === grupo.id ? (
+                      <div className="mt-4 bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col md:flex-row items-end gap-3 animate-fade-in">
+                        <div className="w-full md:flex-1 relative">
+                          <label className="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Variedade (Ex: Pro 128GB)</label>
+                          <input 
+                            type="text" 
+                            value={newVariant.nome} 
+                            onChange={e => {
+                              setNewVariant({...newVariant, nome: e.target.value});
+                              setShowSuggestions(true);
+                            }}
+                            onFocus={() => setShowSuggestions(true)}
+                            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                            className="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-vanta-blue" 
+                            placeholder="Nome da variação" 
+                          />
+                          
+                          {/* Dropdown de Sugestões */}
+                          {showSuggestions && newVariant.nome && (
+                            (() => {
+                              const variacoesExistentes = grupo.variacoes.map(v => v.nome.toLowerCase());
+                              const sugestoesFiltradas = SUGESTOES_VARIEDADES.filter(sug => 
+                                sug.toLowerCase().includes(newVariant.nome.toLowerCase()) && 
+                                !variacoesExistentes.includes(sug.toLowerCase())
+                              ).slice(0, 5);
+
+                              if (sugestoesFiltradas.length === 0) return null;
+
+                              return (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl shadow-xl z-10 overflow-hidden animate-slide-down">
+                                  {sugestoesFiltradas.map(sug => (
+                                    <button
+                                      key={sug}
+                                      className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-gray-700 dark:text-gray-300 border-b border-gray-50 dark:border-gray-700/50 last:border-0"
+                                      onClick={() => {
+                                        setNewVariant({...newVariant, nome: sug});
+                                        setShowSuggestions(false);
+                                      }}
+                                    >
+                                      {sug}
+                                    </button>
+                                  ))}
+                                </div>
+                              );
+                            })()
+                          )}
+                        </div>
+                        <div className="w-full md:w-32">
+                          <label className="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Valor Pago (Custo)</label>
+                          <input type="number" value={newVariant.valor_pago} onChange={e => setNewVariant({...newVariant, valor_pago: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-vanta-blue" placeholder="R$ 0,00" />
+                        </div>
+                        <div className="w-full md:w-32">
+                          <label className="text-[10px] uppercase font-bold text-gray-400 mb-1 block">Valor Venda</label>
+                          <input type="number" value={newVariant.valor_venda} onChange={e => setNewVariant({...newVariant, valor_venda: e.target.value})} className="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-vanta-blue" placeholder="R$ 0,00" />
+                        </div>
+                        <div className="flex items-center gap-2 w-full md:w-auto mt-4 md:mt-0">
+                          <button onClick={() => setAddingVariantTo(null)} className="p-2.5 text-gray-400 hover:text-red-500 bg-gray-50 dark:bg-gray-900 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors flex-1 md:flex-none flex justify-center">
+                            <X className="w-5 h-5" />
+                          </button>
+                          <button onClick={() => handleSaveVariant(grupo.id)} className="p-2.5 text-white bg-green-500 hover:bg-green-600 rounded-xl transition-colors flex-1 md:flex-none flex justify-center shadow-md">
+                            <Save className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button 
+                        onClick={() => setAddingVariantTo(grupo.id)}
+                        className="mt-4 w-full py-3 border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-vanta-blue hover:text-vanta-blue text-gray-400 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" /> Adicionar Derivado / Variação
+                      </button>
+                    )}
+
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );

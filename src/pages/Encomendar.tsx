@@ -309,7 +309,7 @@ export default function Encomendar() {
                         <div className="text-xs font-bold text-gray-400 mb-1">{new Date(enc.criado_em).toLocaleDateString('pt-BR')}</div>
                         <h3 className="font-bold text-gray-900 dark:text-white text-lg">{enc.marca} {enc.modelo}</h3>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${
                         enc.status === 'Concluído' ? 'bg-green-100 text-green-700' :
                         enc.status === 'Em Andamento' ? 'bg-blue-100 text-blue-700' :
                         enc.status === 'Cancelado' ? 'bg-red-100 text-red-700' :
