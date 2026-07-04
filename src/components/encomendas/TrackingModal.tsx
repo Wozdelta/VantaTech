@@ -15,19 +15,29 @@ declare global {
 export default function TrackingModal({ codigo, onClose }: TrackingModalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isWidgetLoaded, setIsWidgetLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     if (!codigo) return;
 
     setIsWidgetLoaded(false);
+    setHasError(false);
+
+    // Timeout para caso o AdBlocker bloqueie o script
+    const timeout = setTimeout(() => {
+      if (!isWidgetLoaded) {
+        setHasError(true);
+      }
+    }, 5000);
 
     // Carregar o script do widget 17Track dinamicamente
     const script = document.createElement('script');
-    script.src = '//s.17track.net/modules/track/widget/v2/index.js';
+    script.src = 'https://s.17track.net/modules/track/widget/v2/index.js';
     script.async = true;
     
     script.onload = () => {
       setIsWidgetLoaded(true);
+      clearTimeout(timeout);
       // Inicializar o widget quando o script terminar de carregar
       if (window.YQV5) {
         window.YQV5.trackSingle({
@@ -40,9 +50,15 @@ export default function TrackingModal({ codigo, onClose }: TrackingModalProps) {
       }
     };
 
+    script.onerror = () => {
+      setHasError(true);
+      clearTimeout(timeout);
+    };
+
     document.body.appendChild(script);
 
     return () => {
+      clearTimeout(timeout);
       // Limpar o script se o modal for fechado
       if (document.body.contains(script)) {
         document.body.removeChild(script);
@@ -73,12 +89,26 @@ export default function TrackingModal({ codigo, onClose }: TrackingModalProps) {
         </div>
 
         <div className="p-2 overflow-y-auto custom-scrollbar flex-1 relative min-h-[400px]">
-          {!isWidgetLoaded && (
+          {hasError ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-vanta-darker z-10 px-6 text-center">
+              <Package className="w-12 h-12 text-vanta-orange mb-4 opacity-80" />
+              <p className="text-sm font-bold text-gray-900 dark:text-white mb-2">Bloqueador de Anúncios Detectado</p>
+              <p className="text-sm font-medium text-gray-500 mb-6">Não foi possível carregar o widget de rastreio pois o seu navegador ou extensão bloqueou o script.</p>
+              <a 
+                href={`https://t.17track.net/pt#nums=${codigo}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-2.5 bg-vanta-blue text-white rounded-xl font-bold text-sm hover:bg-vanta-darkblue transition-colors flex items-center gap-2 shadow-md w-full justify-center"
+              >
+                Abrir Rastreio Oficial
+              </a>
+            </div>
+          ) : !isWidgetLoaded ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-white dark:bg-vanta-darker z-10">
               <div className="w-10 h-10 border-4 border-gray-200 dark:border-gray-700 border-t-vanta-blue rounded-full animate-spin mb-4" />
               <p className="text-sm font-bold text-gray-500">Conectando ao rastreio global...</p>
             </div>
-          )}
+          ) : null}
           
           {/* Container onde o 17Track vai injetar a interface de rastreio */}
           <div id="YQContainer" ref={containerRef} className="w-full"></div>
