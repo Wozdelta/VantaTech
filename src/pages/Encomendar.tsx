@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Smartphone, Plus, PackageSearch, ShieldCheck, Check, Loader2, FileText, X, MessageCircle } from 'lucide-react';
+import { Smartphone, Plus, PackageSearch, ShieldCheck, Check, Loader2, FileText, X, MessageCircle, Package } from 'lucide-react';
 import BlockScreen from '../components/common/BlockScreen';
 import EncomendaChat from '../components/encomendas/EncomendaChat';
+import TrackingModal from '../components/encomendas/TrackingModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { supabase } from '../lib/supabase';
@@ -49,6 +50,7 @@ export default function Encomendar() {
   const [encomendas, setEncomendas] = useState<any[]>([]);
   const [loadingEncomendas, setLoadingEncomendas] = useState(true);
   const [activeChat, setActiveChat] = useState<any | null>(null);
+  const [trackingCode, setTrackingCode] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     marca: '',
@@ -322,10 +324,24 @@ export default function Encomendar() {
                       <span>Cor: {enc.cor || 'N/A'}</span>
                       <span>Armazenamento: {enc.armazenamento || 'N/A'}</span>
                     </div>
-                    <button className="w-full py-2 bg-white dark:bg-gray-800 text-vanta-blue border border-vanta-blue/20 rounded-xl font-bold text-sm group-hover:bg-vanta-blue group-hover:text-white transition-colors flex items-center justify-center gap-2">
-                      <MessageCircle className="w-4 h-4" />
-                      Abrir Chat
-                    </button>
+                    <div className="flex flex-col gap-2 mt-auto pt-2">
+                      {enc.codigo_rastreio && (
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setTrackingCode(enc.codigo_rastreio);
+                          }}
+                          className="w-full py-2 bg-vanta-orange/10 text-vanta-orange border border-vanta-orange/20 rounded-xl font-bold text-sm hover:bg-vanta-orange hover:text-white transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Package className="w-4 h-4" />
+                          Rastrear ({enc.codigo_rastreio})
+                        </button>
+                      )}
+                      <button className="w-full py-2 bg-white dark:bg-gray-800 text-vanta-blue border border-vanta-blue/20 rounded-xl font-bold text-sm group-hover:bg-vanta-blue group-hover:text-white transition-colors flex items-center justify-center gap-2">
+                        <MessageCircle className="w-4 h-4" />
+                        Abrir Chat
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -498,9 +514,20 @@ export default function Encomendar() {
         </div>
       )}
 
-      {/* Modal do Chat */}
+      {/* Modal de Chat */}
       {activeChat && (
-        <EncomendaChat encomenda={activeChat} onClose={() => setActiveChat(null)} />
+        <EncomendaChat 
+          encomenda={activeChat} 
+          onClose={() => setActiveChat(null)} 
+        />
+      )}
+
+      {/* Modal de Rastreio */}
+      {trackingCode && (
+        <TrackingModal 
+          codigo={trackingCode} 
+          onClose={() => setTrackingCode(null)} 
+        />
       )}
     </>
   );

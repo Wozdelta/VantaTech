@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
-import { Search, Loader2, MessageCircle, MoreVertical, Trash2 } from 'lucide-react';
+import { Search, Loader2, MessageCircle, MoreVertical, Trash2, Package, Check, X as CloseIcon } from 'lucide-react';
 import EncomendaChat from '../encomendas/EncomendaChat';
 
 const CancelTimer = ({ enc, onExpired }: { enc: any, onExpired: (id: string) => void }) => {
@@ -45,6 +45,7 @@ export default function AdminEncomendas() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'Pendentes' | 'Em Andamento' | 'Histórico'>('Pendentes');
   const [activeChat, setActiveChat] = useState<any | null>(null);
+  const [trackingInput, setTrackingInput] = useState<{ id: string, codigo: string } | null>(null);
   const { showAlert } = useAlert();
 
   const fetchEncomendas = async () => {
@@ -125,9 +126,38 @@ export default function AdminEncomendas() {
     try {
       await supabase.from('encomendas_pedidos').delete().eq('id', id);
       setEncomendas(prev => prev.filter(e => e.id !== id));
-      showAlert({ type: 'success', message: 'Encomenda cancelada foi deletada automaticamente.' });
+      showAlert({ type: 'success', message: 'Encomenda deletada automaticamente.' });
     } catch (err) {
       console.error('Erro ao deletar encomenda cancelada:', err);
+    }
+  };
+
+  const handleSaveTracking = async (id: string) => {
+    if (!trackingInput?.codigo) return;
+    try {
+      const { error } = await supabase
+        .from('encomendas_pedidos')
+        .update({ codigo_rastreio: trackingInput.codigo })
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      const enc = encomendas.find(e => e.id === id);
+      if (enc && enc.user_id) {
+        await supabase.from('notificacoes').insert({
+          usuario_id: enc.user_id,
+          titulo: `Código de Rastreio Disponível`,
+          mensagem: `O código de rastreio da sua encomenda (${enc.marca} ${enc.modelo}) é: ${trackingInput.codigo}. Você já pode acompanhá-la!`,
+          lida: false
+        });
+      }
+
+      setTrackingInput(null);
+      showAlert({ type: 'success', message: 'Código de rastreio salvo e cliente notificado!' });
+      fetchEncomendas();
+    } catch (err) {
+      console.error('Erro ao salvar rastreio:', err);
+      showAlert({ type: 'error', message: 'Erro ao vincular código de rastreio.' });
     }
   };
 
@@ -258,6 +288,42 @@ export default function AdminEncomendas() {
                         <option value="Cancelado">Cancelado</option>
                       </select>
                       <CancelTimer enc={enc} onExpired={handleDeleteCancelado} />
+                      
+                      {enc.status === 'Em Andamento' && (
+                        <div className="mt-2">
+                          {trackingInput?.id === enc.id ? (
+                            <div className="flex items-center gap-1 mt-1">
+                              <input 
+                                type="text"
+                                value={trackingInput.codigo}
+                                onChange={e => setTrackingInput({ ...trackingInput, codigo: e.target.value })}
+                                placeholder="NL123456789BR"
+                                className="w-full min-w-[120px] text-[10px] px-2 py-1 border border-vanta-blue/30 rounded focus:outline-none focus:border-vanta-blue uppercase"
+                                autoFocus
+                              />
+                              <button onClick={() => handleSaveTracking(enc.id)} className="p-1 bg-green-100 text-green-700 rounded hover:bg-green-200" title="Salvar Rastreio">
+                                <Check className="w-3 h-3" />
+                              </button>
+                              <button onClick={() => setTrackingInput(null)} className="p-1 bg-red-100 text-red-700 rounded hover:bg-red-200" title="Cancelar">
+                                <CloseIcon className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button 
+                              onClick={() => setTrackingInput({ id: enc.id, codigo: enc.codigo_rastreio || '' })}
+                              className="text-[10px] font-bold flex items-center justify-center gap-1 w-full py-1 border border-dashed border-gray-300 dark:border-gray-600 rounded text-gray-500 hover:text-vanta-blue hover:border-vanta-blue transition-colors"
+                            >
+                              <Package className="w-3 h-3" />
+                              {enc.codigo_rastreio ? 'Editar Rastreio' : 'Vincular Rastreio'}
+                            </button>
+                          )}
+                          {enc.codigo_rastreio && trackingInput?.id !== enc.id && (
+                            <div className="text-[10px] text-vanta-blue font-bold mt-1 text-center bg-vanta-blue/10 rounded py-0.5">
+                              {enc.codigo_rastreio}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
