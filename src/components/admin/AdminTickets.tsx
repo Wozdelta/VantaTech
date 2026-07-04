@@ -25,6 +25,7 @@ export default function AdminTickets() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [tableExists, setTableExists] = useState(true);
+  const [ticketToDelete, setTicketToDelete] = useState<string | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -137,25 +138,31 @@ export default function AdminTickets() {
     }
   };
 
-  const handleDeleteTicket = async (ticketId: string) => {
-    if (!window.confirm("Tem certeza que deseja apagar este ticket permanentemente? Esta ação não pode ser desfeita.")) return;
+  const handleDeleteTicket = (ticketId: string) => {
+    setTicketToDelete(ticketId);
+  };
+
+  const performDeleteTicket = async () => {
+    if (!ticketToDelete) return;
 
     try {
       const { error } = await supabase
         .from('tickets')
         .delete()
-        .eq('id', ticketId);
+        .eq('id', ticketToDelete);
 
       if (error) throw error;
 
       showAlert({ type: 'success', message: 'Ticket apagado com sucesso' });
-      setTickets(prev => prev.filter(t => t.id !== ticketId));
-      if (selectedTicket?.id === ticketId) {
+      setTickets(prev => prev.filter(t => t.id !== ticketToDelete));
+      if (selectedTicket?.id === ticketToDelete) {
         setSelectedTicket(null);
       }
     } catch (err) {
       console.error(err);
       showAlert({ type: 'error', message: 'Erro ao apagar ticket' });
+    } finally {
+      setTicketToDelete(null);
     }
   };
 
@@ -436,6 +443,35 @@ export default function AdminTickets() {
           </div>
         </div>
       </div>
+
+      {/* Modal de Confirmação de Exclusão */}
+      {ticketToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl animate-scale-in border border-gray-100 dark:border-gray-700 text-center">
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-6">
+              <ShieldAlert className="w-8 h-8" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Apagar Ticket?</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-8">
+              Tem certeza que deseja apagar este ticket permanentemente? Essa ação não pode ser desfeita.
+            </p>
+            <div className="flex items-center gap-3 w-full">
+              <button
+                onClick={() => setTicketToDelete(null)}
+                className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white font-semibold rounded-xl transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={performDeleteTicket}
+                className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-red-600/20"
+              >
+                Sim, apagar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Header e Filtros */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
