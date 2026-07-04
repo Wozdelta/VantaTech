@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Trash2, ShoppingBag, MapPin, ChevronDown, AlertCircle, ArrowLeft, CreditCard, Loader2, Tag } from 'lucide-react';
+import { X, Trash2, ShoppingBag, MapPin, ChevronDown, AlertCircle, ArrowLeft, CreditCard, Loader2, Tag, CheckCircle } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAlert } from '@/contexts/AlertContext';
@@ -855,7 +855,7 @@ export default function CartDrawer() {
 
               {step === 3 && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                  {finalTotal > 0 && (
+                  {finalTotal > 0 ? (
                     <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-5 border border-gray-100 dark:border-gray-800">
                       <div className="flex items-center gap-2 text-gray-900 dark:text-white mb-4">
                         <CreditCard className="w-5 h-5 text-vanta-blue" />
@@ -937,6 +937,16 @@ export default function CartDrawer() {
                       </div>
                     )}
                   </div>
+                  ) : (
+                    <div className="bg-green-50 dark:bg-green-900/10 rounded-xl p-6 border border-green-100 dark:border-green-900/30 text-center flex flex-col items-center justify-center">
+                      <div className="w-12 h-12 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center mb-4 text-green-600 dark:text-green-400">
+                        <CheckCircle className="w-6 h-6" />
+                      </div>
+                      <h3 className="font-black text-lg text-green-800 dark:text-green-400 mb-2">Pagamento Isento</h3>
+                      <p className="text-sm text-green-700 dark:text-green-500 font-medium leading-relaxed">
+                        Seu pedido foi pago integralmente com pontos do Vanta Club ou frete grátis. Você não precisa selecionar nenhuma forma de pagamento!
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
