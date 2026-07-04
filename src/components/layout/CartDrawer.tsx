@@ -146,8 +146,7 @@ export default function CartDrawer() {
   }
 
   const isPix = pagamento === 'PIX';
-  // O desconto pix é aplicado sobre o subtotal já subtraindo o cupom
-  const pixDiscount = isPix ? Math.max(0, cartTotal - cupomDiscount) * 0.05 : 0;
+  const pixDiscount = 0;
   const currentRate = TAXAS_CARTAO[parcelas as keyof typeof TAXAS_CARTAO] || 0;
 
   // Frete é somado ANTES do juros do cartão, e os descontos são aplicados só no valor dos produtos
@@ -448,7 +447,6 @@ export default function CartDrawer() {
       }
     } else if (pagamento === 'PIX') {
       message += `Forma de Pagamento: PIX\n`;
-      message += `Desconto PIX (5% nos produtos): - ${formatPrice(pixDiscount)}\n`;
     } else {
       message += `Forma de Pagamento: ${pagamento}\n`;
     }
@@ -999,13 +997,6 @@ export default function CartDrawer() {
                 <div className="flex items-center justify-between text-orange-500 animate-in slide-in-from-top-1 duration-300">
                   <span className="font-medium text-xs">Juros (Maquininha)</span>
                   <span className="text-xs font-bold">+ {formatPrice(interestValue)}</span>
-                </div>
-              )}
-
-              {step === 3 && pagamento === 'PIX' && (
-                <div className="flex items-center justify-between text-green-500 animate-in slide-in-from-top-1 duration-300">
-                  <span className="font-medium text-xs">Desconto PIX (5%)</span>
-                  <span className="text-xs font-bold">- {formatPrice(pixDiscount)}</span>
                 </div>
               )}
 
