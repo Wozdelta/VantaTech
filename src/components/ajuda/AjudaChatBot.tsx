@@ -32,63 +32,83 @@ export default function AjudaChatBot({ onOpenTicket }: { onOpenTicket: () => voi
     const normalizedQuery = query.toLowerCase()
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove acentos
       .replace(/[^\w\s]/gi, ''); // remove pontuação
+      
+    const inputWords = normalizedQuery.split(' ').filter(w => w.length > 2);
 
-    // Intents hardcoded para conversas simples
+    // Intents aprimorados com raízes de palavras
     const intents = [
       {
-        keywords: ['oi', 'ola', 'bom dia', 'boa tarde', 'boa noite', 'opa'],
-        response: 'Olá! Sou o assistente virtual da VantaTech. Tudo bem? Como posso te ajudar hoje?'
+        keywords: ['oi', 'ola', 'bom dia', 'boa tarde', 'boa noite', 'opa', 'eae', 'tudo bem'],
+        response: 'Olá! Sou o assistente virtual inteligente da VantaTech. Como posso te ajudar hoje?'
       },
       {
-        keywords: ['obrigado', 'obrigada', 'valeu', 'agradeco', 'perfeito', 'tchau'],
+        keywords: ['obrigad', 'valeu', 'agradec', 'perfeit', 'tchau', 'grato'],
         response: 'Por nada! Estou sempre aqui se precisar de mais alguma coisa. Tenha um excelente dia!'
       },
       {
-        keywords: ['comprar', 'fazer pedido', 'como faco para comprar', 'adicionar ao carrinho'],
+        keywords: ['compr', 'pedid', 'adquirir', 'carrinho', 'quero um', 'como eu faco para ter'],
         response: 'Para comprar, basta navegar pelos nossos Produtos, escolher o aparelho desejado e clicar em "Adicionar ao Carrinho". Depois é só finalizar a compra no checkout!'
       },
       {
-        keywords: ['cade', 'compra nao', 'nao ta aparecendo', 'onde esta', 'nao aparece', 'nao encontro', 'sumiu', 'acompanhar'],
-        response: 'Você pode acompanhar seus pedidos e pagamentos na aba "Meus Pedidos" no seu perfil. Lá fica o status em tempo real. Se o seu pedido não estiver aparecendo, pode ser um atraso temporário do sistema de pagamentos. Gostaria de abrir um ticket para nossa equipe de suporte investigar?',
+        keywords: ['prec', 'valor', 'custa', 'dinheiro', 'pagar', 'pagamento', 'pix', 'cartao', 'boleto'],
+        response: 'Nossos preços e formas de pagamento variam por modelo. Você pode conferir os valores exatos na loja! Aceitamos PIX e parcelamos no cartão de crédito.'
+      },
+      {
+        keywords: ['iphone', 'samsung', 'celular', 'aparelho', 'modelo', 'estoque'],
+        response: 'Trabalhamos com diversas marcas e modelos, novos e seminovos! Navegue pela aba de Produtos para ver nosso estoque atualizado.'
+      },
+      {
+        keywords: ['cade', 'sumiu', 'acompanhar', 'rastrear', 'rastreio'],
+        response: 'Você pode acompanhar seus pedidos na aba "Meus Pedidos" no seu perfil. Gostaria de abrir um ticket para nossa equipe de suporte verificar?',
         isAction: true
       },
       {
-        keywords: ['atrasado', 'demorando', 'nao chegou', 'prazo'],
-        response: 'Caso seu pedido tenha passado do prazo de entrega ou de aprovação, recomendo abrir um ticket de suporte para nossa equipe investigar imediatamente o que houve.',
+        keywords: ['atrasad', 'demor', 'nao chegou', 'prazo'],
+        response: 'Caso seu pedido tenha passado do prazo de entrega, recomendo abrir um ticket de suporte para nossa equipe investigar imediatamente o que houve.',
         isAction: true
       },
       {
-        keywords: ['cancelar', 'cancelamento', 'desistir'],
+        keywords: ['cancel', 'desistir'],
         response: 'O cancelamento pode ser feito até 24h após a compra, desde que o produto não tenha sido enviado. Acesse a aba "Meus Pedidos" e clique em "Cancelar".'
       },
       {
-        keywords: ['reembolso', 'devolucao', 'estorno', 'devolver'],
-        response: 'O reembolso é processado na mesma forma de pagamento original em até 7 dias úteis após a aprovação do cancelamento ou devolução.'
+        keywords: ['reembolso', 'devolu', 'estorno', 'devolver'],
+        response: 'O reembolso é processado na mesma forma de pagamento original em até 7 dias úteis após a aprovação da devolução.'
       },
       {
-        keywords: ['garantia', 'defeito', 'quebrado', 'estragou', 'parou de funcionar'],
-        response: 'Todos os nossos aparelhos possuem garantia padrão de 90 dias contra defeitos de fabricação. Para acionar a garantia, por favor, abra um ticket detalhando o defeito que ocorreu.',
+        keywords: ['garantia', 'defeito', 'quebrad', 'estrag', 'parou'],
+        response: 'Todos os aparelhos possuem garantia de 90 dias contra defeitos de fabricação. Por favor, abra um ticket detalhando o problema para acioná-la.',
         isAction: true
       },
       {
-        keywords: ['ajuda', 'suporte', 'atendente', 'humano', 'falar com pessoa', 'preciso de ajuda', 'problema'],
-        response: 'Eu sou um assistente virtual treinado para tirar dúvidas rápidas, mas se o seu problema for complexo, posso te direcionar para a nossa equipe. Gostaria de abrir um ticket de suporte?',
+        keywords: ['carro', 'moto', 'bicicleta', 'aviao', 'barco', 'comida', 'fome'],
+        response: 'Haha! Nós somos especialistas em tecnologia e smartphones. Infelizmente não vendemos isso por aqui! 😂'
+      },
+      {
+        keywords: ['inteligente', 'burro', 'robo', 'bot', 'chatgpt', 'ia', 'artificial'],
+        response: 'Eu sou um bot focado em ajudar com dúvidas da loja, mas estou aprendendo cada dia mais! Se a pergunta for muito difícil, eu chamo os humanos. 🤖'
+      },
+      {
+        keywords: ['ajuda', 'suporte', 'atendente', 'humano', 'falar com pessoa', 'problema'],
+        response: 'Posso direcionar você para a nossa equipe humana de suporte. Gostaria de abrir um ticket agora mesmo?',
         isAction: true
       }
     ];
 
-    // Checar intents primeiro
+    // Checar intents primeiro (Lógica mais inteligente de stems)
     for (const intent of intents) {
-      if (intent.keywords.some(k => normalizedQuery.includes(k))) {
+      const isMatch = intent.keywords.some(k => {
+        if (k.includes(' ')) return normalizedQuery.includes(k);
+        return inputWords.some(w => w.includes(k));
+      });
+      if (isMatch) {
         return { text: intent.response, isAction: intent.isAction };
       }
     }
 
     // Flatten FAQ
     const allFaqs = FAQ_DATA.flatMap(c => c.items);
-    
-    // Stop words comuns em português
-    const stopWords = ['como', 'para', 'qual', 'quando', 'onde', 'porque', 'por que', 'quem', 'com', 'meu', 'minha', 'seu', 'sua', 'que', 'dos', 'das'];
+    const stopWords = ['como', 'para', 'qual', 'quando', 'onde', 'porque', 'por que', 'quem', 'com', 'meu', 'minha', 'seu', 'sua', 'que', 'dos', 'das', 'faco', 'ter'];
     
     let bestMatch = null;
     let maxScore = 0;
@@ -102,7 +122,7 @@ export default function AjudaChatBot({ onOpenTicket }: { onOpenTicket: () => voi
         
       let score = 0;
       for (const w of qWords) {
-        if (normalizedQuery.includes(w)) {
+        if (inputWords.some(iw => iw.includes(w) || w.includes(iw))) {
           score++;
         }
       }

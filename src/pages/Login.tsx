@@ -55,18 +55,13 @@ export default function Login() {
           password,
           options: { 
             data: { 
-              nome_completo: nome,
-              indicado_por: afiliadoId || null
+              nome_completo: nome
             } 
           },
         });
         if (error) {
           if (error.message.includes('User already registered')) throw new Error('Este e-mail já está em uso.');
           throw new Error(error.message);
-        }
-        
-        if (data?.user) {
-          localStorage.removeItem('afiliado_id');
         }
 
         navigate('/');

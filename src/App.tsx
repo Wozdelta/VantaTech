@@ -34,7 +34,8 @@ export default function App() {
     if (user) {
       const afiliadoId = localStorage.getItem('afiliado_id');
       if (afiliadoId) {
-        if (afiliadoId !== user.id) {
+        // Valida se o ID tem cara de UUID (36 caracteres)
+        if (afiliadoId.length === 36 && afiliadoId !== user.id) {
           import('./lib/supabase').then(({ supabase }) => {
             // Atualiza apenas se o perfil ainda não tiver indicação
             supabase.from('perfis')
