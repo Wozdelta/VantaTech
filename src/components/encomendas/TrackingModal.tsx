@@ -32,26 +32,24 @@ export default function TrackingModal({ codigo, onClose }: TrackingModalProps) {
         setError(null);
         
         let res;
+        let data;
         try {
-          // Tenta API principal (LinkeTrack sem api. subdominio)
-          res = await fetch(`https://linketrack.com/track/json?user=teste&token=1abcd00b2731640e886fb41a8a9671ad1434c599dbaa0a0de9a5aa619f29a83f&codigo=${codigo}`);
+          // Tenta API principal (LinkeTrack) passando por um Proxy de CORS diferente (allorigins)
+          const targetUrl = encodeURIComponent(`https://linketrack.com/track/json?user=teste&token=1abcd00b2731640e886fb41a8a9671ad1434c599dbaa0a0de9a5aa619f29a83f&codigo=${codigo}`);
+          res = await fetch(`https://api.allorigins.win/raw?url=${targetUrl}&time=${Date.now()}`);
           if (!res.ok) throw new Error('LinkeTrack Error');
+          data = await res.json();
         } catch (err) {
           // Fallback para BrasilAPI
           res = await fetch(`https://brasilapi.com.br/api/correios/v1/${codigo}`);
-        }
-        
-        if (res.status === 404) {
-          setError('O código de rastreio informado não foi encontrado. Ele pode estar incorreto, ter expirado (se for muito antigo) ou os Correios ainda não atualizaram o sistema.');
-          return;
-        }
-
-        if (!res.ok) {
-          throw new Error('Falha ao buscar os dados de rastreio.');
+          if (res.status === 404) {
+            setError('O código de rastreio informado não foi encontrado. Ele pode estar incorreto, ter expirado (se for muito antigo) ou os Correios ainda não atualizaram o sistema.');
+            return;
+          }
+          if (!res.ok) throw new Error('BrasilAPI Error');
+          data = await res.json();
         }
 
-        const data = await res.json();
-        
         if (data && data.eventos && data.eventos.length > 0) {
           setTrackingData(data);
         } else {
