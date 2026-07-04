@@ -143,19 +143,19 @@ export default function Login() {
         <div className="bg-white dark:bg-gray-800 rounded-[32px] shadow-2xl border border-gray-100 dark:border-gray-700 p-8 sm:p-10 animate-slide-up">
           
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-extrabold text-vanta-darkblue dark:text-white tracking-tight">
-              {view === 'login' && 'Bem-vindo de volta'}
-              {view === 'register' && 'Crie sua conta'}
-              {view === 'forgot_email' && 'Esqueceu a senha?'}
-              {view === 'forgot_otp' && 'Digite o Código'}
-              {view === 'forgot_new_password' && 'Nova Senha'}
+            <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">
+              {view === 'login' && <span>Bem-vindo de volta</span>}
+              {view === 'register' && <span>Criar Conta</span>}
+              {view === 'forgot_email' && <span>Recuperar Senha</span>}
+              {view === 'forgot_otp' && <span>Digite o Código</span>}
+              {view === 'forgot_new_password' && <span>Nova Senha</span>}
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-              {view === 'login' && 'Faça login para continuar na VantaTech'}
-              {view === 'register' && 'Junte-se a nós para a melhor experiência'}
-              {view === 'forgot_email' && 'Enviaremos um código de recuperação para você'}
-              {view === 'forgot_otp' && `Enviamos um código de recuperação para ${email}`}
-              {view === 'forgot_new_password' && 'Crie uma senha forte e segura'}
+              {view === 'login' && <span>Faça login para continuar na VantaTech</span>}
+              {view === 'register' && <span>Junte-se a nós para a melhor experiência</span>}
+              {view === 'forgot_email' && <span>Enviaremos um código de recuperação para você</span>}
+              {view === 'forgot_otp' && <span>Enviamos um código de recuperação para {email}</span>}
+              {view === 'forgot_new_password' && <span>Crie uma senha forte e segura</span>}
             </p>
           </div>
 
@@ -287,11 +287,15 @@ export default function Login() {
             >
               {loading ? (
                 <Loader2 className="w-6 h-6 animate-spin mx-auto" />
-              ) : view === 'login' ? 'Entrar'
-                : view === 'register' ? 'Cadastrar'
-                : view === 'forgot_email' ? 'Enviar Código'
-                : view === 'forgot_otp' ? 'Verificar Código'
-                : 'Salvar Nova Senha'}
+              ) : (
+                <>
+                  {view === 'login' && <span>Entrar</span>}
+                  {view === 'register' && <span>Criar Conta</span>}
+                  {view === 'forgot_email' && <span>Enviar Código</span>}
+                  {view === 'forgot_otp' && <span>Verificar Código</span>}
+                  {view === 'forgot_new_password' && <span>Salvar Nova Senha</span>}
+                </>
+              )}
             </button>
           </form>
 
@@ -327,7 +331,7 @@ export default function Login() {
 
               <div className="mt-8 text-center">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {view === 'login' ? 'Ainda não tem uma conta?' : 'Já possui uma conta?'}
+                  <span>{view === 'login' ? 'Ainda não tem uma conta?' : 'Já possui uma conta?'}</span>
                   <button 
                     onClick={() => {
                       setView(view === 'login' ? 'register' : 'login');
@@ -335,7 +339,7 @@ export default function Login() {
                     }} 
                     className="ml-1.5 font-bold text-vanta-blue hover:text-vanta-darkblue transition-colors"
                   >
-                    {view === 'login' ? 'Crie agora' : 'Faça login'}
+                    <span>{view === 'login' ? 'Crie agora' : 'Faça login'}</span>
                   </button>
                 </p>
               </div>
