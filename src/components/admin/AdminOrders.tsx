@@ -231,7 +231,7 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
 
         // Estorno de Pontos
         if (pedido) {
-          const { data: historico } = await supabase.from('historico_pontos').select('*').eq('descricao', `Resgate no Pedido #${pedido.id}`).single();
+          const { data: historico } = await supabase.from('historico_pontos').select('*').or(`descricao.eq.Resgate no Pedido #${pedido.id},descricao.eq.Resgate no Pedido #${pedido.numero}`).single();
           if (historico) {
             const { data: perfil } = await supabase.from('perfis').select('pontos').eq('id', pedido.user_id).single();
             if (perfil) {
@@ -240,7 +240,7 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
                 user_id: pedido.user_id,
                 tipo: 'entrada',
                 quantidade: historico.quantidade,
-                descricao: `Estorno: Pedido #${pedido.id} Cancelado`
+                descricao: `Estorno: Pedido #${pedido.numero} Cancelado`
               });
             }
           }
@@ -257,7 +257,7 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
         
         // Descontar pontos novamente
         if (pedido) {
-          const { data: historicoEstorno } = await supabase.from('historico_pontos').select('*').eq('descricao', `Estorno: Pedido #${pedido.id} Cancelado`).single();
+          const { data: historicoEstorno } = await supabase.from('historico_pontos').select('*').or(`descricao.eq.Estorno: Pedido #${pedido.id} Cancelado,descricao.eq.Estorno: Pedido #${pedido.numero} Cancelado`).single();
           if (historicoEstorno) {
             const { data: perfil } = await supabase.from('perfis').select('pontos').eq('id', pedido.user_id).single();
             if (perfil) {
@@ -266,7 +266,7 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
                 user_id: pedido.user_id,
                 tipo: 'saida',
                 quantidade: historicoEstorno.quantidade,
-                descricao: `Reversão de Estorno: Pedido #${pedido.id}`
+                descricao: `Reversão de Estorno: Pedido #${pedido.numero}`
               });
             }
           }

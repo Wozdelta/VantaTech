@@ -113,7 +113,7 @@ export default function Pedidos() {
 
       // Estorno de Pontos
       if (pedido) {
-        const { data: historico } = await supabase.from('historico_pontos').select('*').eq('descricao', `Resgate no Pedido #${pedido.id}`).single();
+        const { data: historico } = await supabase.from('historico_pontos').select('*').or(`descricao.eq.Resgate no Pedido #${pedido.id},descricao.eq.Resgate no Pedido #${pedido.numero}`).single();
         if (historico) {
           const { data: perfil } = await supabase.from('perfis').select('pontos').eq('id', pedido.user_id).single();
           if (perfil) {
@@ -122,7 +122,7 @@ export default function Pedidos() {
               user_id: pedido.user_id,
               tipo: 'entrada',
               quantidade: historico.quantidade,
-              descricao: `Estorno: Pedido #${pedido.id} Cancelado`
+              descricao: `Estorno: Pedido #${pedido.numero} Cancelado`
             });
             if (refreshPerfil) await refreshPerfil();
           }
