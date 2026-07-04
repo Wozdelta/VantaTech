@@ -42,10 +42,9 @@ export default function App() {
               .update({ indicado_por: afiliadoId })
               .eq('id', user.id)
               .is('indicado_por', null)
-              .then(({ error, data }) => {
+              .then(({ error }) => {
                 if (error) {
-                  console.error('ERRO SUPABASE AFILIADO:', error);
-                  alert(`Erro ao vincular indicação: ${error.message} \nDetalhes: ${error.details || ''} \nDica: ${error.hint || ''}`);
+                  console.warn('Falha ao vincular afiliado (link expirado ou usuário inexistente):', error.message);
                 }
                 localStorage.removeItem('afiliado_id');
               });
