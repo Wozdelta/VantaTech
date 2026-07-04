@@ -26,7 +26,7 @@ interface Pedido {
 }
 
 export default function Pedidos() {
-  const { user, perfil } = useAuth();
+  const { user, perfil, refreshPerfil } = useAuth();
   const { showAlert } = useAlert();
   const { settings } = useSettings();
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
