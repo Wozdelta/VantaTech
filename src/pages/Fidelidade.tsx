@@ -194,6 +194,7 @@ export default function Fidelidade() {
           price: 0,
           image: recompensa.imagem_url,
           quantity: 1,
+          pointsCost: recompensa.pontos,
         });
         
         showAlert({ title: 'Resgatado!', message: 'A recompensa foi adicionada ao seu carrinho!', type: 'success' });

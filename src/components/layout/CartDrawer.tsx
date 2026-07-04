@@ -414,7 +414,7 @@ export default function CartDrawer() {
     }
 
     const text = items.map(item =>
-      `*${item.quantity}x ${item.name}*\n     Cor: ${item.color || 'Padrão'} | Armazenamento: ${item.storage || 'Padrão'}\n     Valor: ${formatPrice(item.price * item.quantity)}`
+      `*${item.quantity}x ${item.name}*\n     Cor: ${item.color || 'Padrão'} | Armazenamento: ${item.storage || 'Padrão'}\n     Valor: ${item.pointsCost ? (item.pointsCost * item.quantity) + ' pts' : formatPrice(item.price * item.quantity)}`
     ).join('\n\n');
 
     let message = `*NOVO PEDIDO - VANTATECH*\n\n`;
@@ -677,7 +677,11 @@ export default function CartDrawer() {
 
                         <div className="flex items-end justify-between mt-2">
                           <div className="text-vanta-blue dark:text-blue-400 font-bold text-base">
-                            {formatPrice(item.price * item.quantity)}
+                            {item.pointsCost ? (
+                              <span className="text-vanta-orange">{(item.pointsCost * item.quantity).toLocaleString('pt-BR')} pts</span>
+                            ) : (
+                              formatPrice(item.price * item.quantity)
+                            )}
                           </div>
 
                           <div className="flex items-center gap-3">

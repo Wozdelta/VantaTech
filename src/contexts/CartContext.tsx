@@ -12,6 +12,7 @@ export type CartItem = {
   quantity: number;
   isItem?: boolean;
   maxQuantity?: number;
+  pointsCost?: number;
 };
 
 type CartContextType = {
