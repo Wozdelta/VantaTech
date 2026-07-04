@@ -37,7 +37,7 @@ type Historico = {
 export default function Fidelidade() {
   const { user, perfil, refreshPerfil } = useAuth();
   const { showAlert } = useAlert();
-  const { addToCart } = useCart();
+  const { addToCart, items } = useCart();
   const [copied, setCopied] = useState(false);
   const [niveis, setNiveis] = useState<Nivel[]>([]);
   const [recompensas, setRecompensas] = useState<Recompensa[]>([]);
@@ -127,9 +127,12 @@ export default function Fidelidade() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const pontosPendentes = items.reduce((acc, item) => acc + ((item.pointsCost || 0) * item.quantity), 0);
+  const pontosDisponiveis = pontosAtuais - pontosPendentes;
+
   const handleResgatar = async (recompensa: Recompensa) => {
-    if (pontosAtuais < recompensa.pontos) {
-      showAlert({ title: 'Pontos Insuficientes', message: 'Você não tem saldo suficiente de VantaCoins para resgatar.', type: 'warning' });
+    if (pontosDisponiveis < recompensa.pontos) {
+      showAlert({ title: 'Pontos Insuficientes', message: 'Você não tem saldo suficiente de VantaCoins (verifique os itens já no carrinho).', type: 'warning' });
       return;
     }
     
@@ -172,25 +175,10 @@ export default function Fidelidade() {
         await refreshPerfil();
         showAlert({ title: 'Resgate Concluído!', message: `Você ganhou o cupom! Seu código é ${novoCodigo} e já está salvo na sua aba Meus Cupons.`, type: 'success' });
       } else {
-        // Produto físico -> Redirecionar WhatsApp
-        const novosPontos = pontosAtuais - recompensa.pontos;
-        await supabase.from('perfis').update({ pontos: novosPontos }).eq('id', user?.id);
-        
-        await supabase.from('historico_pontos').insert({
-          user_id: user?.id,
-          tipo: 'saida',
-          quantidade: recompensa.pontos,
-          descricao: `Resgate: ${recompensa.nome}`
-        });
-
-        const { data: hData } = await supabase.from('historico_pontos').select('*').eq('user_id', user?.id).order('created_at', { ascending: false }).limit(20);
-        if (hData) setHistorico(hData);
-
-        await refreshPerfil();
-        
+        // Produto físico -> Apenas adicionar ao carrinho
         addToCart({
           productId: recompensa.id,
-          name: `[Resgate] ${recompensa.nome}`,
+          name: `[Vanta Club] ${recompensa.nome}`,
           price: 0,
           image: recompensa.imagem_url,
           quantity: 1,

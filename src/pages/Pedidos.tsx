@@ -188,7 +188,7 @@ export default function Pedidos() {
                     {pedido.status === 'Cancelado pelo cliente' ? 'Cancelado' : pedido.status}
                   </span>
                   <span className="text-sm font-bold text-vanta-blue mt-2">
-                    Total: R$ {Number(pedido.total).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    Total: {Number(pedido.total) === 0 && pedido.itens_pedido?.some(i => i.produto_nome.includes('[Vanta Club]')) ? `${pedido.itens_pedido.filter(i => i.produto_nome.includes('[Vanta Club]')).reduce((acc, i) => acc + (Number(i.produto_preco) * i.quantidade), 0)} pontos` : `R$ ${Number(pedido.total).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                   </span>
                   {(pedido.status === 'Pendente' || pedido.status === 'Pago') && (
                     <button 
@@ -216,7 +216,11 @@ export default function Pedidos() {
                       <p className="font-bold text-gray-900 dark:text-white break-words">{item.produto_nome}</p>
                       <div className="flex items-center gap-3 mt-1">
                         <span className="text-sm font-semibold text-vanta-blue">
-                          {item.quantidade > 1 ? `${item.quantidade}x ` : ''}R$ {Number(item.produto_preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {item.produto_nome.includes('[Vanta Club]') ? (
+                            `${item.quantidade > 1 ? `${item.quantidade}x ` : ''}${item.produto_preco} pontos`
+                          ) : (
+                            `${item.quantidade > 1 ? `${item.quantidade}x ` : ''}R$ ${Number(item.produto_preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                          )}
                         </span>
                       </div>
                     </div>

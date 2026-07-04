@@ -404,7 +404,7 @@ export default function CartDrawer() {
               pedido_id: pedido.id,
               produto_id: item.productId,
               produto_nome: nomeDetalhado,
-              produto_preco: item.price,
+              produto_preco: item.pointsCost || item.price,
               quantidade: item.quantity || 1,
               imagem_url: item.image
             };

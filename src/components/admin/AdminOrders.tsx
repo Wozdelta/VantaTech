@@ -608,7 +608,7 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
                             <p className="text-sm font-bold text-gray-900 dark:text-white whitespace-normal line-clamp-2">{item.produto_nome}</p>
                             <p className="text-xs text-gray-500">
                               {item.produto_nome.includes('[Vanta Club]') ? (
-                                `${item.quantidade > 1 ? `${item.quantidade}x ` : ''}Pago com pontos`
+                                `${item.quantidade > 1 ? `${item.quantidade}x ` : ''}${item.produto_preco} pontos`
                               ) : (
                                 `${item.quantidade}x R$ ${item.produto_preco.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
                               )}
@@ -619,7 +619,7 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
                     </div>
                   </td>
                   <td className="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white border-b border-gray-50 dark:border-gray-800 whitespace-nowrap align-top">
-                    <span>{Number(pedido.total) === 0 && pedido.itens_pedido?.some(i => i.produto_nome.includes('[Vanta Club]')) ? 'Pago com pontos' : `R$ ${pedido.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}</span>
+                    <span>{Number(pedido.total) === 0 && pedido.itens_pedido?.some(i => i.produto_nome.includes('[Vanta Club]')) ? `${pedido.itens_pedido.filter(i => i.produto_nome.includes('[Vanta Club]')).reduce((acc, i) => acc + (Number(i.produto_preco) * i.quantidade), 0)} pontos` : `R$ ${pedido.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap border-b border-gray-50 dark:border-gray-800 align-top">
                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${getStatusColor(pedido.status)}`}>
@@ -714,7 +714,7 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
                       <p className="text-sm font-bold text-gray-900 dark:text-white line-clamp-2 leading-snug mb-1">{item.produto_nome}</p>
                       <p className="text-xs text-vanta-orange font-bold bg-orange-50 dark:bg-orange-900/20 inline-block px-1.5 py-0.5 rounded">
                         {item.produto_nome.includes('[Vanta Club]') ? (
-                          `${item.quantidade > 1 ? `${item.quantidade}x ` : ''}Pago com pontos`
+                          `${item.quantidade > 1 ? `${item.quantidade}x ` : ''}${item.produto_preco} pontos`
                         ) : (
                           `${item.quantidade}x R$ ${item.produto_preco.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
                         )}
@@ -729,7 +729,7 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-gray-500 font-bold uppercase tracking-wider">Total do Pedido</span>
                   <span className="text-lg font-black text-gray-900 dark:text-white">
-                    {Number(pedido.total) === 0 && pedido.itens_pedido?.some(i => i.produto_nome.includes('[Vanta Club]')) ? 'Pago com pontos' : `R$ ${pedido.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                    {Number(pedido.total) === 0 && pedido.itens_pedido?.some(i => i.produto_nome.includes('[Vanta Club]')) ? `${pedido.itens_pedido.filter(i => i.produto_nome.includes('[Vanta Club]')).reduce((acc, i) => acc + (Number(i.produto_preco) * i.quantidade), 0)} pontos` : `R$ ${pedido.total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                   </span>
                 </div>
                 
