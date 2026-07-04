@@ -42,7 +42,11 @@ export default function App() {
               .update({ indicado_por: afiliadoId })
               .eq('id', user.id)
               .is('indicado_por', null)
-              .then(() => {
+              .then(({ error, data }) => {
+                if (error) {
+                  console.error('ERRO SUPABASE AFILIADO:', error);
+                  alert(`Erro ao vincular indicação: ${error.message} \nDetalhes: ${error.details || ''} \nDica: ${error.hint || ''}`);
+                }
                 localStorage.removeItem('afiliado_id');
               });
           });
