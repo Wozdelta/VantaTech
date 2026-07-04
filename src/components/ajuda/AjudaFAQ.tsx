@@ -1,0 +1,109 @@
+import { ChevronDown, Ticket } from 'lucide-react';
+import * as Accordion from '@radix-ui/react-accordion';
+
+export const FAQ_DATA = [
+  {
+    categoria: 'Pedidos',
+    items: [
+      { pergunta: 'Como acompanhar meu pedido?', resposta: 'Você pode acompanhar seu pedido na aba "Meus Pedidos" no seu perfil. Lá você encontra o status atualizado em tempo real.' },
+      { pergunta: 'Meu pedido está atrasado', resposta: 'Caso seu pedido tenha passado do prazo de entrega, por favor, abra um ticket informando o número do pedido para nossa equipe investigar.' },
+      { pergunta: 'Cancelamento', resposta: 'O cancelamento pode ser feito até 24h após a compra, desde que o produto não tenha sido enviado. Acesse seus pedidos e clique em Cancelar.' },
+      { pergunta: 'Reembolso', resposta: 'O reembolso é processado na mesma forma de pagamento original em até 7 dias úteis após a aprovação do cancelamento.' },
+    ]
+  },
+  {
+    categoria: 'Pagamentos',
+    items: [
+      { pergunta: 'PIX', resposta: 'Pagamentos via PIX são aprovados na hora. O código PIX tem validade de 30 minutos.' },
+      { pergunta: 'Cartão', resposta: 'Aceitamos as principais bandeiras. Pagamentos no cartão podem passar por uma análise de segurança que leva até 48h.' },
+      { pergunta: 'Parcelamento', resposta: 'Oferecemos parcelamento em até 12x. Consulte as taxas de juros no momento do checkout.' },
+      { pergunta: 'Pagamento recusado', resposta: 'Seu pagamento pode ter sido recusado pelo emissor do cartão. Recomendamos contatar seu banco ou tentar outra forma de pagamento.' },
+    ]
+  },
+  {
+    categoria: 'Conta',
+    items: [
+      { pergunta: 'Alterar senha', resposta: 'Acesse "Meu Perfil" > "Segurança" para redefinir sua senha, ou use a opção "Esqueci minha senha" na tela de login.' },
+      { pergunta: 'Alterar endereço', resposta: 'Você pode gerenciar seus endereços na aba "Meu Perfil". O endereço de pedidos já realizados não pode ser alterado.' },
+      { pergunta: 'Alterar telefone', resposta: 'Atualize seus dados de contato a qualquer momento acessando a aba "Meu Perfil".' },
+    ]
+  },
+  {
+    categoria: 'Produtos',
+    items: [
+      { pergunta: 'Garantia', resposta: 'Todos os nossos aparelhos possuem garantia padrão de 90 dias contra defeitos de fabricação.' },
+      { pergunta: 'Estado do aparelho', resposta: 'Trabalhamos com aparelhos Seminovos em condições excelentes e aparelhos Novos lacrados. A condição é descrita na página de cada produto.' },
+      { pergunta: 'Acessórios', resposta: 'Aparelhos seminovos não acompanham fone de ouvido ou carregador, a menos que especificado na descrição do produto.' },
+    ]
+  },
+  {
+    categoria: 'Encomendas',
+    items: [
+      { pergunta: 'Como funciona', resposta: 'A encomenda permite reservar aparelhos que não estão no estoque imediato. Nossa equipe fará a importação ou busca com fornecedores.' },
+      { pergunta: 'Prazo', resposta: 'O prazo médio para encomendas varia entre 15 e 30 dias úteis, dependendo do modelo solicitado.' },
+      { pergunta: 'Pagamento inicial', resposta: 'Para confirmar a encomenda, é necessário um sinal que varia conforme o aparelho. O restante é pago na entrega.' },
+      { pergunta: 'Rastreamento', resposta: 'Assim que o fornecedor despachar o aparelho, enviaremos atualizações diretamente pelo sistema ou via WhatsApp.' },
+    ]
+  }
+];
+
+export default function AjudaFAQ({ onOpenTicket }: { onOpenTicket: () => void }) {
+  return (
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {FAQ_DATA.map((secao, idx) => (
+          <div key={idx} className="bg-white dark:bg-gray-800 rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 dark:border-gray-700">
+            <h3 className="text-xl font-black text-gray-900 dark:text-white mb-6 flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-sm">
+                {idx + 1}
+              </div>
+              {secao.categoria}
+            </h3>
+            
+            <Accordion.Root type="single" collapsible className="space-y-3">
+              {secao.items.map((item, itemIdx) => (
+                <Accordion.Item 
+                  key={itemIdx} 
+                  value={`${idx}-${itemIdx}`}
+                  className="bg-gray-50 dark:bg-gray-900/50 rounded-2xl overflow-hidden border border-transparent data-[state=open]:border-vanta-blue/20 transition-colors"
+                >
+                  <Accordion.Header>
+                    <Accordion.Trigger className="w-full flex items-center justify-between p-4 text-left group">
+                      <span className="font-bold text-gray-700 dark:text-gray-300 group-data-[state=open]:text-vanta-blue transition-colors">
+                        {item.pergunta}
+                      </span>
+                      <ChevronDown className="w-5 h-5 text-gray-400 group-data-[state=open]:text-vanta-blue group-data-[state=open]:rotate-180 transition-all duration-300" />
+                    </Accordion.Trigger>
+                  </Accordion.Header>
+                  <Accordion.Content className="overflow-hidden text-sm data-[state=open]:animate-slideDown data-[state=closed]:animate-slideUp">
+                    <div className="p-4 pt-0 text-gray-500 dark:text-gray-400 leading-relaxed">
+                      {item.resposta}
+                    </div>
+                  </Accordion.Content>
+                </Accordion.Item>
+              ))}
+            </Accordion.Root>
+          </div>
+        ))}
+      </div>
+
+      {/* Banner de Ajuda Extra */}
+      <div className="bg-gradient-to-r from-vanta-blue to-blue-600 rounded-3xl p-8 md:p-12 shadow-xl text-center text-white flex flex-col items-center justify-center space-y-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
+        <div className="relative z-10 space-y-2">
+          <h3 className="text-2xl md:text-3xl font-black">Ainda precisa de ajuda?</h3>
+          <p className="text-blue-100 font-medium max-w-md mx-auto">
+            Nossa equipe de especialistas está pronta para analisar seu caso e oferecer a melhor solução.
+          </p>
+        </div>
+        <button 
+          onClick={onOpenTicket}
+          className="relative z-10 bg-white text-vanta-blue px-8 py-3.5 rounded-xl font-black hover:bg-gray-50 transition-colors shadow-lg flex items-center gap-2"
+        >
+          <Ticket className="w-5 h-5" />
+          Abrir Ticket de Suporte
+        </button>
+      </div>
+    </div>
+  );
+}

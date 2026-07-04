@@ -12,6 +12,7 @@ import ProductDetails from './pages/ProductDetails';
 import Produtos from './pages/Produtos';
 import Cupons from './pages/Cupons';
 import Encomendar from './pages/Encomendar';
+import Ajuda from './pages/Ajuda';
 import { AlertProvider } from './contexts/AlertContext';
 import { SettingsProvider } from './contexts/SettingsContext';
 
@@ -66,6 +67,7 @@ export default function App() {
             <Route path="cupons" element={<Cupons />} />
             <Route path="fidelidade" element={<Fidelidade />} />
             <Route path="encomendar" element={<Encomendar />} />
+            <Route path="ajuda" element={<Ajuda />} />
           </Route>
         </Routes>
       </AlertProvider>

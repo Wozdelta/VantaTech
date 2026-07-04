@@ -15,10 +15,11 @@ import AdminCupons from '../components/admin/AdminCupons';
 import AdminControle from '../components/admin/AdminControle';
 import AdminEncomendas from '../components/admin/AdminEncomendas';
 import AdminTabelaPrecos from '../components/admin/AdminTabelaPrecos';
+import AdminTickets from '../components/admin/AdminTickets';
 
 export default function AdminDashboard() {
   const { user, perfil, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'products' | 'categories' | 'notifications' | 'attributes' | 'sales_history' | 'fidelidade' | 'cupons' | 'controle' | 'encomendas' | 'tabela_precos'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'products' | 'categories' | 'notifications' | 'attributes' | 'sales_history' | 'fidelidade' | 'cupons' | 'controle' | 'encomendas' | 'tabela_precos' | 'tickets'>('overview');
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
 
   const toggleTheme = () => {
@@ -42,6 +43,7 @@ export default function AdminDashboard() {
   const [pendingPedidosCount, setPendingPedidosCount] = useState(0);
   const [pendingFidelidadeCount, setPendingFidelidadeCount] = useState(0);
   const [pendingEncomendasCount, setPendingEncomendasCount] = useState(0);
+  const [pendingTicketsCount, setPendingTicketsCount] = useState(0);
 
   useEffect(() => {
     if (perfil?.cargo !== 'Admin') return;
@@ -73,6 +75,11 @@ export default function AdminDashboard() {
         .in('status', ['Pendente', 'Pagamento pendente']);
 
       setPendingEncomendasCount(encomendasCount || 0);
+      
+      try {
+        const { count } = await supabase.from('tickets').select('id', { count: 'exact', head: true }).eq('status', 'Aberto');
+        setPendingTicketsCount(count || 0);
+      } catch (err) {}
     };
 
     fetchCounts();
@@ -81,6 +88,7 @@ export default function AdminDashboard() {
       .channel('counts-updates')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, fetchCounts)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'encomendas_pedidos' }, fetchCounts)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, fetchCounts)
       .subscribe();
 
     return () => {
@@ -257,6 +265,7 @@ export default function AdminDashboard() {
     { id: 'products', label: 'Produtos', icon: Package },
     { id: 'categories', label: 'Menu do Site', icon: ListOrdered },
     { id: 'notifications', label: 'Avisos', icon: BellRing },
+    { id: 'tickets', label: 'Suporte', icon: Ticket, badge: pendingTicketsCount },
     { id: 'fidelidade', label: 'Fidelidade', icon: Award, badge: pendingFidelidadeCount },
     { id: 'cupons', label: 'Cupons', icon: Tag },
     { id: 'encomendas', label: 'Encomendas', icon: PackageSearch, badge: pendingEncomendasCount },
@@ -454,6 +463,7 @@ export default function AdminDashboard() {
             {activeTab === 'cupons' && <AdminCupons />}
             {activeTab === 'encomendas' && <AdminEncomendas />}
             {activeTab === 'tabela_precos' && <AdminTabelaPrecos />}
+            {activeTab === 'tickets' && <AdminTickets />}
             {activeTab === 'controle' && <AdminControle />}
           </div>
         </main>
