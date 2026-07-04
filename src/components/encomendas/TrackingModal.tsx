@@ -29,22 +29,25 @@ export default function TrackingModal({ codigo, onClose }: TrackingModalProps) {
     async function fetchTracking() {
       try {
         setLoading(true);
+        setError(null);
         
         let res;
         try {
-          res = await fetch(`https://api.linketrack.com/track/json?user=teste&token=1abcd00b2731640e886fb41a8a9671ad1434c599dbaa0a0de9a5aa619f29a83f&codigo=${codigo}`);
+          // Tenta API principal (LinkeTrack sem api. subdominio)
+          res = await fetch(`https://linketrack.com/track/json?user=teste&token=1abcd00b2731640e886fb41a8a9671ad1434c599dbaa0a0de9a5aa619f29a83f&codigo=${codigo}`);
+          if (!res.ok) throw new Error('LinkeTrack Error');
         } catch (err) {
           // Fallback para BrasilAPI
           res = await fetch(`https://brasilapi.com.br/api/correios/v1/${codigo}`);
         }
         
-        if (!res || !res.ok) {
-          // Tenta um último fallback via proxy de CORS genérico para a API oficial dos correios
-          res = await fetch(`https://api.rastrearpedidos.com.br/api/rastreio/v1?codigo=${codigo}`);
-          
-          if (!res || !res.ok) {
-            throw new Error('Falha ao buscar os dados de rastreio.');
-          }
+        if (res.status === 404) {
+          setError('O código de rastreio informado não foi encontrado. Ele pode estar incorreto, ter expirado (se for muito antigo) ou os Correios ainda não atualizaram o sistema.');
+          return;
+        }
+
+        if (!res.ok) {
+          throw new Error('Falha ao buscar os dados de rastreio.');
         }
 
         const data = await res.json();
