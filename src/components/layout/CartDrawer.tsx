@@ -110,6 +110,12 @@ export default function CartDrawer() {
     }
   }, [isCartOpen]);
 
+  useEffect(() => {
+    if (step === 3 && Math.max(0, cartTotal - (cupomAplicado?.valor_desconto || 0)) + frete === 0) {
+      setPagamento('Vanta Club');
+    }
+  }, [step, cartTotal, frete, cupomAplicado]);
+
   // Monitora continuamente a validade do cupom aplicado
   useEffect(() => {
     if (!cupomAplicado || !cupomAplicado.data_expiracao) return;
@@ -409,6 +415,20 @@ export default function CartDrawer() {
             .insert(itensToInsert);
 
           if (errorItens) throw errorItens;
+
+          if (totalPoints > 0 && perfil) {
+            const novosPontos = (perfil.pontos || 0) - totalPoints;
+            await supabase.from('perfis').update({ pontos: novosPontos }).eq('id', user.id);
+            await supabase.from('historico_pontos').insert({
+              user_id: user.id,
+              tipo: 'saida',
+              quantidade: totalPoints,
+              descricao: `Resgate no Pedido #${pedido.id}`
+            });
+            if (refreshPerfil) {
+              await refreshPerfil();
+            }
+          }
         }
       } catch (error) {
         console.error("Erro ao salvar pedido no banco:", error);
@@ -835,13 +855,14 @@ export default function CartDrawer() {
 
               {step === 3 && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                  <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-5 border border-gray-100 dark:border-gray-800 relative z-50">
-                    <div className="flex items-center gap-2 text-gray-900 dark:text-white mb-5">
-                      <CreditCard className="w-5 h-5 text-vanta-blue" />
-                      <h3 className="font-bold text-base">Forma de Pagamento</h3>
-                    </div>
+                  {finalTotal > 0 && (
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-5 border border-gray-100 dark:border-gray-800">
+                      <div className="flex items-center gap-2 text-gray-900 dark:text-white mb-4">
+                        <CreditCard className="w-5 h-5 text-vanta-blue" />
+                        <h3 className="font-bold text-base">Forma de Pagamento</h3>
+                      </div>
 
-                    <div className="relative mb-5">
+                      <div className="relative mb-5">
                       <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5 block">Selecione uma opção</label>
                       <button
                         onClick={() => setShowPagamento(!showPagamento)}
@@ -916,6 +937,7 @@ export default function CartDrawer() {
                       </div>
                     )}
                   </div>
+                  )}
                 </div>
               )}
             </div>

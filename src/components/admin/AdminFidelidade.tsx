@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
-import { Plus, Trash2, Image as ImageIcon, Loader2, X, Edit, UploadCloud, Award, Medal, Trophy, Users, Gift, Star, Settings, Ticket } from 'lucide-react';
+import { Plus, Trash2, Image as ImageIcon, Loader2, X, Edit, UploadCloud, Award, Medal, Package, Settings, Users, Gift, Star, Ticket } from 'lucide-react';
+import AdminOrders from './AdminOrders';
 
 type Nivel = {
   id: string;
@@ -19,6 +20,7 @@ type Recompensa = {
   nivel_id?: string | null;
   cupom_valor?: number | null;
   cupom_tipo?: string | null;
+  imagem_url?: string;
 };
 
 interface Perfil {
@@ -30,7 +32,7 @@ interface Perfil {
 
 export default function AdminFidelidade() {
   const { showAlert } = useAlert();
-  const [activeTab, setActiveTab] = useState<'geral' | 'config'>('geral');
+  const [activeTab, setActiveTab] = useState<'geral' | 'config' | 'pedidos'>('geral');
   
   // State Níveis
   const [niveis, setNiveis] = useState<Nivel[]>([]);
@@ -50,6 +52,8 @@ export default function AdminFidelidade() {
   // Form Data
   const [formData, setFormData] = useState({
     nome: '',
+    pontos: '',
+    badge: '',
     nivel_id: '',
     tipo: 'produto',
     cupom_valor: '',
@@ -135,7 +139,7 @@ export default function AdminFidelidade() {
       cupom_valor: recompensa.cupom_valor ? recompensa.cupom_valor.toString() : '',
       cupom_tipo: recompensa.cupom_tipo || 'fixo'
     });
-    setImagePreview(recompensa.imagem_url);
+    setImagePreview(recompensa.imagem_url || '');
     setImageFile(null);
     setIsModalOpen(true);
   };
@@ -188,7 +192,7 @@ export default function AdminFidelidade() {
       let imagem_url = imagePreview;
 
       if (formData.tipo === 'cupom') {
-        imagem_url = 'https://i.ibb.co/6P0rJ89/coupon-icon.png'; // Generic coupon icon or could be omitted
+        imagem_url = 'https://i.ibb.co/6P0rJ89/coupon-icon.png';
       } else if (imageFile) {
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${Math.random()}.${fileExt}`;
@@ -268,7 +272,6 @@ export default function AdminFidelidade() {
       return { nome: n.nome, bg: 'text-white shadow-md', cor: n.cor_hex || '#1D8EFF' };
     }
     
-    // Fallback caso não carregue os níveis do banco
     if (pontosAcumulados >= 5000) return { nome: 'Diamante', bg: 'bg-cyan-900 text-white shadow-md', cor: undefined };
     if (pontosAcumulados >= 2500) return { nome: 'Ouro', bg: 'bg-yellow-700 text-white shadow-md', cor: undefined };
     if (pontosAcumulados >= 1000) return { nome: 'Prata', bg: 'bg-gray-600 text-white shadow-md', cor: undefined };
@@ -290,6 +293,12 @@ export default function AdminFidelidade() {
           className={`px-4 py-2 rounded-lg font-bold transition-colors flex items-center gap-2 ${activeTab === 'config' ? 'bg-vanta-blue text-white' : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
         >
           <Settings className="w-4 h-4" /> Configurações de Níveis
+        </button>
+        <button
+          onClick={() => setActiveTab('pedidos')}
+          className={`px-4 py-2 rounded-lg font-bold transition-colors flex items-center gap-2 ${activeTab === 'pedidos' ? 'bg-vanta-blue text-white' : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
+        >
+          <Package className="w-4 h-4" /> Pedidos de Resgate
         </button>
       </div>
 
@@ -661,6 +670,12 @@ export default function AdminFidelidade() {
         </div>
       )}
       </div>
+      )}
+
+      {activeTab === 'pedidos' && (
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft overflow-hidden p-6">
+          <AdminOrders onlyVantaClub={true} />
+        </div>
       )}
     </div>
   );

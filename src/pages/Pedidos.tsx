@@ -110,6 +110,24 @@ export default function Pedidos() {
           await supabase.from('cupons').update({ quantidade_disponivel: cupom.quantidade_disponivel + 1 }).eq('id', pedido.cupom_id);
         }
       }
+
+      // Estorno de Pontos
+      if (pedido) {
+        const { data: historico } = await supabase.from('historico_pontos').select('*').eq('descricao', `Resgate no Pedido #${pedido.id}`).single();
+        if (historico) {
+          const { data: perfil } = await supabase.from('perfis').select('pontos').eq('id', pedido.user_id).single();
+          if (perfil) {
+            await supabase.from('perfis').update({ pontos: perfil.pontos + historico.quantidade }).eq('id', pedido.user_id);
+            await supabase.from('historico_pontos').insert({
+              user_id: pedido.user_id,
+              tipo: 'entrada',
+              quantidade: historico.quantidade,
+              descricao: `Estorno: Pedido #${pedido.id} Cancelado`
+            });
+            if (refreshPerfil) await refreshPerfil();
+          }
+        }
+      }
       
       // Atualizar lista local
       setPedidos(pedidos.map(p => p.id === pedidoId ? { ...p, status: 'Cancelado pelo cliente' } : p));

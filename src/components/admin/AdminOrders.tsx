@@ -23,7 +23,7 @@ interface Pedido {
   itens_pedido: ItemPedido[];
 }
 
-export default function AdminOrders() {
+export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?: boolean } = {}) {
   const { showAlert } = useAlert();
   const [orders, setOrders] = useState<Pedido[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,7 +64,15 @@ export default function AdminOrders() {
         setErrorMsg(error.message);
         throw error;
       }
-      setOrders(data as Pedido[]);
+      
+      let finalData = data as Pedido[];
+      if (onlyVantaClub && finalData) {
+        finalData = finalData.filter((pedido: any) => 
+          pedido.itens_pedido?.some((item: any) => item.produto_nome.includes('[Vanta Club]'))
+        );
+      }
+      
+      setOrders(finalData);
       setErrorMsg(null);
     } catch (err: any) {
       console.error('Erro ao buscar pedidos:', err);
@@ -220,6 +228,23 @@ export default function AdminOrders() {
             await supabase.from('cupons').update({ quantidade_disponivel: cupom.quantidade_disponivel + 1 }).eq('id', pedido.cupom_id);
           }
         }
+
+        // Estorno de Pontos
+        if (pedido) {
+          const { data: historico } = await supabase.from('historico_pontos').select('*').eq('descricao', `Resgate no Pedido #${pedido.id}`).single();
+          if (historico) {
+            const { data: perfil } = await supabase.from('perfis').select('pontos').eq('id', pedido.user_id).single();
+            if (perfil) {
+              await supabase.from('perfis').update({ pontos: perfil.pontos + historico.quantidade }).eq('id', pedido.user_id);
+              await supabase.from('historico_pontos').insert({
+                user_id: pedido.user_id,
+                tipo: 'entrada',
+                quantidade: historico.quantidade,
+                descricao: `Estorno: Pedido #${pedido.id} Cancelado`
+              });
+            }
+          }
+        }
       } else if (!isNowCancelled && wasCancelled) {
         // Descontar cupom novamente
         const pedido = orders.find(p => p.id === pedidoId);
@@ -227,6 +252,23 @@ export default function AdminOrders() {
           const { data: cupom } = await supabase.from('cupons').select('quantidade_disponivel').eq('id', pedido.cupom_id).single();
           if (cupom && cupom.quantidade_disponivel !== null && cupom.quantidade_disponivel > 0) {
             await supabase.from('cupons').update({ quantidade_disponivel: cupom.quantidade_disponivel - 1 }).eq('id', pedido.cupom_id);
+          }
+        }
+        
+        // Descontar pontos novamente
+        if (pedido) {
+          const { data: historicoEstorno } = await supabase.from('historico_pontos').select('*').eq('descricao', `Estorno: Pedido #${pedido.id} Cancelado`).single();
+          if (historicoEstorno) {
+            const { data: perfil } = await supabase.from('perfis').select('pontos').eq('id', pedido.user_id).single();
+            if (perfil) {
+              await supabase.from('perfis').update({ pontos: perfil.pontos - historicoEstorno.quantidade }).eq('id', pedido.user_id);
+              await supabase.from('historico_pontos').insert({
+                user_id: pedido.user_id,
+                tipo: 'saida',
+                quantidade: historicoEstorno.quantidade,
+                descricao: `Reversão de Estorno: Pedido #${pedido.id}`
+              });
+            }
           }
         }
       }
