@@ -111,9 +111,18 @@ export default function TrackingModal({ codigo, onClose }: TrackingModalProps) {
               <p className="text-sm font-bold text-gray-500 dark:text-gray-400">Buscando atualizações nos Correios...</p>
             </div>
           ) : error ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="flex flex-col items-center justify-center py-8 text-center px-4">
               <AlertCircle className="w-12 h-12 text-vanta-orange mb-4 opacity-80" />
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300 max-w-[280px]">{error}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-6">{error}</p>
+              <a 
+                href={`https://linketrack.com/track?codigo=${codigo}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-2.5 bg-vanta-blue text-white rounded-xl font-bold text-sm hover:bg-vanta-darkblue transition-colors flex items-center gap-2 shadow-md"
+              >
+                <Package className="w-4 h-4" />
+                Rastrear no site oficial
+              </a>
             </div>
           ) : trackingData?.eventos?.length ? (
             <div className="relative pl-6 border-l-2 border-gray-100 dark:border-gray-700 space-y-8 my-4">

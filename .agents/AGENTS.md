@@ -1,0 +1,1 @@
+- Realize um commit no git ("git commit -m 'mensagem em português'") SEMPRE que finalizar uma alteração no código para o usuário. As mensagens de commit devem ser sempre em português.
