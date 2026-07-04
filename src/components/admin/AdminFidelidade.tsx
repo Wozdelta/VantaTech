@@ -62,12 +62,42 @@ export default function AdminFidelidade() {
   
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
+  
+  const [pendingResgatesCount, setPendingResgatesCount] = useState(0);
 
   useEffect(() => {
     fetchNiveis();
     fetchRecompensas();
     fetchPerfis();
+    fetchPendingResgates();
+
+    const channel = supabase
+      .channel('fidelidade-counts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, fetchPendingResgates)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
+
+  async function fetchPendingResgates() {
+    try {
+      const { data } = await supabase
+        .from('pedidos')
+        .select(`total, itens_pedido(produto_nome)`)
+        .eq('status', 'Pendente');
+        
+      if (data) {
+        const count = data.filter((p: any) => 
+          Number(p.total) === 0 && p.itens_pedido?.some((i: any) => i.produto_nome.includes('[Vanta Club]'))
+        ).length;
+        setPendingResgatesCount(count);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar pedidos de resgate pendentes:', error);
+    }
+  }
 
   async function fetchNiveis() {
     try {
@@ -294,12 +324,22 @@ export default function AdminFidelidade() {
         >
           <Settings className="w-4 h-4" /> Configurações de Níveis
         </button>
-        <button
-          onClick={() => setActiveTab('pedidos')}
-          className={`px-4 py-2 rounded-lg font-bold transition-colors flex items-center gap-2 ${activeTab === 'pedidos' ? 'bg-vanta-blue text-white' : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
-        >
-          <Package className="w-4 h-4" /> Pedidos de Resgate
-        </button>
+          <button
+            onClick={() => setActiveTab('pedidos')}
+            className={`px-6 py-2.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
+              activeTab === 'pedidos' 
+                ? 'bg-vanta-blue text-white shadow-lg shadow-blue-500/25' 
+                : 'bg-white dark:bg-gray-800 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'
+            }`}
+          >
+            <Package className="w-4 h-4" />
+            Pedidos de Resgate
+            {pendingResgatesCount > 0 && (
+              <span className="bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">
+                {pendingResgatesCount}
+              </span>
+            )}
+          </button>
       </div>
 
       {activeTab === 'config' && (

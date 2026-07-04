@@ -40,23 +40,38 @@ export default function AdminDashboard() {
   const [topUser, setTopUser] = useState({ nome: 'Nenhum', pontos: 0 });
   
   const [pendingPedidosCount, setPendingPedidosCount] = useState(0);
+  const [pendingFidelidadeCount, setPendingFidelidadeCount] = useState(0);
   const [pendingEncomendasCount, setPendingEncomendasCount] = useState(0);
 
   useEffect(() => {
     if (perfil?.cargo !== 'Admin') return;
     
     const fetchCounts = async () => {
-      const { count: pedidosCount } = await supabase
+      const { data: pendingPedidos } = await supabase
         .from('pedidos')
-        .select('*', { count: 'exact', head: true })
+        .select(`total, itens_pedido(produto_nome)`)
         .eq('status', 'Pendente');
+
+      let fidelidadeC = 0;
+      let regularC = 0;
+
+      if (pendingPedidos) {
+        pendingPedidos.forEach((p: any) => {
+          if (Number(p.total) === 0 && p.itens_pedido?.some((i: any) => i.produto_nome.includes('[Vanta Club]'))) {
+            fidelidadeC++;
+          } else {
+            regularC++;
+          }
+        });
+      }
+      setPendingPedidosCount(regularC);
+      setPendingFidelidadeCount(fidelidadeC);
       
       const { count: encomendasCount } = await supabase
         .from('encomendas_pedidos')
         .select('*', { count: 'exact', head: true })
         .in('status', ['Pendente', 'Pagamento pendente']);
 
-      setPendingPedidosCount(pedidosCount || 0);
       setPendingEncomendasCount(encomendasCount || 0);
     };
 
@@ -243,7 +258,7 @@ export default function AdminDashboard() {
     { id: 'products', label: 'Produtos', icon: Package },
     { id: 'categories', label: 'Menu do Site', icon: ListOrdered },
     { id: 'notifications', label: 'Avisos', icon: BellRing },
-    { id: 'fidelidade', label: 'Fidelidade', icon: Award },
+    { id: 'fidelidade', label: 'Fidelidade', icon: Award, badge: pendingFidelidadeCount },
     { id: 'cupons', label: 'Cupons', icon: Tag },
     { id: 'encomendas', label: 'Encomendas', icon: PackageSearch, badge: pendingEncomendasCount },
     { id: 'tabela_precos', label: 'Tabela de Preços', icon: DollarSign },
