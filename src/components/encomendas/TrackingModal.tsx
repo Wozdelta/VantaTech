@@ -29,23 +29,34 @@ export default function TrackingModal({ codigo, onClose }: TrackingModalProps) {
     async function fetchTracking() {
       try {
         setLoading(true);
-        // Using LinkeTrack public API for tracking
-        const res = await fetch(`https://api.linketrack.com/track/json?user=teste&token=1abcd00b2731640e886fb41a8a9671ad1434c599dbaa0a0de9a5aa619f29a83f&codigo=${codigo}`);
         
-        if (!res.ok) {
-          throw new Error('Falha ao buscar os dados de rastreio.');
+        let res;
+        try {
+          res = await fetch(`https://api.linketrack.com/track/json?user=teste&token=1abcd00b2731640e886fb41a8a9671ad1434c599dbaa0a0de9a5aa619f29a83f&codigo=${codigo}`);
+        } catch (err) {
+          // Fallback para BrasilAPI
+          res = await fetch(`https://brasilapi.com.br/api/correios/v1/${codigo}`);
+        }
+        
+        if (!res || !res.ok) {
+          // Tenta um último fallback via proxy de CORS genérico para a API oficial dos correios
+          res = await fetch(`https://api.rastrearpedidos.com.br/api/rastreio/v1?codigo=${codigo}`);
+          
+          if (!res || !res.ok) {
+            throw new Error('Falha ao buscar os dados de rastreio.');
+          }
         }
 
         const data = await res.json();
         
-        if (data && data.eventos) {
+        if (data && data.eventos && data.eventos.length > 0) {
           setTrackingData(data);
         } else {
-          setError('Ainda não há atualizações para este código de rastreio.');
+          setError('Ainda não há atualizações para este código de rastreio ou ele é inválido.');
         }
       } catch (err: any) {
         console.error('Erro ao buscar rastreio:', err);
-        setError('Não foi possível carregar o rastreio ou os servidores estão instáveis.');
+        setError('Não foi possível carregar o rastreio. Os servidores podem estar instáveis no momento.');
       } finally {
         setLoading(false);
       }
