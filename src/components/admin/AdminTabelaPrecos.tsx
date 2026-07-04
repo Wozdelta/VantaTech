@@ -14,6 +14,7 @@ interface Variacao {
   nome: string;
   valor_pago: number;
   valor_venda: number;
+  ordem?: number;
 }
 
 interface Grupo {
@@ -44,6 +45,7 @@ export default function AdminTabelaPrecos() {
   const [selectedMarcaId, setSelectedMarcaId] = useState<string>('all');
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const dragGroupItem = useRef<number | null>(null);
+  const dragVariantItem = useRef<{grupoId: string, index: number} | null>(null);
   
   // Create States
   const [isAddingGroup, setIsAddingGroup] = useState(false);
@@ -65,14 +67,21 @@ export default function AdminTabelaPrecos() {
       const [marcasRes, gruposRes, variacoesRes] = await Promise.all([
         supabase.from('marcas').select('*').order('nome'),
         supabase.from('tabela_precos_grupos').select('*').order('ordem', { ascending: true, nullsFirst: false }).order('nome'),
-        supabase.from('tabela_precos_variacoes').select('*').order('valor_venda')
+        supabase.from('tabela_precos_variacoes').select('*').order('ordem', { ascending: true, nullsFirst: false }).order('valor_venda')
       ]);
+
+      let variacoesData = variacoesRes.data || [];
+      
+      // Fallback: se der erro por falta da coluna 'ordem'
+      if (variacoesRes.error && variacoesRes.error.message.includes('ordem')) {
+        const fallbackRes = await supabase.from('tabela_precos_variacoes').select('*').order('valor_venda');
+        variacoesData = fallbackRes.data || [];
+      }
 
       if (marcasRes.error) throw marcasRes.error;
       
       const marcasData = marcasRes.data || [];
       const gruposData = gruposRes.data || [];
-      const variacoesData = variacoesRes.data || [];
 
       // Montar a árvore
       const gruposTree = gruposData.map(g => ({
@@ -127,6 +136,50 @@ export default function AdminTabelaPrecos() {
       ));
     } catch (err) {
       console.error('Erro ao salvar ordem:', err);
+    }
+  };
+
+  const handleVariantDragStart = (e: React.DragEvent, grupoId: string, index: number) => {
+    dragVariantItem.current = { grupoId, index };
+    if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleVariantDragEnter = (e: React.DragEvent, grupoId: string, index: number) => {
+    if (dragVariantItem.current && dragVariantItem.current.grupoId === grupoId && dragVariantItem.current.index !== index) {
+      const newGrupos = [...grupos];
+      const grupoIndex = newGrupos.findIndex(g => g.id === grupoId);
+      if (grupoIndex === -1) return;
+      
+      const newVariacoes = [...newGrupos[grupoIndex].variacoes];
+      const draggedItemContent = newVariacoes[dragVariantItem.current.index];
+      newVariacoes.splice(dragVariantItem.current.index, 1);
+      newVariacoes.splice(index, 0, draggedItemContent);
+      
+      newGrupos[grupoIndex].variacoes = newVariacoes;
+      setGrupos(newGrupos);
+      dragVariantItem.current = { grupoId, index };
+    }
+  };
+
+  const handleVariantDragEnd = async (grupoId: string) => {
+    if (!dragVariantItem.current) return;
+    dragVariantItem.current = null;
+    
+    const grupo = grupos.find(g => g.id === grupoId);
+    if (!grupo) return;
+
+    try {
+      const { error } = await supabase.from('tabela_precos_variacoes').update({ ordem: 0 }).eq('id', grupo.variacoes[0]?.id || 'null');
+      if (error && error.message.includes('ordem')) {
+        showAlert({ type: 'warning', message: 'Execute o SQL sugerido para habilitar a ordenação.' });
+        return;
+      }
+      
+      await Promise.all(grupo.variacoes.map((v, index) => 
+        supabase.from('tabela_precos_variacoes').update({ ordem: index }).eq('id', v.id)
+      ));
+    } catch (err) {
+      console.error('Erro ao salvar ordem das variações:', err);
     }
   };
 
@@ -462,7 +515,7 @@ export default function AdminTabelaPrecos() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                            {grupo.variacoes.map(variacao => {
+                            {grupo.variacoes.map((variacao, index) => {
                               const lucroReal = variacao.valor_venda - variacao.valor_pago;
                               const margem = variacao.valor_pago > 0 ? ((lucroReal / variacao.valor_pago) * 100).toFixed(0) : '100';
                               
@@ -516,8 +569,19 @@ export default function AdminTabelaPrecos() {
                                   </td>
                                 </tr>
                               ) : (
-                                <tr key={variacao.id} className="hover:bg-white dark:hover:bg-gray-800 transition-colors group/row">
-                                  <td className="py-3 px-4 font-bold text-gray-900 dark:text-white text-sm">
+                                <tr 
+                                  key={variacao.id} 
+                                  className="hover:bg-white dark:hover:bg-gray-800 transition-colors group/row"
+                                  draggable
+                                  onDragStart={(e) => handleVariantDragStart(e, grupo.id, index)}
+                                  onDragEnter={(e) => handleVariantDragEnter(e, grupo.id, index)}
+                                  onDragEnd={() => handleVariantDragEnd(grupo.id)}
+                                  onDragOver={(e) => e.preventDefault()}
+                                >
+                                  <td className="py-3 px-4 font-bold text-gray-900 dark:text-white text-sm flex items-center gap-2">
+                                    <div className="text-gray-300 dark:text-gray-600 cursor-grab hover:text-gray-500">
+                                      <GripVertical className="w-4 h-4" />
+                                    </div>
                                     {variacao.nome}
                                   </td>
                                   <td className="py-3 px-4 font-medium text-gray-500 dark:text-gray-400 text-sm">
