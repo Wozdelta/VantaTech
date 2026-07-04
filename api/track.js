@@ -37,7 +37,7 @@ export default async function handler(req, res) {
       const brRes = await fetch(`https://brasilapi.com.br/api/correios/v1/${codigo}`);
       
       if (brRes.status === 404) {
-        return res.status(404).json({ error: 'Rastreio não encontrado ou inexistente' });
+        return res.status(200).json({ notFound: true, error: 'Rastreio não encontrado ou inexistente' });
       }
       
       if (brRes.ok) {
@@ -45,9 +45,9 @@ export default async function handler(req, res) {
         return res.status(200).json(data);
       }
       
-      throw new Error('BrasilAPI falhou');
+      return res.status(200).json({ fallbackError: true, error: 'BrasilAPI falhou' });
     } catch (brError) {
-      return res.status(500).json({ error: 'Servidores de rastreio indisponíveis no momento' });
+      return res.status(200).json({ fatalError: true, error: 'Servidores de rastreio indisponíveis no momento' });
     }
   }
 }

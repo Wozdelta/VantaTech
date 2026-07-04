@@ -34,16 +34,17 @@ export default function TrackingModal({ codigo, onClose }: TrackingModalProps) {
         // Requisição para a nossa própria Serverless API (Vercel) para contornar problemas de CORS 
         const res = await fetch(`/api/track?codigo=${codigo}`);
         
-        if (res.status === 404) {
+        const data = await res.json();
+        
+        if (data.notFound) {
           setError('O código de rastreio informado não foi encontrado. Ele pode estar incorreto, ter expirado (se for muito antigo) ou os Correios ainda não atualizaram o sistema.');
           return;
         }
 
-        if (!res.ok) {
-          throw new Error('Falha ao buscar os dados de rastreio.');
+        if (data.fallbackError || data.fatalError) {
+          setError('Servidores de rastreio indisponíveis no momento. Tente novamente mais tarde.');
+          return;
         }
-
-        const data = await res.json();
 
         if (data && data.eventos && data.eventos.length > 0) {
           setTrackingData(data);
