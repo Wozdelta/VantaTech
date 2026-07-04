@@ -3,7 +3,6 @@ import { Package, X } from 'lucide-react';
 
 interface TrackingModalProps {
   codigo: string;
-  isOpen: boolean;
   onClose: () => void;
 }
 
@@ -13,12 +12,12 @@ declare global {
   }
 }
 
-export default function TrackingModal({ codigo, isOpen, onClose }: TrackingModalProps) {
+export default function TrackingModal({ codigo, onClose }: TrackingModalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isWidgetLoaded, setIsWidgetLoaded] = useState(false);
 
   useEffect(() => {
-    if (!isOpen || !codigo) return;
+    if (!codigo) return;
 
     setIsWidgetLoaded(false);
 
@@ -49,9 +48,7 @@ export default function TrackingModal({ codigo, isOpen, onClose }: TrackingModal
         document.body.removeChild(script);
       }
     };
-  }, [isOpen, codigo]);
-
-  if (!isOpen) return null;
+  }, [codigo]);
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
