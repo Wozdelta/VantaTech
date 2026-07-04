@@ -85,9 +85,9 @@ export default function AdminEncomendas() {
       if (error) throw error;
       
       const enc = encomendas.find(e => e.id === id);
-      if (enc && enc.usuario_id) {
+      if (enc && enc.user_id) {
         await supabase.from('notificacoes').insert({
-          usuario_id: enc.usuario_id,
+          usuario_id: enc.user_id,
           titulo: `Status da Encomenda`,
           mensagem: `Sua encomenda do ${enc.marca} ${enc.modelo} mudou para: ${novoStatus}.`,
           lida: false

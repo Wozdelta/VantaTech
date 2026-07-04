@@ -448,10 +448,15 @@ export default function Navbar() {
               onClick={() => setIsCartOpen(true)}
             />
             <button 
-              className="p-2 text-gray-600 dark:text-gray-300 hover:text-vanta-blue transition-colors"
+              className="p-2 text-gray-600 dark:text-gray-300 hover:text-vanta-blue transition-colors relative"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {unreadCount > 0 && (
+                <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-vanta-orange px-1 text-[10px] font-bold text-white border-2 border-white dark:border-gray-900">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
             </button>
           </div>
         </div>
