@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAlert } from '../contexts/AlertContext';
+import { useCart } from '../contexts/CartContext';
 
 type Nivel = {
   id: string;
@@ -36,6 +37,7 @@ type Historico = {
 export default function Fidelidade() {
   const { user, perfil, refreshPerfil } = useAuth();
   const { showAlert } = useAlert();
+  const { addToCart } = useCart();
   const [copied, setCopied] = useState(false);
   const [niveis, setNiveis] = useState<Nivel[]>([]);
   const [recompensas, setRecompensas] = useState<Recompensa[]>([]);
@@ -186,9 +188,15 @@ export default function Fidelidade() {
 
         await refreshPerfil();
         
-        showAlert({ title: 'Resgatado!', message: 'Seus pontos foram descontados. Vamos abrir o WhatsApp para combinar a entrega!', type: 'success' });
-        const text = encodeURIComponent(`Olá! Acabei de resgatar a recompensa "${recompensa.nome}" (Custo: ${recompensa.pontos} pts) no site.`);
-        window.open(`https://wa.me/5516997700430?text=${text}`, '_blank');
+        addToCart({
+          productId: recompensa.id,
+          name: `[Resgate] ${recompensa.nome}`,
+          price: 0,
+          image: recompensa.imagem_url,
+          quantity: 1,
+        });
+        
+        showAlert({ title: 'Resgatado!', message: 'A recompensa foi adicionada ao seu carrinho!', type: 'success' });
       }
     } catch (err) {
       console.error(err);
