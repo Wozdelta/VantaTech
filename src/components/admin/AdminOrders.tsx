@@ -231,7 +231,7 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
 
         // Estorno de Pontos
         if (pedido) {
-          const { data: historico } = await supabase.from('historico_pontos').select('*').or(`descricao.eq.Resgate no Pedido #${pedido.id},descricao.eq.Resgate no Pedido #${pedido.numero}`).single();
+          const { data: historico } = await supabase.from('historico_pontos').select('*').or(`descricao.ilike.%Pedido #${pedido.id}%,descricao.ilike.%Pedido #${pedido.numero}%`).eq('tipo', 'saida').single();
           if (historico) {
             const { data: perfil } = await supabase.from('perfis').select('pontos').eq('id', pedido.user_id).single();
             if (perfil) {
@@ -257,7 +257,7 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
         
         // Descontar pontos novamente
         if (pedido) {
-          const { data: historicoEstorno } = await supabase.from('historico_pontos').select('*').or(`descricao.eq.Estorno: Pedido #${pedido.id} Cancelado,descricao.eq.Estorno: Pedido #${pedido.numero} Cancelado`).single();
+          const { data: historicoEstorno } = await supabase.from('historico_pontos').select('*').or(`descricao.ilike.%Estorno: Pedido #${pedido.id}%,descricao.ilike.%Estorno: Pedido #${pedido.numero}%`).eq('tipo', 'entrada').single();
           if (historicoEstorno) {
             const { data: perfil } = await supabase.from('perfis').select('pontos').eq('id', pedido.user_id).single();
             if (perfil) {

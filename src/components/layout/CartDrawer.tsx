@@ -423,7 +423,7 @@ export default function CartDrawer() {
               user_id: user.id,
               tipo: 'saida',
               quantidade: totalPoints,
-              descricao: `Resgate no Pedido #${pedido.numero}`
+              descricao: `Resgate: ${items.filter(i => i.pointsCost).map(i => i.name).join(', ')} (Pedido #${pedido.numero})`
             });
             if (refreshPerfil) {
               await refreshPerfil();
