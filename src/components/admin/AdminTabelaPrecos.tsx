@@ -52,6 +52,9 @@ export default function AdminTabelaPrecos() {
   const [addingVariantTo, setAddingVariantTo] = useState<string | null>(null);
   const [newVariant, setNewVariant] = useState({ nome: '', valor_pago: '', valor_venda: '' });
   const [showSuggestions, setShowSuggestions] = useState(false);
+  
+  const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
+  const [editingVariantData, setEditingVariantData] = useState({ nome: '', valor_pago: '', valor_venda: '' });
 
   useEffect(() => {
     fetchData();
@@ -182,6 +185,46 @@ export default function AdminTabelaPrecos() {
     } catch (err) {
       console.error(err);
       showAlert({ type: 'error', message: 'Erro ao criar variação.' });
+    }
+  };
+
+  const handleEditVariantSubmit = async (grupo_id: string, variacao_id: string) => {
+    if (!editingVariantData.nome || !editingVariantData.valor_pago || !editingVariantData.valor_venda) {
+      showAlert({ type: 'warning', message: 'Preencha todos os campos.' });
+      return;
+    }
+    
+    try {
+      const payload = {
+        nome: editingVariantData.nome,
+        valor_pago: parseFloat(editingVariantData.valor_pago),
+        valor_venda: parseFloat(editingVariantData.valor_venda)
+      };
+
+      const { data, error } = await supabase
+        .from('tabela_precos_variacoes')
+        .update(payload)
+        .eq('id', variacao_id)
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      showAlert({ type: 'success', message: 'Variação atualizada!' });
+      setEditingVariantId(null);
+      
+      setGrupos(prev => prev.map(g => {
+        if (g.id === grupo_id) {
+          return { 
+            ...g, 
+            variacoes: g.variacoes.map(v => v.id === variacao_id ? data : v).sort((a, b) => a.valor_venda - b.valor_venda) 
+          };
+        }
+        return g;
+      }));
+    } catch (err) {
+      console.error(err);
+      showAlert({ type: 'error', message: 'Erro ao atualizar variação.' });
     }
   };
 
@@ -423,7 +466,56 @@ export default function AdminTabelaPrecos() {
                               const lucroReal = variacao.valor_venda - variacao.valor_pago;
                               const margem = variacao.valor_pago > 0 ? ((lucroReal / variacao.valor_pago) * 100).toFixed(0) : '100';
                               
-                              return (
+                              return editingVariantId === variacao.id ? (
+                                <tr key={variacao.id} className="bg-gray-50 dark:bg-gray-800/50">
+                                  <td className="py-2 px-4">
+                                    <input 
+                                      type="text" 
+                                      value={editingVariantData.nome} 
+                                      onChange={e => setEditingVariantData({...editingVariantData, nome: e.target.value})} 
+                                      className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-vanta-blue" 
+                                      placeholder="Nome"
+                                    />
+                                  </td>
+                                  <td className="py-2 px-4">
+                                    <input 
+                                      type="number" 
+                                      value={editingVariantData.valor_pago} 
+                                      onChange={e => setEditingVariantData({...editingVariantData, valor_pago: e.target.value})} 
+                                      className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-vanta-blue" 
+                                    />
+                                  </td>
+                                  <td className="py-2 px-4">
+                                    <input 
+                                      type="number" 
+                                      value={editingVariantData.valor_venda} 
+                                      onChange={e => setEditingVariantData({...editingVariantData, valor_venda: e.target.value})} 
+                                      className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-vanta-blue" 
+                                    />
+                                  </td>
+                                  <td className="py-2 px-4">
+                                    <div className="text-gray-400 text-xs italic opacity-50">Auto</div>
+                                  </td>
+                                  <td className="py-2 px-4 text-right">
+                                    <div className="flex items-center justify-end gap-1">
+                                      <button 
+                                        onClick={() => handleEditVariantSubmit(grupo.id, variacao.id)}
+                                        className="p-1.5 text-vanta-blue hover:bg-vanta-blue/10 rounded-md transition-colors"
+                                        title="Salvar"
+                                      >
+                                        <Save className="w-4 h-4" />
+                                      </button>
+                                      <button 
+                                        onClick={() => setEditingVariantId(null)}
+                                        className="p-1.5 text-gray-400 hover:text-gray-600 rounded-md transition-colors"
+                                        title="Cancelar"
+                                      >
+                                        <X className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ) : (
                                 <tr key={variacao.id} className="hover:bg-white dark:hover:bg-gray-800 transition-colors group/row">
                                   <td className="py-3 px-4 font-bold text-gray-900 dark:text-white text-sm">
                                     {variacao.nome}
@@ -444,12 +536,29 @@ export default function AdminTabelaPrecos() {
                                     </div>
                                   </td>
                                   <td className="py-3 px-4 text-right">
-                                    <button 
-                                      onClick={() => handleDeleteVariant(grupo.id, variacao.id)}
-                                      className="p-1.5 text-gray-400 hover:text-red-500 opacity-0 group-hover/row:opacity-100 transition-all rounded-lg"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
+                                    <div className="flex justify-end gap-1 opacity-0 group-hover/row:opacity-100 transition-all">
+                                      <button 
+                                        onClick={() => {
+                                          setEditingVariantId(variacao.id);
+                                          setEditingVariantData({
+                                            nome: variacao.nome,
+                                            valor_pago: variacao.valor_pago.toString(),
+                                            valor_venda: variacao.valor_venda.toString()
+                                          });
+                                        }}
+                                        className="p-1.5 text-gray-400 hover:text-vanta-blue transition-colors rounded-lg"
+                                        title="Editar Variação"
+                                      >
+                                        <Edit2 className="w-4 h-4" />
+                                      </button>
+                                      <button 
+                                        onClick={() => handleDeleteVariant(grupo.id, variacao.id)}
+                                        className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg"
+                                        title="Apagar Variação"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </div>
                                   </td>
                                 </tr>
                               );
