@@ -1,8 +1,43 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
-import { Search, Loader2, MessageCircle, MoreVertical } from 'lucide-react';
+import { Search, Loader2, MessageCircle, MoreVertical, Trash2 } from 'lucide-react';
 import EncomendaChat from '../encomendas/EncomendaChat';
+
+const CancelTimer = ({ enc, onExpired }: { enc: any, onExpired: (id: string) => void }) => {
+  const [timeLeft, setTimeLeft] = useState('');
+
+  useEffect(() => {
+    if (enc.status !== 'Cancelado' || !enc.cancelado_em) return;
+
+    const checkTime = () => {
+      const cancelTime = new Date(enc.cancelado_em).getTime();
+      const deleteTime = cancelTime + 10 * 60 * 1000;
+      const now = new Date().getTime();
+      const diff = deleteTime - now;
+
+      if (diff <= 0) {
+        onExpired(enc.id);
+      } else {
+        const minutes = Math.floor(diff / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+        setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+      }
+    };
+
+    checkTime();
+    const interval = setInterval(checkTime, 1000);
+    return () => clearInterval(interval);
+  }, [enc, onExpired]);
+
+  if (enc.status !== 'Cancelado' || !enc.cancelado_em || !timeLeft) return null;
+
+  return (
+    <div className="text-[10px] text-red-500 font-bold mt-2 animate-pulse text-center">
+      Deletando em: {timeLeft}
+    </div>
+  );
+};
 
 export default function AdminEncomendas() {
   const [encomendas, setEncomendas] = useState<any[]>([]);
@@ -35,18 +70,64 @@ export default function AdminEncomendas() {
 
   const handleUpdateStatus = async (id: string, novoStatus: string) => {
     try {
+      const updateData: any = { status: novoStatus };
+      if (novoStatus === 'Cancelado') {
+        updateData.cancelado_em = new Date().toISOString();
+      } else {
+        updateData.cancelado_em = null;
+      }
+
       const { error } = await supabase
         .from('encomendas_pedidos')
-        .update({ status: novoStatus })
+        .update(updateData)
         .eq('id', id);
         
       if (error) throw error;
+      
+      const enc = encomendas.find(e => e.id === id);
+      if (enc && enc.usuario_id) {
+        await supabase.from('notificacoes').insert({
+          usuario_id: enc.usuario_id,
+          titulo: `Status da Encomenda`,
+          mensagem: `Sua encomenda do ${enc.marca} ${enc.modelo} mudou para: ${novoStatus}.`,
+          lida: false
+        });
+      }
       
       showAlert({ type: 'success', message: 'Status atualizado com sucesso!' });
       fetchEncomendas();
     } catch (err) {
       console.error('Erro ao atualizar status:', err);
       showAlert({ type: 'error', message: 'Erro ao atualizar status.' });
+    }
+  };
+
+  const handleDeleteManual = async (id: string) => {
+    const confirmed = await showAlert({
+      title: 'Deletar Encomenda',
+      message: 'Tem certeza que deseja deletar permanentemente esta encomenda?',
+      type: 'warning',
+      showConfirm: true
+    });
+    if (!confirmed) return;
+
+    try {
+      await supabase.from('encomendas_pedidos').delete().eq('id', id);
+      setEncomendas(prev => prev.filter(e => e.id !== id));
+      showAlert({ type: 'success', message: 'Encomenda deletada.' });
+    } catch (err) {
+      console.error('Erro ao deletar encomenda manual:', err);
+      showAlert({ type: 'error', message: 'Erro ao deletar encomenda.' });
+    }
+  };
+
+  const handleDeleteCancelado = async (id: string) => {
+    try {
+      await supabase.from('encomendas_pedidos').delete().eq('id', id);
+      setEncomendas(prev => prev.filter(e => e.id !== id));
+      showAlert({ type: 'success', message: 'Encomenda cancelada foi deletada automaticamente.' });
+    } catch (err) {
+      console.error('Erro ao deletar encomenda cancelada:', err);
     }
   };
 
@@ -176,26 +257,36 @@ export default function AdminEncomendas() {
                         <option value="Concluído">Concluído</option>
                         <option value="Cancelado">Cancelado</option>
                       </select>
+                      <CancelTimer enc={enc} onExpired={handleDeleteCancelado} />
                     </td>
                     <td className="px-6 py-4 text-right">
-                      {(() => {
-                        const approvalMsg = enc.encomendas_mensagens?.find((m: any) => m.mensagem.includes('Agora que o pagamento foi aprovado'));
-                        const isExpired = approvalMsg && (Date.now() - new Date(approvalMsg.criado_em).getTime()) > 3 * 60 * 60 * 1000;
-                        
-                        if (isExpired || enc.status === 'Concluído' || enc.status === 'Cancelado') {
-                          return <span className="text-xs text-gray-400 font-medium">Chat Encerrado</span>;
-                        }
+                      <div className="flex items-center justify-end gap-2">
+                        {(() => {
+                          const approvalMsg = enc.encomendas_mensagens?.find((m: any) => m.mensagem.includes('Agora que o pagamento foi aprovado'));
+                          const isExpired = approvalMsg && (Date.now() - new Date(approvalMsg.criado_em).getTime()) > 3 * 60 * 60 * 1000;
+                          
+                          if (isExpired || enc.status === 'Concluído' || enc.status === 'Cancelado') {
+                            return <span className="text-xs text-gray-400 font-medium whitespace-nowrap">Chat Encerrado</span>;
+                          }
 
-                        return (
-                          <button
-                            onClick={() => setActiveChat(enc)}
-                            className="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-vanta-blue/10 text-vanta-blue hover:bg-vanta-blue hover:text-white rounded-lg transition-colors font-bold text-xs"
-                          >
-                            <MessageCircle className="w-4 h-4" />
-                            Chat
-                          </button>
-                        );
-                      })()}
+                          return (
+                            <button
+                              onClick={() => setActiveChat(enc)}
+                              className="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-vanta-blue/10 text-vanta-blue hover:bg-vanta-blue hover:text-white rounded-lg transition-colors font-bold text-xs"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              Chat
+                            </button>
+                          );
+                        })()}
+                        <button
+                          onClick={() => handleDeleteManual(enc.id)}
+                          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                          title="Deletar Encomenda"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
