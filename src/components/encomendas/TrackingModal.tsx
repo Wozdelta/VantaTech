@@ -1,19 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Package, Truck, CheckCircle2, X, AlertCircle, Loader2 } from 'lucide-react';
-
-interface TrackingEvent {
-  data: string;
-  hora: string;
-  local: string;
-  status: string;
-  subStatus?: string[];
-}
-
-interface TrackingData {
-  codigo: string;
-  host: string;
-  eventos: TrackingEvent[];
-}
+import { Package, X, AlertCircle } from 'lucide-react';
+import { getTrackingInfo } from '../../services/tracking/trackingService';
+import { TrackingResponse } from '../../services/tracking/trackingTypes';
+import TrackingTimeline from './TrackingTimeline';
 
 interface TrackingModalProps {
   codigo: string;
@@ -21,62 +10,18 @@ interface TrackingModalProps {
 }
 
 export default function TrackingModal({ codigo, onClose }: TrackingModalProps) {
-  const [trackingData, setTrackingData] = useState<TrackingData | null>(null);
+  const [data, setData] = useState<TrackingResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchTracking() {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        let res;
-        let data;
-        try {
-          // Tenta API principal (LinkeTrack) passando por um Proxy de CORS diferente (allorigins)
-          const targetUrl = encodeURIComponent(`https://linketrack.com/track/json?user=teste&token=1abcd00b2731640e886fb41a8a9671ad1434c599dbaa0a0de9a5aa619f29a83f&codigo=${codigo}`);
-          res = await fetch(`https://api.allorigins.win/raw?url=${targetUrl}&time=${Date.now()}`);
-          if (!res.ok) throw new Error('LinkeTrack Error');
-          data = await res.json();
-        } catch (err) {
-          // Fallback para BrasilAPI
-          res = await fetch(`https://brasilapi.com.br/api/correios/v1/${codigo}`);
-          if (res.status === 404) {
-            setError('O código de rastreio informado não foi encontrado. Ele pode estar incorreto, ter expirado (se for muito antigo) ou os Correios ainda não atualizaram o sistema.');
-            return;
-          }
-          if (!res.ok) throw new Error('BrasilAPI Error');
-          data = await res.json();
-        }
-
-        if (data && data.eventos && data.eventos.length > 0) {
-          setTrackingData(data);
-        } else {
-          setError('Ainda não há atualizações para este código de rastreio ou ele é inválido.');
-        }
-      } catch (err: any) {
-        console.error('Erro ao buscar rastreio:', err);
-        setError('Não foi possível carregar o rastreio. Os servidores podem estar instáveis no momento.');
-      } finally {
-        setLoading(false);
-      }
+    async function loadData() {
+      setLoading(true);
+      const result = await getTrackingInfo(codigo);
+      setData(result);
+      setLoading(false);
     }
-
-    if (codigo) {
-      fetchTracking();
-    }
+    loadData();
   }, [codigo]);
-
-  const getStatusIcon = (status: string, index: number) => {
-    if (index === 0 && status.toLowerCase().includes('entregue')) {
-      return <CheckCircle2 className="w-5 h-5 text-green-500" />;
-    }
-    if (status.toLowerCase().includes('postado')) {
-      return <Package className="w-5 h-5 text-vanta-blue" />;
-    }
-    return <Truck className="w-5 h-5 text-vanta-orange" />;
-  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -96,9 +41,18 @@ export default function TrackingModal({ codigo, onClose }: TrackingModalProps) {
               {codigo}
             </p>
           </div>
+          
+          {data?.success && data.delivered !== undefined && (
+            <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ml-4 ${
+              data.delivered ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+            }`}>
+              {data.delivered ? 'Pedido Entregue' : 'Em transporte'}
+            </span>
+          )}
+
           <button 
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
+            className="p-2 ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -106,14 +60,28 @@ export default function TrackingModal({ codigo, onClose }: TrackingModalProps) {
 
         <div className="p-6 overflow-y-auto custom-scrollbar flex-1 relative">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <Loader2 className="w-10 h-10 text-vanta-blue animate-spin mb-4" />
-              <p className="text-sm font-bold text-gray-500 dark:text-gray-400">Buscando atualizações nos Correios...</p>
+            <div className="flex flex-col gap-6 pl-6 py-4 relative">
+              <div className="absolute left-[39px] top-8 bottom-8 w-0.5 bg-gray-100 dark:bg-gray-700" />
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="relative flex gap-4 animate-pulse">
+                  <div className="relative z-10 flex flex-col items-center">
+                    <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 border-2 border-white dark:border-gray-800" />
+                  </div>
+                  <div className="flex flex-col gap-2 w-full pt-1">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3" />
+                    <div className="flex gap-2 mt-1">
+                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/4" />
+                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/4" />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          ) : error ? (
+          ) : !data?.success ? (
             <div className="flex flex-col items-center justify-center py-8 text-center px-4">
               <AlertCircle className="w-12 h-12 text-vanta-orange mb-4 opacity-80" />
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-6">{error}</p>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-6">{data?.message || 'Erro desconhecido.'}</p>
               <a 
                 href={`https://linketrack.com/track?codigo=${codigo}`}
                 target="_blank"
@@ -124,42 +92,8 @@ export default function TrackingModal({ codigo, onClose }: TrackingModalProps) {
                 Rastrear no site oficial
               </a>
             </div>
-          ) : trackingData?.eventos?.length ? (
-            <div className="relative pl-6 border-l-2 border-gray-100 dark:border-gray-700 space-y-8 my-4">
-              {trackingData.eventos.map((evento, index) => (
-                <div key={index} className="relative">
-                  <div className={`absolute -left-[35px] flex items-center justify-center w-8 h-8 rounded-full border-4 border-white dark:border-gray-800 ${
-                    index === 0 ? 'bg-blue-50 dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-800'
-                  }`}>
-                    {getStatusIcon(evento.status, index)}
-                  </div>
-                  
-                  <div className={`flex flex-col ${index === 0 ? 'opacity-100' : 'opacity-60'}`}>
-                    <span className={`font-bold ${index === 0 ? 'text-gray-900 dark:text-white text-base' : 'text-gray-700 dark:text-gray-300 text-sm'}`}>
-                      {evento.status}
-                    </span>
-                    
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs font-bold text-vanta-blue bg-vanta-blue/10 px-2 py-0.5 rounded">
-                        {evento.data} às {evento.hora}
-                      </span>
-                    </div>
-                    
-                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-1">
-                      📍 {evento.local}
-                    </span>
-                    
-                    {evento.subStatus && evento.subStatus.length > 0 && (
-                      <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 italic border-l-2 border-gray-200 dark:border-gray-600 pl-3">
-                        {evento.subStatus.map((sub, i) => (
-                          <p key={i}>{sub}</p>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+          ) : data.events && data.events.length > 0 ? (
+            <TrackingTimeline events={data.events} />
           ) : (
              <div className="flex flex-col items-center justify-center py-12 text-center">
                <Package className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-4" />
