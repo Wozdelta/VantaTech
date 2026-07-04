@@ -473,57 +473,73 @@ export default function AdminFidelidade() {
               <p className="text-gray-400 text-sm mt-2">Clique no botão acima para adicionar a primeira.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {recompensas.map((rec) => (
-                <div key={rec.id} className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden group">
-                  <div className="aspect-square relative bg-gray-100 dark:bg-gray-800">
-                    {rec.badge && (
-                      <span className={`absolute top-2 left-2 z-10 px-2 py-1 text-xs font-bold rounded-lg shadow-sm ${rec.cupom_valor ? 'bg-white text-vanta-orange shadow-md' : 'bg-vanta-orange text-white'}`}>
-                        {rec.badge}
-                      </span>
-                    )}
-                    {rec.nivel_id && niveis.find(n => n.id === rec.nivel_id) && (
-                      <span 
-                        className="absolute bottom-2 right-2 z-10 px-2 py-1 text-white text-[10px] uppercase tracking-wider font-bold rounded-lg shadow-sm backdrop-blur-sm"
-                        style={{ backgroundColor: niveis.find(n => n.id === rec.nivel_id)?.cor_hex || '#000' }}
-                      >
-                        Exclusivo {niveis.find(n => n.id === rec.nivel_id)?.nome}
-                      </span>
-                    )}
-                    {rec.cupom_valor ? (
-                      <div className="w-full h-full bg-gradient-to-br from-vanta-orange to-orange-600 flex flex-col items-center justify-center text-white p-4">
-                        <Ticket className="w-12 h-12 mb-2 opacity-80" />
-                        <span className="font-black text-2xl">
-                          {rec.cupom_tipo === 'porcentagem' ? `${rec.cupom_valor}%` : `R$ ${rec.cupom_valor}`}
-                        </span>
-                        <span className="text-xs uppercase tracking-widest opacity-80 font-bold mt-1">Desconto</span>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              {recompensas.map((rec) => {
+                const nivel = rec.nivel_id ? niveis.find(n => n.id === rec.nivel_id) : null;
+                const bgCor = nivel?.cor_hex || '#f97316'; // vanta-orange default
+                
+                return (
+                  <div key={rec.id} className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden group flex bg-white dark:bg-gray-800 relative h-28 hover:border-gray-300 dark:hover:border-gray-600 transition-all shadow-sm hover:shadow-md">
+                    {/* Imagem ou Ícone do Cupom */}
+                    <div className="w-28 h-full flex-shrink-0 relative">
+                      {rec.cupom_valor ? (
+                        <div 
+                           className="w-full h-full flex flex-col items-center justify-center text-white"
+                           style={{ backgroundColor: bgCor }}
+                        >
+                          <Ticket className="w-8 h-8 mb-1 opacity-90" />
+                          <span className="font-black text-lg leading-none">
+                            {rec.cupom_tipo === 'porcentagem' ? `${rec.cupom_valor}%` : `R$ ${rec.cupom_valor}`}
+                          </span>
+                        </div>
+                      ) : (
+                        <img src={rec.imagem_url || '/placeholder.png'} alt={rec.nome} className="w-full h-full object-cover" />
+                      )}
+                    </div>
+                    
+                    {/* Conteúdo */}
+                    <div className="p-4 flex-1 flex flex-col justify-center min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <h3 className="font-bold text-gray-900 dark:text-white truncate">{rec.nome}</h3>
+                        {rec.badge && (
+                          <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 whitespace-nowrap flex-shrink-0">
+                            {rec.badge}
+                          </span>
+                        )}
                       </div>
-                    ) : (
-                      <img src={rec.imagem_url} alt={rec.nome} className="w-full h-full object-cover" />
-                    )}
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 backdrop-blur-sm">
+                      
+                      <p className="text-vanta-orange font-black flex items-center gap-1.5 text-sm mb-2">
+                        <Star className="w-4 h-4 fill-vanta-orange" /> {rec.pontos} pts
+                      </p>
+                      
+                      {nivel && (
+                         <span 
+                            className="inline-block px-2 py-0.5 text-white text-[10px] uppercase tracking-wider font-bold rounded-md w-max"
+                            style={{ backgroundColor: nivel.cor_hex }}
+                          >
+                            Exclusivo {nivel.nome}
+                          </span>
+                      )}
+                    </div>
+
+                    {/* Ações Hover */}
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-1.5 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-1.5 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700">
                       <button
                         onClick={() => handleEdit(rec)}
-                        className="p-2 bg-white/20 hover:bg-white text-white hover:text-vanta-blue rounded-lg transition-colors"
+                        className="p-1.5 text-gray-500 hover:text-vanta-blue rounded-md transition-colors"
                       >
-                        <Edit className="w-5 h-5" />
+                        <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(rec.id)}
-                        className="p-2 bg-white/20 hover:bg-red-500 text-white rounded-lg transition-colors"
+                        className="p-1.5 text-gray-500 hover:text-red-500 rounded-md transition-colors"
                       >
-                        <Trash2 className="w-5 h-5" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
-                  <div className="p-4 bg-white dark:bg-gray-800">
-                    <h3 className="font-bold text-gray-900 dark:text-white break-words">{rec.nome}</h3>
-                    <p className="text-vanta-orange font-black mt-1 flex items-center gap-1">
-                      <Star className="w-4 h-4 fill-vanta-orange" /> {rec.pontos} pts
-                    </p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
