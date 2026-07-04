@@ -193,11 +193,10 @@ export default function AdminDashboard() {
           .from('perfis')
           .select('nome_completo, pontos')
           .order('pontos', { ascending: false })
-          .limit(1)
-          .single();
+          .limit(1);
         
-        if (topUserDb) {
-          setTopUser({ nome: topUserDb.nome_completo || 'Sem Nome', pontos: topUserDb.pontos || 0 });
+        if (topUserDb && topUserDb.length > 0) {
+          setTopUser({ nome: topUserDb[0].nome_completo || 'Sem Nome', pontos: topUserDb[0].pontos || 0 });
         }
       } catch (err) {
         console.error('Erro ao buscar receita:', err);
