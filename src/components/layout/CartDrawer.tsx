@@ -160,6 +160,8 @@ export default function CartDrawer() {
   const installmentValue = finalTotal / parcelas;
   const interestValue = finalTotal - baseValueForInstallments;
 
+  const totalPoints = items.reduce((acc, item) => acc + ((item.pointsCost || 0) * item.quantity), 0);
+
   const handleCepChange = async (value: string) => {
     setEndereco({ ...endereco, cep: value });
     const rawCep = value.replace(/\D/g, '');
@@ -428,6 +430,10 @@ export default function CartDrawer() {
 
     message += `*RESUMO FINANCEIRO:*\n`;
     message += `Subtotal: ${formatPrice(cartTotal)}\n`;
+    
+    if (totalPoints > 0) {
+      message += `Pontos Gastos: ${totalPoints.toLocaleString('pt-BR')} pts\n`;
+    }
 
     if (cupomAplicado) {
       message += `Cupom Aplicado (${cupomAplicado.codigo}): - ${formatPrice(cupomDiscount)}\n`;
@@ -1010,6 +1016,15 @@ export default function CartDrawer() {
                   {step === 3 ? formatPrice(finalTotal) : formatPrice(Math.max(0, cartTotal - cupomDiscount))}
                 </span>
               </div>
+              
+              {totalPoints > 0 && (
+                <div className="flex items-center justify-between pt-2 mt-2 border-t border-gray-100 dark:border-gray-800">
+                  <span className="text-gray-700 dark:text-gray-300 font-bold text-sm">Pontos Gastos</span>
+                  <span className="text-lg font-black text-vanta-orange">
+                    {totalPoints.toLocaleString('pt-BR')} pts
+                  </span>
+                </div>
+              )}
             </div>
 
             {step === 1 && (
