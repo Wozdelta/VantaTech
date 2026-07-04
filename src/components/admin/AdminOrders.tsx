@@ -876,6 +876,16 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
                     </div>
                   )}
 
+                  {/* Pontos Utilizados */}
+                  {selectedOrder.itens_pedido?.some(i => i.produto_nome.includes('[Vanta Club]')) && (
+                    <div className="bg-purple-50 dark:bg-purple-900/10 p-4 rounded-xl border border-purple-100 dark:border-purple-900/30 shadow-soft">
+                      <p className="text-xs text-purple-600 dark:text-purple-400 mb-1 font-bold">Pontos Utilizados</p>
+                      <p className="text-sm font-black text-purple-600 dark:text-purple-400">
+                        {selectedOrder.itens_pedido.filter(i => i.produto_nome.includes('[Vanta Club]')).reduce((acc, i) => acc + (Number(i.produto_preco) * i.quantidade), 0)} pts
+                      </p>
+                    </div>
+                  )}
+
                   {/* Frete */}
                   {(selectedOrder as any).frete !== undefined && (selectedOrder as any).frete !== null && (
                     <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-soft">
@@ -940,7 +950,9 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-bold text-gray-900 dark:text-white">
-                          R$ {item.produto_preco?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
+                          {item.produto_nome.includes('[Vanta Club]') 
+                            ? `${item.produto_preco} pontos` 
+                            : `R$ ${item.produto_preco?.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}`}
                         </p>
                         <p className="text-xs text-gray-500">Qtd: {item.quantidade}</p>
                       </div>

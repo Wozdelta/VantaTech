@@ -147,7 +147,7 @@ export default function CartDrawer() {
     if (cupomAplicado.tipo_desconto === 'porcentagem') {
       cupomDiscount = cartTotal * (cupomAplicado.valor_desconto / 100);
     } else {
-      cupomDiscount = cupomAplicado.valor_desconto;
+      cupomDiscount = Math.min(cupomAplicado.valor_desconto, cartTotal);
     }
   }
 
