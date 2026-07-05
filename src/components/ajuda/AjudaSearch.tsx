@@ -63,7 +63,8 @@ export default function AjudaSearch({ onOpenTicket }: { onOpenTicket: () => void
                   {results.map((item, idx) => (
                     <button
                       key={idx}
-                      onClick={() => {
+                      onMouseDown={(e) => {
+                        e.preventDefault(); // Prevents input blur before click registers
                         setShowResults(false);
                         const element = document.getElementById(`faq-${item.idx}-${item.itemIdx}`);
                         if (element) {
