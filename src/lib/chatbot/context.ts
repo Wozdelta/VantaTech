@@ -16,9 +16,15 @@ export function createContext(): ChatContext {
 }
 
 export function updateContext(context: ChatContext, newEntities: Entities, userInput: string, intent?: string): ChatContext {
+  // Se o usuário mudou de produto (ex: de iphone para samsung), apaga o modelo antigo da memória
+  const entitiesBase = { ...context.entities };
+  if (newEntities.produto && entitiesBase.produto && newEntities.produto !== entitiesBase.produto) {
+    delete entitiesBase.modelo;
+  }
+
   // Mescla as novas entidades com as antigas (mantém a memória)
   const updatedEntities = {
-    ...context.entities,
+    ...entitiesBase,
     ...Object.fromEntries(Object.entries(newEntities).filter(([_, v]) => v !== undefined))
   };
 
