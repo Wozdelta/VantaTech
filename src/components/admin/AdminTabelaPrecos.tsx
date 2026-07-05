@@ -650,6 +650,20 @@ export default function AdminTabelaPrecos() {
                             }}
                             onFocus={() => setShowSuggestions(true)}
                             onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Tab' && showSuggestions && newVariant.nome) {
+                                const variacoesExistentes = grupo.variacoes.map(v => v.nome.toLowerCase());
+                                const sugestoesFiltradas = SUGESTOES_VARIEDADES.filter(sug => 
+                                  sug.toLowerCase().includes(newVariant.nome.toLowerCase()) && 
+                                  !variacoesExistentes.includes(sug.toLowerCase())
+                                );
+                                if (sugestoesFiltradas.length > 0) {
+                                  e.preventDefault(); // Previne ir para o próximo campo
+                                  setNewVariant({...newVariant, nome: sugestoesFiltradas[0]});
+                                  setShowSuggestions(false);
+                                }
+                              }
+                            }}
                             className="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-vanta-blue" 
                             placeholder="Nome da variação" 
                           />
