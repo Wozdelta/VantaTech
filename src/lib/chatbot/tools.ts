@@ -87,7 +87,7 @@ export async function executeTool(intent: string, entities: Entities): Promise<T
       }
 
       return {
-        text: `Ótima escolha! Para comprar um ${searchTerm}, recomendo verificar a aba de Produtos para ver nosso estoque atual e as cores disponíveis, como o ${entities.cor || 'modelo padrão'}.`,
+        text: `O valor para o modelo ${searchTerm} ainda não foi definido no nosso sistema. Posso te ajudar em algo mais?`,
       };
     }
   }
