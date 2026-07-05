@@ -68,11 +68,11 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
       let finalData = data as Pedido[];
       if (onlyVantaClub && finalData) {
         finalData = finalData.filter((pedido: any) => 
-          pedido.itens_pedido?.some((item: any) => item.produto_nome.includes('[Vanta Club]')) && Number(pedido.total) === 0
+          pedido.itens_pedido?.some((item: any) => item.produto_nome.includes('[Vanta Club]'))
         );
       } else if (finalData) {
         finalData = finalData.filter((pedido: any) => 
-          !(pedido.itens_pedido?.some((item: any) => item.produto_nome.includes('[Vanta Club]')) && Number(pedido.total) === 0)
+          !(pedido.itens_pedido?.some((item: any) => item.produto_nome.includes('[Vanta Club]')))
         );
       }
       
