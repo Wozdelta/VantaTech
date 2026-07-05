@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getAnalytics, ChatLog } from '../../lib/chatbot/analytics';
+import { getAnalytics, type ChatLog } from '../../lib/chatbot/analytics';
 import { MessageSquare, CheckCircle, XCircle, Activity, Smile, Frown, Bot, Download } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
 
