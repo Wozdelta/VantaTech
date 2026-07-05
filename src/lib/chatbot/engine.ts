@@ -72,7 +72,15 @@ export async function processMessage(
         break;
 
       case 'pagamento':
-        responseText = 'Aceitamos pagamentos via PIX (com desconto especial) e parcelamento no cartão de crédito em até 12x. Todas as transações são seguras!';
+        if (normalized.includes('juro') || normalized.includes('taxa')) {
+          responseText = 'Nossas taxas de parcelamento no cartão são:\n' + 
+            '1x: 3.15%\n2x: 5.39%\n3x: 6.12%\n4x: 6.85%\n5x: 7.57%\n' +
+            '6x: 8.28%\n7x: 8.99%\n8x: 9.69%\n9x: 10.38%\n' +
+            '10x: 11.06%\n11x: 11.74%\n12x: 12.4%\n\n' +
+            'Lembrando que pagamentos via PIX têm desconto especial!';
+        } else {
+          responseText = 'Aceitamos pagamentos via PIX (com desconto especial) e parcelamento no cartão de crédito em até 12x. Todas as transações são seguras!';
+        }
         suggestions = ['Comprar Produto'];
         break;
 
