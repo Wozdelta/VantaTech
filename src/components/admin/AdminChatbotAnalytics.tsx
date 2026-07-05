@@ -210,23 +210,23 @@ export default function AdminChatbotAnalytics() {
               {analytics.recentLogs.map((log: ChatLog) => (
                 <tr key={log.id} className="border-b border-gray-50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                   <td className="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400">
-                    {new Date(log.timestamp).toLocaleString('pt-BR')}
+                    {log.data_hora ? new Date(log.data_hora).toLocaleString('pt-BR') : '-'}
                   </td>
                   <td className="px-6 py-4 font-medium text-gray-900 dark:text-white max-w-[300px] truncate">
-                    "{log.query}"
+                    "{log.pergunta}"
                   </td>
                   <td className="px-6 py-4">
                     <span className="px-2.5 py-1 bg-blue-50 dark:bg-blue-900/20 text-vanta-blue rounded-lg text-xs font-bold uppercase">
-                      {log.intent}
+                      {log.intencao}
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    {log.emotion === 'happy' ? <Smile className="w-5 h-5 text-green-500" /> : 
-                     log.emotion === 'angry' ? <Frown className="w-5 h-5 text-red-500" /> : 
+                    {log.emocao === 'happy' ? <Smile className="w-5 h-5 text-green-500" /> : 
+                     log.emocao === 'angry' ? <Frown className="w-5 h-5 text-red-500" /> : 
                      <span className="text-gray-400">-</span>}
                   </td>
                   <td className="px-6 py-4">
-                    {log.resolved ? (
+                    {log.resolvido ? (
                        <span className="flex items-center gap-1 text-green-600 dark:text-green-400 font-medium">
                          <CheckCircle className="w-4 h-4" /> Resolvido
                        </span>
