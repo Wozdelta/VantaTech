@@ -44,7 +44,7 @@ export const ABBREVIATIONS: Record<string, string> = {
   bae: 'amor', bff: 'melhor amigo', diy: 'faça você mesmo', faq: 'perguntas frequentes', eta: 'tempo estimado de chegada', tba: 'a ser anunciado',
   tbd: 'a ser determinado', fwiw: 'pelo que vale', icymi: 'caso você tenha perdido', tbhq: 'para ser honesto', rofl: 'rolando no chão de rir', lmfao: 'rindo muito',
   ily: 'eu te amo', xoxo: 'beijos e abraços', ty: 'obrigado', thx: 'obrigado', tyvm: 'muito obrigado', yw: 'de nada', np: 'sem problema',
-  gl: 'boa sorte', hf: 'divirta-se', ggwp: 'bom jogo bem jogado', noob: 'novato', n00b: 'novato', pro: 'profissional', hack: 'trapaça',
+  gl: 'boa sorte', hf: 'divirta-se', ggwp: 'bom jogo bem jogado', noob: 'novato', n00b: 'novato', hack: 'trapaça',
   cheat: 'trapaça', lag: 'atraso', bug: 'erro', glitch: 'falha', crash: 'travamento', freeze: 'congelamento', fps: 'quadros por segundo',
   ping: 'latência', dc: 'desconectado', afk: 'ausente', brb: 'já volto', g2g: 'tenho que ir', cya: 'até logo', l8r: 'mais tarde',
   b4: 'antes', 2: 'para', 4: 'por', u: 'você', r: 'são', y: 'por que', 'w/': 'com', 'w/o': 'sem',
