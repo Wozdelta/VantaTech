@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { DollarSign, Plus, Save, Trash2, Edit2, X, Tag, ChevronDown, ChevronUp, Search, TrendingUp, Layers, GripVertical } from 'lucide-react';
+import { DollarSign, Plus, Save, Trash2, Edit2, X, Tag, ChevronDown, ChevronUp, Search, TrendingUp, Layers, GripVertical, Copy } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
 
@@ -324,6 +324,27 @@ export default function AdminTabelaPrecos() {
     return matchMarca && matchSearch;
   });
 
+  const handleCopyGroup = (grupo: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!grupo.variacoes || grupo.variacoes.length === 0) {
+      showAlert({ title: 'Aviso', message: 'Nenhuma variação para copiar.', type: 'error' });
+      return;
+    }
+
+    let text = `📱 *Tabela de Preço: ${grupo.nome}*\n\n`;
+    
+    grupo.variacoes.forEach((v: any) => {
+      const formatado = Number(v.valor_venda).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      text += `• ${grupo.nome} ${v.nome} ➔ *${formatado}*\n`;
+    });
+
+    navigator.clipboard.writeText(text).then(() => {
+      showAlert({ title: 'Copiado!', message: 'Tabela copiada para a área de transferência.', type: 'success' });
+    }).catch(() => {
+      showAlert({ title: 'Erro', message: 'Não foi possível copiar.', type: 'error' });
+    });
+  };
+
   return (
     <div className="space-y-8 animate-fade-in pb-20">
       {/* Header Premium */}
@@ -483,6 +504,13 @@ export default function AdminTabelaPrecos() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
+                    <button 
+                      onClick={(e) => handleCopyGroup(grupo, e)}
+                      className="p-2 text-gray-400 hover:text-vanta-blue hover:bg-vanta-blue/10 rounded-xl transition-colors"
+                      title="Copiar tabela de preços"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
                     <button 
                       onClick={(e) => { e.stopPropagation(); setAddingVariantTo(grupo.id); if (!isExpanded) toggleGroup(grupo.id); }}
                       className="p-2 text-vanta-blue hover:bg-vanta-blue/10 rounded-xl transition-colors font-bold text-sm hidden sm:flex items-center gap-1"
