@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
-import { Users, ShoppingBag, DollarSign, Activity, ListOrdered, BellRing, Package, History, Award, Tag, LogOut, LayoutDashboard, Moon, Sun, ShieldCheck, PackageSearch, MessageCircle } from 'lucide-react';
+import { Users, ShoppingBag, DollarSign, Activity, ListOrdered, BellRing, Package, History, Award, Tag, LogOut, LayoutDashboard, Moon, Sun, ShieldCheck, PackageSearch, MessageCircle, Bot } from 'lucide-react';
 import AdminProducts from '../components/admin/AdminProducts';
 import AdminCategories from '../components/admin/AdminCategories';
 import AdminNotifications from '../components/admin/AdminNotifications';
@@ -17,10 +17,11 @@ import AdminControle from '../components/admin/AdminControle';
 import AdminEncomendas from '../components/admin/AdminEncomendas';
 import AdminTabelaPrecos from '../components/admin/AdminTabelaPrecos';
 import AdminTickets from '../components/admin/AdminTickets';
+import AdminChatbotAnalytics from '../components/admin/AdminChatbotAnalytics';
 
 export default function AdminDashboard() {
   const { user, perfil, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'products' | 'categories' | 'notifications' | 'attributes' | 'sales_history' | 'fidelidade' | 'cupons' | 'controle' | 'encomendas' | 'tabela_precos' | 'tickets'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'products' | 'categories' | 'notifications' | 'attributes' | 'sales_history' | 'fidelidade' | 'cupons' | 'controle' | 'encomendas' | 'tabela_precos' | 'tickets' | 'chatbot'>('overview');
   const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
 
   const toggleTheme = () => {
@@ -275,6 +276,7 @@ export default function AdminDashboard() {
     { id: 'cupons', label: 'Cupons', icon: Tag },
     { id: 'encomendas', label: 'Encomendas', icon: PackageSearch, badge: pendingEncomendasCount },
     { id: 'tabela_precos', label: 'Tabela de Preços', icon: DollarSign },
+    { id: 'chatbot', label: 'Chatbot IA', icon: Bot },
     { id: 'controle', label: 'Controle', icon: ShieldCheck },
   ] as const;
 
@@ -469,6 +471,7 @@ export default function AdminDashboard() {
             {activeTab === 'encomendas' && <AdminEncomendas />}
             {activeTab === 'tabela_precos' && <AdminTabelaPrecos />}
             {activeTab === 'tickets' && <AdminTickets />}
+            {activeTab === 'chatbot' && <AdminChatbotAnalytics />}
             {activeTab === 'controle' && <AdminControle />}
           </div>
         </main>
