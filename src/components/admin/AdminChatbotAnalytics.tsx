@@ -1,23 +1,40 @@
 import { useState, useEffect } from 'react';
 import { getAnalytics, type ChatLog } from '../../lib/chatbot/analytics';
-import { MessageSquare, CheckCircle, XCircle, Activity, Smile, Frown, Bot, Download } from 'lucide-react';
+import { MessageSquare, CheckCircle, XCircle, Activity, Smile, Frown, Bot, Download, Trash2 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
+import { supabase } from '@/lib/supabase';
 
 export default function AdminChatbotAnalytics() {
   const [analytics, setAnalytics] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchLogs = async () => {
+    setLoading(true);
+    const data = await getAnalytics();
+    if (data) setAnalytics(data);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    // Carregar os logs do chatbot armazenados no local storage
-    const data = getAnalytics();
-    if (data) {
-      setAnalytics(data);
-    }
+    fetchLogs();
   }, []);
 
-  if (!analytics) {
+  const handleClearLogs = async () => {
+    if (window.confirm('Tem certeza que deseja limpar todos os logs do chatbot? Essa ação não pode ser desfeita.')) {
+      setLoading(true);
+      await supabase.from('historico_chatbot').delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Deleta todos (hack simples pq delete() precisa de filtro)
+      await fetchLogs();
+    }
+  };
+
+  if (loading) {
+    return <div className="p-8 text-center text-gray-500">Carregando logs do chatbot...</div>;
+  }
+
+  if (!analytics || analytics.total === 0) {
     return (
       <div className="p-8 text-center text-gray-500">
-        Nenhum dado de chatbot disponível. Interaja com o bot para gerar logs.
+        Nenhum log do chatbot disponível. Interaja com o bot para gerar dados.
       </div>
     );
   }
@@ -53,13 +70,22 @@ export default function AdminChatbotAnalytics() {
           <Bot className="w-8 h-8 text-vanta-blue" />
           Desempenho do Chatbot (IA)
         </h2>
-        <button 
-          onClick={exportData}
-          className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium transition-colors"
-        >
-          <Download className="w-4 h-4" />
-          Exportar Logs
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handleClearLogs}
+            className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-xl font-medium transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+            Limpar Logs
+          </button>
+          <button 
+            onClick={exportData}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            Exportar Logs
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

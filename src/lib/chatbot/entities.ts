@@ -40,6 +40,14 @@ export function extractEntities(normalizedText: string): Entities {
       if (modeloParts.length > 0) {
         entities.modelo = modeloParts.join(' ');
       }
+    } else if (!entities.produto && !entities.modelo) {
+      // Tentar extrair um modelo isolado (ex: o usuário disse só "e do 15?")
+      if (/^\d{1,2}$/.test(word) || /^[sS]\d{2}$/.test(word) || ['pro', 'max', 'ultra', 'plus'].includes(word)) {
+        let standaloneModel = [word];
+        if (words[i+1] && ['pro', 'max', 'ultra', 'plus'].includes(words[i+1])) standaloneModel.push(words[i+1]);
+        if (words[i+2] && ['pro', 'max', 'ultra', 'plus'].includes(words[i+2])) standaloneModel.push(words[i+2]);
+        entities.modelo = standaloneModel.join(' ');
+      }
     }
 
     // Detectar cor

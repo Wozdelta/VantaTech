@@ -106,10 +106,10 @@ export async function processMessage(
 
   // 8. Log Analytics
   logInteraction({
-    query: userInput,
-    intent,
-    resolved,
-    emotion
+    pergunta: userInput,
+    intencao: intent,
+    resolvido: resolved,
+    emocao: emotion
   });
 
   const t1 = performance.now();
