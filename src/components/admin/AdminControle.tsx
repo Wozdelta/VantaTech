@@ -93,6 +93,25 @@ export default function AdminControle() {
     </div>
   );
 
+  const handleSetAll = (type: 'todos' | 'admin') => {
+    const isPublic = type === 'todos';
+    const msg = isPublic 
+      ? 'Tem certeza que deseja deixar TODOS os módulos PÚBLICOS para seus clientes?' 
+      : 'Tem certeza que deseja bloquear e deixar TODOS os módulos PRIVADOS (visíveis apenas para administradores)?';
+      
+    if (window.confirm(msg)) {
+      setLocalSettings({
+        acesso_loja: type,
+        acesso_pedidos: type,
+        acesso_cupons: type,
+        acesso_fidelidade: type,
+        acesso_perfil: type,
+        acesso_encomendas: type,
+        acesso_ajuda: type,
+      });
+    }
+  };
+
   return (
     <div className="space-y-8 max-w-5xl animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
@@ -106,6 +125,24 @@ export default function AdminControle() {
           <p className="text-gray-500 text-sm mt-2 max-w-2xl leading-relaxed">
             Configure quem tem acesso a cada módulo do sistema. Módulos definidos como <span className="font-bold text-gray-700 dark:text-gray-300">"Público"</span> ficam visíveis para todos os clientes, enquanto módulos em <span className="font-bold text-gray-700 dark:text-gray-300">"Privado"</span> são visíveis apenas para administradores.
           </p>
+          
+          <div className="mt-5 flex flex-wrap items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700/50 w-fit">
+            <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Ação Rápida:</span>
+            <button 
+              onClick={() => handleSetAll('todos')}
+              className="px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg text-xs font-bold hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors flex items-center gap-1.5"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              Tornar Tudo Público
+            </button>
+            <button 
+              onClick={() => handleSetAll('admin')}
+              className="px-3 py-1.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg text-xs font-bold hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors flex items-center gap-1.5"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              Tornar Tudo Privado
+            </button>
+          </div>
         </div>
         <button
           onClick={handleSave}
