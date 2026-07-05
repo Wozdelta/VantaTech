@@ -93,22 +93,27 @@ export default function AdminControle() {
     </div>
   );
 
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmType, setConfirmType] = useState<'todos' | 'admin' | null>(null);
+
   const handleSetAll = (type: 'todos' | 'admin') => {
-    const isPublic = type === 'todos';
-    const msg = isPublic 
-      ? 'Tem certeza que deseja deixar TODOS os módulos PÚBLICOS para seus clientes?' 
-      : 'Tem certeza que deseja bloquear e deixar TODOS os módulos PRIVADOS (visíveis apenas para administradores)?';
-      
-    if (window.confirm(msg)) {
+    setConfirmType(type);
+    setShowConfirmModal(true);
+  };
+
+  const executeSetAll = () => {
+    if (confirmType) {
       setLocalSettings({
-        acesso_loja: type,
-        acesso_pedidos: type,
-        acesso_cupons: type,
-        acesso_fidelidade: type,
-        acesso_perfil: type,
-        acesso_encomendas: type,
-        acesso_ajuda: type,
+        acesso_loja: confirmType,
+        acesso_pedidos: confirmType,
+        acesso_cupons: confirmType,
+        acesso_fidelidade: confirmType,
+        acesso_perfil: confirmType,
+        acesso_encomendas: confirmType,
+        acesso_ajuda: confirmType,
       });
+      setShowConfirmModal(false);
+      setConfirmType(null);
     }
   };
 
@@ -225,6 +230,50 @@ export default function AdminControle() {
           onChange={(val: any) => setLocalSettings(prev => ({ ...prev, acesso_ajuda: val }))}
         />
       </div>
+
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md p-6 sm:p-8 shadow-2xl relative overflow-hidden animate-slide-up">
+            <div className={`absolute top-0 left-0 right-0 h-2 ${confirmType === 'todos' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-6 mx-auto ${
+              confirmType === 'todos' ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+            }`}>
+              {confirmType === 'todos' ? <Globe className="w-8 h-8" /> : <Lock className="w-8 h-8" />}
+            </div>
+
+            <h3 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-2">
+              {confirmType === 'todos' ? 'Tornar Tudo Público?' : 'Tornar Tudo Privado?'}
+            </h3>
+            
+            <p className="text-gray-500 dark:text-gray-400 text-center mb-8 text-sm">
+              {confirmType === 'todos' 
+                ? 'Tem certeza que deseja deixar TODOS os módulos visíveis para todos os clientes?' 
+                : 'Tem certeza que deseja bloquear TODOS os módulos apenas para administradores?'}
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setConfirmType(null);
+                }}
+                className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={executeSetAll}
+                className={`flex-1 px-4 py-3 text-white rounded-xl font-bold transition-colors ${
+                  confirmType === 'todos' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'
+                }`}
+              >
+                Sim, confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
