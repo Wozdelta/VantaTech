@@ -671,7 +671,8 @@ export default function AdminTabelaPrecos() {
                                     <button
                                       key={sug}
                                       className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium text-gray-700 dark:text-gray-300 border-b border-gray-50 dark:border-gray-700/50 last:border-0"
-                                      onClick={() => {
+                                      onMouseDown={(e) => {
+                                        e.preventDefault(); // Evita que o input perca o foco antes do clique
                                         setNewVariant({...newVariant, nome: sug});
                                         setShowSuggestions(false);
                                       }}
