@@ -8,6 +8,8 @@ export default function AdminChatbotAnalytics() {
   const [analytics, setAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [filterIntent, setFilterIntent] = useState<string | null>(null);
+  const [filterEmotion, setFilterEmotion] = useState<string | null>(null);
 
   const fetchLogs = async () => {
     setLoading(true);
@@ -149,6 +151,8 @@ export default function AdminChatbotAnalytics() {
                     paddingAngle={5}
                     dataKey="value"
                     stroke="none"
+                    onClick={(data) => setFilterIntent(filterIntent === data.name.toLowerCase() ? null : data.name.toLowerCase())}
+                    className="cursor-pointer hover:opacity-80 transition-opacity"
                   >
                     {intentData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -193,6 +197,16 @@ export default function AdminChatbotAnalytics() {
                     paddingAngle={5}
                     dataKey="value"
                     stroke="none"
+                    onClick={(data) => {
+                      const emotionMap: Record<string, string> = {
+                        'Feliz / Satisfeito': 'happy',
+                        'Neutro': 'neutral',
+                        'Irritado / Frustrado': 'angry'
+                      };
+                      const emotionValue = emotionMap[data.name];
+                      setFilterEmotion(filterEmotion === emotionValue ? null : emotionValue);
+                    }}
+                    className="cursor-pointer hover:opacity-80 transition-opacity"
                   >
                     {emotionData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
@@ -226,8 +240,20 @@ export default function AdminChatbotAnalytics() {
 
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Últimas Interações (Log em Tempo Real)</h3>
-          <span className="text-xs font-medium text-gray-500">Mostrando últimas 50 mensagens</span>
+          <div className="flex items-center gap-4">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Últimas Interações (Log em Tempo Real)</h3>
+            {(filterIntent || filterEmotion) && (
+              <button 
+                onClick={() => { setFilterIntent(null); setFilterEmotion(null); }}
+                className="text-xs px-2 py-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors font-medium flex items-center gap-1"
+              >
+                <XCircle className="w-3 h-3" /> Limpar Filtro
+              </button>
+            )}
+          </div>
+          <span className="text-xs font-medium text-gray-500">
+            {filterIntent || filterEmotion ? 'Mostrando resultados filtrados' : 'Mostrando últimas 50 mensagens'}
+          </span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
@@ -241,7 +267,10 @@ export default function AdminChatbotAnalytics() {
               </tr>
             </thead>
             <tbody>
-              {analytics.recentLogs.map((log: ChatLog) => (
+              {analytics.recentLogs
+                .filter((log: ChatLog) => !filterIntent || log.intencao === filterIntent)
+                .filter((log: ChatLog) => !filterEmotion || log.emocao === filterEmotion)
+                .map((log: ChatLog) => (
                 <tr key={log.id} className="border-b border-gray-50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                   <td className="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400">
                     {log.data_hora ? new Date(log.data_hora).toLocaleString('pt-BR') : '-'}
@@ -272,9 +301,13 @@ export default function AdminChatbotAnalytics() {
                   </td>
                 </tr>
               ))}
-              {analytics.recentLogs.length === 0 && (
+              {analytics.recentLogs
+                .filter((log: ChatLog) => !filterIntent || log.intencao === filterIntent)
+                .filter((log: ChatLog) => !filterEmotion || log.emocao === filterEmotion).length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">Nenhuma interação registrada ainda.</td>
+                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                    Nenhuma interação encontrada para os filtros selecionados.
+                  </td>
                 </tr>
               )}
             </tbody>
