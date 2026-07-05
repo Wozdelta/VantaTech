@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Bell, ShoppingCart, User, Menu, X, Smartphone, Trash2, Moon, Sun, Settings, Package, Ticket, Crown, LayoutDashboard, HelpCircle, LogOut } from 'lucide-react';
+import { Search, Bell, ShoppingCart, User, Menu, X, Smartphone, Trash2, Moon, Sun, Settings, Package, Ticket, Crown, LayoutDashboard, HelpCircle, LogOut, Lock } from 'lucide-react';
 import { FaWhatsapp, FaInstagram } from 'react-icons/fa6';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
