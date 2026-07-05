@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useSettings } from '../../contexts/SettingsContext';
 import { ShieldCheck, Save, Loader2, Store, ShoppingBag, Ticket, Award, UserCircle, Globe, Lock, PackagePlus, HelpCircle } from 'lucide-react';
 import { useAlert } from '../../contexts/AlertContext';
@@ -231,8 +232,8 @@ export default function AdminControle() {
         />
       </div>
 
-      {showConfirmModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+      {showConfirmModal && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in" style={{ zIndex: 9999 }}>
           <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md p-6 sm:p-8 shadow-2xl relative overflow-hidden animate-slide-up">
             <div className={`absolute top-0 left-0 right-0 h-2 ${confirmType === 'todos' ? 'bg-green-500' : 'bg-red-500'}`}></div>
             
@@ -272,7 +273,8 @@ export default function AdminControle() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
