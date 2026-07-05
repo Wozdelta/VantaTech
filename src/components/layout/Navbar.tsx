@@ -306,7 +306,7 @@ export default function Navbar() {
         ) : (
           <div className="flex items-center justify-between px-3 py-2.5 text-sm text-gray-400 dark:text-gray-600 rounded-xl font-medium cursor-not-allowed select-none">
             <div className="flex items-center gap-3"><Ticket className="w-4 h-4 opacity-50" /> Meus Cupons</div>
-            <span className="text-[9px] font-bold bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-500 uppercase">Em breve</span>
+            <Lock className="w-3 h-3 opacity-50" />
           </div>
         )}
 
@@ -316,12 +316,9 @@ export default function Navbar() {
             Clube Vanta
           </Link>
         ) : (
-          <div className="flex items-center justify-between px-3 py-2.5 text-sm text-gray-400 dark:text-gray-600 rounded-xl font-medium cursor-not-allowed select-none gap-2">
-            <div className="flex items-center gap-3 overflow-hidden">
-              <Crown className="w-4 h-4 opacity-50 shrink-0" /> 
-              <span className="truncate">Clube Vanta</span>
-            </div>
-            <span className="shrink-0 whitespace-nowrap text-[9px] font-bold bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-500 uppercase">Em breve</span>
+          <div className="flex items-center justify-between px-3 py-2.5 text-sm text-gray-400 dark:text-gray-600 rounded-xl font-medium cursor-not-allowed select-none">
+            <div className="flex items-center gap-3"><Crown className="w-4 h-4 opacity-50" /> Clube Vanta</div>
+            <Lock className="w-3 h-3 opacity-50" />
           </div>
         )}
         
@@ -331,12 +328,9 @@ export default function Navbar() {
             Encomendar um Aparelho
           </Link>
         ) : (
-          <div className="flex items-center justify-between px-3 py-2.5 text-sm text-gray-400 dark:text-gray-600 rounded-xl font-medium cursor-not-allowed select-none gap-2">
-            <div className="flex items-center gap-3 overflow-hidden">
-              <Smartphone className="w-4 h-4 opacity-50 shrink-0" /> 
-              <span className="truncate">Encomendar um Aparelho</span>
-            </div>
-            <span className="shrink-0 whitespace-nowrap text-[9px] font-bold bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-500 uppercase">Em breve</span>
+          <div className="flex items-center justify-between px-3 py-2.5 text-sm text-gray-400 dark:text-gray-600 rounded-xl font-medium cursor-not-allowed select-none">
+            <div className="flex items-center gap-3"><Smartphone className="w-4 h-4 opacity-50" /> Encomendar um Aparelho</div>
+            <Lock className="w-3 h-3 opacity-50" />
           </div>
         )}
         </>
@@ -357,7 +351,7 @@ export default function Navbar() {
         ) : (
           <div className="flex items-center justify-between px-3 py-2.5 text-sm text-gray-400 dark:text-gray-600 rounded-xl font-medium cursor-not-allowed select-none">
             <div className="flex items-center gap-3"><HelpCircle className="w-4 h-4 opacity-50" /> Ajuda</div>
-            <span className="text-[9px] font-bold bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded text-gray-500 uppercase">Em breve</span>
+            <Lock className="w-3 h-3 opacity-50" />
           </div>
         )}
 
