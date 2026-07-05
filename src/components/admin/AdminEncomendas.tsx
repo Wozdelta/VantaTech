@@ -240,30 +240,36 @@ export default function AdminEncomendas() {
                 {filtered.map(enc => (
                   <tr key={enc.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                     <td className="px-6 py-4">
-                      <div className="font-bold">{enc.perfis?.nome_completo || 'Desconhecido'}</div>
+                      <div className="font-bold text-gray-900 dark:text-white max-w-[150px] truncate" title={enc.perfis?.nome_completo || 'Desconhecido'}>
+                        {enc.perfis?.nome_completo || 'Desconhecido'}
+                      </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="font-bold text-gray-900 dark:text-white">{enc.marca} {enc.modelo}</div>
-                      <div className="text-xs inline-block mt-1 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">{enc.estado}</div>
+                      <div className="font-bold text-gray-900 dark:text-white max-w-[180px] break-words line-clamp-2" title={`${enc.marca} ${enc.modelo}`}>
+                        {enc.marca} {enc.modelo}
+                      </div>
+                      <div className="text-[10px] inline-block mt-1.5 font-bold text-gray-500 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-2 py-0.5 rounded-md">
+                        {enc.estado}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 text-xs space-y-1">
-                      <div><span className="font-bold">Cor:</span> {enc.cor || '-'}</div>
-                      <div><span className="font-bold">Armaz.:</span> {enc.armazenamento || '-'}</div>
+                    <td className="px-6 py-4 text-[11px] space-y-1.5">
+                      <div className="flex items-center gap-1.5"><span className="font-bold text-gray-400 uppercase">Cor:</span> <span className="font-medium text-gray-700 dark:text-gray-300 truncate max-w-[100px]" title={enc.cor || '-'}>{enc.cor || '-'}</span></div>
+                      <div className="flex items-center gap-1.5"><span className="font-bold text-gray-400 uppercase">Armaz:</span> <span className="font-medium text-gray-700 dark:text-gray-300 truncate max-w-[100px]" title={enc.armazenamento || '-'}>{enc.armazenamento || '-'}</span></div>
                     </td>
                     <td className="px-6 py-4">
                       {enc.valor_total ? (
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 w-10">Total</span>
-                            <span className="font-black text-sm text-gray-900 dark:text-white">{Number(enc.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                        <div className="flex flex-col gap-1.5 w-max">
+                          <div className="flex items-center justify-between gap-4">
+                            <span className="text-[10px] uppercase font-bold text-gray-400">Total</span>
+                            <span className="font-black text-sm text-gray-900 dark:text-white whitespace-nowrap">{Number(enc.valor_total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] uppercase font-bold text-gray-400 dark:text-gray-500 w-10">Sinal</span>
-                            <span className="font-bold text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-md">{Number(enc.valor_sinal).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                          <div className="flex items-center justify-between gap-4">
+                            <span className="text-[10px] uppercase font-bold text-gray-400">Sinal</span>
+                            <span className="font-bold text-[11px] text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-md whitespace-nowrap border border-green-100 dark:border-green-800">{Number(enc.valor_sinal).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                           </div>
                         </div>
                       ) : (
-                        <span className="text-xs text-gray-400 dark:text-gray-600 italic font-medium">Em negociação...</span>
+                        <span className="text-[11px] text-orange-500 bg-orange-50 dark:bg-orange-900/20 px-2 py-1 border border-orange-100 dark:border-orange-800 rounded-md font-bold whitespace-nowrap">Em negociação</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-xs whitespace-nowrap">
