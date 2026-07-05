@@ -1,4 +1,4 @@
-import { Entities } from './entities';
+import { type Entities } from './entities';
 
 export interface ChatContext {
   userId?: string;
