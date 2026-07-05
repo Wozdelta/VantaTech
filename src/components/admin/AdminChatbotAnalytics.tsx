@@ -138,22 +138,39 @@ export default function AdminChatbotAnalytics() {
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Assuntos Mais Frequentes</h3>
           {intentData.length > 0 ? (
-            <div className="h-64">
+            <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={intentData}
-                    innerRadius={60}
-                    outerRadius={80}
+                    innerRadius={75}
+                    outerRadius={95}
+                    cornerRadius={8}
                     paddingAngle={5}
                     dataKey="value"
+                    stroke="none"
                   >
                     {intentData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <RechartsTooltip />
-                  <Legend />
+                  <RechartsTooltip 
+                    contentStyle={{ 
+                      borderRadius: '16px', 
+                      border: 'none', 
+                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                      backgroundColor: 'var(--tw-colors-white, #fff)',
+                      color: '#1f2937',
+                      fontWeight: 'bold'
+                    }}
+                    itemStyle={{ color: '#4b5563' }}
+                  />
+                  <Legend 
+                    verticalAlign="bottom" 
+                    iconType="circle"
+                    wrapperStyle={{ paddingTop: '20px' }}
+                    formatter={(value) => <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 ml-1">{value}</span>}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -165,22 +182,39 @@ export default function AdminChatbotAnalytics() {
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Sentimento do Cliente</h3>
           {emotionData.length > 0 ? (
-            <div className="h-64">
+            <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={emotionData}
-                    innerRadius={60}
-                    outerRadius={80}
+                    innerRadius={75}
+                    outerRadius={95}
+                    cornerRadius={8}
                     paddingAngle={5}
                     dataKey="value"
+                    stroke="none"
                   >
                     {emotionData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <RechartsTooltip />
-                  <Legend />
+                  <RechartsTooltip 
+                    contentStyle={{ 
+                      borderRadius: '16px', 
+                      border: 'none', 
+                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                      backgroundColor: 'var(--tw-colors-white, #fff)',
+                      color: '#1f2937',
+                      fontWeight: 'bold'
+                    }}
+                    itemStyle={{ color: '#4b5563' }}
+                  />
+                  <Legend 
+                    verticalAlign="bottom" 
+                    iconType="circle"
+                    wrapperStyle={{ paddingTop: '20px' }}
+                    formatter={(value) => <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 ml-1">{value}</span>}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
