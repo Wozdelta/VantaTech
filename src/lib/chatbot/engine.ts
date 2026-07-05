@@ -1,6 +1,6 @@
 import { normalizeText, detectEmotion } from './normalizer';
 import { correctSpelling } from './spelling';
-import { extractEntities, type Entities } from './entities';
+import { extractEntities } from './entities';
 import { classifyIntent, type Intent } from './intent';
 import { type ChatContext, updateContext } from './context';
 import { executeTool, type ToolResult } from './tools';
