@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Ticket, Copy, ThumbsUp, ThumbsDown, Package, Check, RefreshCw } from 'lucide-react';
-import { processMessage, ChatResponse } from '../lib/chatbot/engine';
-import { ChatContext, createContext } from '../lib/chatbot/context';
+import { processMessage, ChatResponse } from '../../lib/chatbot/engine';
+import { ChatContext, createContext } from '../../lib/chatbot/context';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
