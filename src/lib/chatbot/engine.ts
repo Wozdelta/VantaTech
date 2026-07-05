@@ -2,7 +2,7 @@ import { normalizeText, detectEmotion } from './normalizer';
 import { correctSpelling } from './spelling';
 import { extractEntities, type Entities } from './entities';
 import { classifyIntent, type Intent } from './intent';
-import { ChatContext, updateContext } from './context';
+import { type ChatContext, updateContext } from './context';
 import { executeTool, type ToolResult } from './tools';
 import { getRandomResponse, GREETINGS, FALLBACK_RESPONSES, TICKET_OFFER } from './responses';
 import { logInteraction } from './analytics';
