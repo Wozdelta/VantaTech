@@ -61,7 +61,7 @@ export default function AdminDashboard() {
 
       if (pendingPedidos) {
         pendingPedidos.forEach((p: any) => {
-          if (Number(p.total) === 0 && p.itens_pedido?.some((i: any) => i.produto_nome.includes('[Vanta Club]'))) {
+          if (p.itens_pedido?.some((i: any) => i.produto_nome.includes('[Vanta Club]'))) {
             fidelidadeC++;
           } else {
             regularC++;

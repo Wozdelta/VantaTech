@@ -90,7 +90,7 @@ export default function AdminFidelidade() {
         
       if (data) {
         const count = data.filter((p: any) => 
-          Number(p.total) === 0 && p.itens_pedido?.some((i: any) => i.produto_nome.includes('[Vanta Club]'))
+          p.itens_pedido?.some((i: any) => i.produto_nome.includes('[Vanta Club]'))
         ).length;
         setPendingResgatesCount(count);
       }
