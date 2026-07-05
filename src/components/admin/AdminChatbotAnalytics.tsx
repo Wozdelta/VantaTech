@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 export default function AdminChatbotAnalytics() {
   const [analytics, setAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const fetchLogs = async () => {
     setLoading(true);
@@ -19,12 +20,11 @@ export default function AdminChatbotAnalytics() {
     fetchLogs();
   }, []);
 
-  const handleClearLogs = async () => {
-    if (window.confirm('Tem certeza que deseja limpar todos os logs do chatbot? Essa ação não pode ser desfeita.')) {
-      setLoading(true);
-      await supabase.from('historico_chatbot').delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Deleta todos (hack simples pq delete() precisa de filtro)
-      await fetchLogs();
-    }
+  const confirmClearLogs = async () => {
+    setShowConfirm(false);
+    setLoading(true);
+    await supabase.from('historico_chatbot').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await fetchLogs();
   };
 
   if (loading) {
@@ -128,7 +128,7 @@ export default function AdminChatbotAnalytics() {
             <XCircle className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Fails (Necessitou Ticket)</p>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Fallback (Ticket)</p>
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.unresolved}</h3>
           </div>
         </div>
@@ -247,6 +247,37 @@ export default function AdminChatbotAnalytics() {
           </table>
         </div>
       </div>
+
+      {/* Modal de Confirmação de Limpeza de Logs */}
+      {showConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 max-w-md w-full shadow-2xl border border-gray-100 dark:border-gray-800 scale-in-center">
+            <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-6">
+              <Trash2 className="w-8 h-8 text-red-600 dark:text-red-500" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white text-center mb-4">
+              Limpar todos os logs?
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 text-center mb-8">
+              Tem certeza que deseja apagar todo o histórico de interações do chatbot? Esta ação é permanente e não poderá ser desfeita.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="flex-1 px-6 py-3 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-xl font-bold transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmClearLogs}
+                className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-red-500/30 hover:shadow-red-500/50"
+              >
+                Sim, Limpar Tudo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -16,9 +16,16 @@ export function createContext(): ChatContext {
 }
 
 export function updateContext(context: ChatContext, newEntities: Entities, userInput: string, intent?: string): ChatContext {
+  const normalizedInput = userInput.toLowerCase();
+  
   // Se o usuário mudou de produto (ex: de iphone para samsung), apaga o modelo antigo da memória
   const entitiesBase = { ...context.entities };
   if (newEntities.produto && entitiesBase.produto && newEntities.produto !== entitiesBase.produto) {
+    delete entitiesBase.modelo;
+  }
+
+  // Se o usuário pedir explicitamente por mais/outros modelos, limpamos o modelo atual para focar no produto todo
+  if (normalizedInput.includes('mais modelos') || normalizedInput.includes('outros modelos') || normalizedInput.includes('quais modelos')) {
     delete entitiesBase.modelo;
   }
 
