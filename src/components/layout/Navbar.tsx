@@ -26,6 +26,7 @@ export default function Navbar() {
   const showCupons = settings.acesso_cupons === 'todos' || perfil?.cargo === 'Admin';
   const showEncomendas = settings.acesso_encomendas === 'todos' || perfil?.cargo === 'Admin';
   const showAjuda = settings.acesso_ajuda === 'todos' || perfil?.cargo === 'Admin';
+  const showPedidos = settings.acesso_pedidos === 'todos' || perfil?.cargo === 'Admin';
 
   useEffect(() => {
     fetchCategories();
@@ -285,10 +286,17 @@ export default function Navbar() {
               <Settings className="w-4 h-4 text-gray-400 group-hover:text-vanta-blue transition-colors" />
               Configurar Perfil
             </Link>
-        <Link to="/pedidos" onClick={() => closeMenus()} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-vanta-blue rounded-xl transition-colors font-medium group">
-          <Package className="w-4 h-4 text-gray-400 group-hover:text-vanta-blue transition-colors" />
-          Meus Pedidos
-        </Link>
+        {showPedidos ? (
+          <Link to="/pedidos" onClick={() => closeMenus()} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-vanta-blue rounded-xl transition-colors font-medium group">
+            <Package className="w-4 h-4 text-gray-400 group-hover:text-vanta-blue transition-colors" />
+            Meus Pedidos
+          </Link>
+        ) : (
+          <div className="flex items-center justify-between px-3 py-2.5 text-sm text-gray-400 dark:text-gray-600 rounded-xl font-medium cursor-not-allowed select-none">
+            <div className="flex items-center gap-3"><Package className="w-4 h-4 opacity-50" /> Meus Pedidos</div>
+            <Lock className="w-3 h-3 opacity-50" />
+          </div>
+        )}
         
         {showCupons ? (
           <Link to="/cupons" onClick={() => closeMenus()} className="flex items-center gap-3 px-3 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 hover:text-vanta-blue rounded-xl transition-colors font-medium group">
