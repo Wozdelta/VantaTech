@@ -30,7 +30,7 @@ export const ABBREVIATIONS: Record<string, string> = {
   pqp: 'puta que pariu', fdp: 'filho da puta', krl: 'caralho', vtnc: 'vai tomar no cu', vsf: 'vai se foder', tnc: 'tomar no cu',
   tomanocu: 'tomar no cu', crlh: 'caralho', kra: 'cara', man: 'mano', mn: 'mano', bro: 'brother', s: 'sim',
   ss: 'sim', y: 'sim', yep: 'sim', ofc: 'claro', crtz: 'certeza', bl: 'beleza', fmz: 'firmeza', sdds: 'saudades',
-  bj: 'beijo', bjs: 'beijos', abs: 'abraços', flws: 'falou', te+ : 'até mais', t+: 'até mais', dnd: 'de nada',
+  bj: 'beijo', bjs: 'beijos', abs: 'abraços', flws: 'falou', 'te+': 'até mais', 't+': 'até mais', dnd: 'de nada',
   magina: 'imagina', dmr: 'demorou', partiu: 'fui', gg: 'good game', wp: 'well played', np: 'no problem', rlx: 'relaxa',
   sussa: 'suave', suave: 'tranquilo', deboa: 'tranquilo', vddr: 'verdadeiro', fka: 'falso', fake: 'falso', br: 'brasil',
   pt: 'português', en: 'inglês', sp: 'são paulo', rj: 'rio de janeiro', mg: 'minas gerais', rsrs: 'risos', hehe: 'risos',
