@@ -446,11 +446,11 @@ export default function ProductDetails() {
                 }}
               >
                 {allImages.map((url, i) => (
-                  <div key={i} className="flex-shrink-0 w-full h-full flex items-center justify-center p-6 lg:p-8 pointer-events-none">
+                  <div key={i} className="flex-shrink-0 w-full h-full flex items-center justify-center pointer-events-none">
                     <img 
                       src={url || '/Phone.png'} 
                       alt={`${product.nome} - Imagem ${i + 1}`} 
-                      className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal pointer-events-none drop-shadow-sm"
+                      className="w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal pointer-events-none drop-shadow-sm"
                       draggable="false"
                     />
                   </div>
@@ -471,9 +471,9 @@ export default function ProductDetails() {
                   <button 
                     key={index}
                     onClick={() => setMainImage(url)}
-                    className={`flex-shrink-0 w-20 h-20 bg-gray-50 dark:bg-gray-900 rounded-2xl p-2 border-2 transition-all ${mainImage === url ? 'border-vanta-blue' : 'border-transparent hover:border-gray-300 dark:hover:border-gray-700'}`}
+                    className={`flex-shrink-0 w-20 h-20 bg-gray-50 dark:bg-gray-900 rounded-2xl border-2 transition-all overflow-hidden ${mainImage === url ? 'border-vanta-blue' : 'border-transparent hover:border-gray-300 dark:hover:border-gray-700'}`}
                   >
-                    <img src={url} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" alt={`Miniatura ${index+1}`} />
+                    <img src={url} className="w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal rounded-xl" alt={`Miniatura ${index+1}`} />
                   </button>
                 ))}
               </div>
