@@ -895,25 +895,26 @@ export default function CartDrawer() {
                     
                     <div className="space-y-3">
                       {adicionaisDisponiveis.map((acessorio) => {
-                        const inCart = items.some(i => i.id === acessorio.id);
+                        const cartItem = items.find(i => i.productId === acessorio.id);
+                        const inCart = !!cartItem;
                         return (
-                          <div key={acessorio.id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-lg shadow-sm">
-                            <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 bg-gray-50 dark:bg-gray-800 rounded-md overflow-hidden p-1 shrink-0">
+                          <div key={acessorio.id} className="flex items-center justify-between p-4 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-vanta-blue/30 rounded-2xl shadow-sm transition-all group">
+                            <div className="flex items-center gap-4">
+                              <div className="w-14 h-14 bg-gray-50 dark:bg-gray-800/80 rounded-xl overflow-hidden p-1.5 shrink-0 group-hover:scale-105 transition-transform">
                                 <img src={acessorio.imagem_url || '/Phone.png'} alt={acessorio.nome} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
                               </div>
                               <div className="flex flex-col">
-                                <span className="font-bold text-sm text-gray-900 dark:text-white line-clamp-1 max-w-[150px]">{acessorio.nome}</span>
-                                <span className="text-xs font-black text-vanta-blue">{Number(acessorio.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                                <span className="font-bold text-sm text-gray-900 dark:text-white line-clamp-1 max-w-[160px]">{acessorio.nome}</span>
+                                <span className="text-sm font-black text-vanta-blue mt-0.5">{Number(acessorio.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
                               </div>
                             </div>
                             
                             {inCart ? (
                               <button 
-                                disabled
-                                className="px-3 py-1.5 bg-green-100 text-green-700 text-xs font-bold rounded-lg flex items-center gap-1 opacity-70"
+                                onClick={() => removeFromCart(cartItem.id)}
+                                className="px-3.5 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 text-xs font-black rounded-xl flex items-center gap-1.5 transition-colors"
                               >
-                                <CheckCircle className="w-3.5 h-3.5" /> Adicionado
+                                <Trash2 className="w-3.5 h-3.5" /> Remover
                               </button>
                             ) : (
                               <button 
@@ -930,9 +931,9 @@ export default function CartDrawer() {
                                   });
                                   showAlert({ title: 'Oba!', message: `${acessorio.nome} adicionado ao carrinho.`, type: 'success' });
                                 }}
-                                className="px-3 py-1.5 bg-vanta-blue hover:bg-blue-600 text-white text-xs font-bold rounded-lg transition-colors flex flex-col items-center shadow-sm"
+                                className="px-3.5 py-2 bg-vanta-blue hover:bg-blue-600 text-white text-xs font-black rounded-xl transition-colors shadow-sm shadow-blue-500/20"
                               >
-                                <span>+ Adicionar</span>
+                                + Adicionar
                               </button>
                             )}
                           </div>
