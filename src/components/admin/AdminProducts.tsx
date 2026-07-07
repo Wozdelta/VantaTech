@@ -473,17 +473,19 @@ export default function AdminProducts() {
 
   return (
     <div className="bg-white dark:bg-gray-800 shadow-soft rounded-xl p-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-start sm:items-center mb-6 gap-4">
         <div>
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Produtos</h2>
-          <p className="text-sm text-gray-500">Gerencie o catálogo da sua loja.</p>
+          <p className="text-sm text-gray-500 line-clamp-1 sm:line-clamp-none">Gerencie o catálogo da loja.</p>
         </div>
         {activeTab === 'Produtos' && (
           <button
             onClick={openTypeSelector}
-            className="flex items-center gap-2 px-4 py-2 bg-vanta-blue text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="flex-shrink-0 flex items-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-4 bg-vanta-blue text-white rounded-lg hover:bg-blue-600 transition-colors font-bold text-sm"
           >
-            <Plus className="w-4 h-4" /> Novo Produto
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Novo Produto</span>
+            <span className="sm:hidden">Novo</span>
           </button>
         )}
       </div>
@@ -502,6 +504,8 @@ export default function AdminProducts() {
             {tab}
           </button>
         ))}
+      </div>
+
       {activeTab === 'Produtos' ? (
         <>
           <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -832,7 +836,6 @@ export default function AdminProducts() {
           </div>
         </div>
         </>
-      )}       </div>
       )}
       </>
       ) : (
