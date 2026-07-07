@@ -85,6 +85,7 @@ export default function AdminProducts() {
 
   // Filters state
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchAdicionais, setSearchAdicionais] = useState('');
   const [filterCategoria, setFilterCategoria] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterPreco, setFilterPreco] = useState('');
@@ -686,49 +687,72 @@ export default function AdminProducts() {
       )}
       </>
       ) : (
-        <div className="bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700/50 p-6 md:p-8">
-          <div className="mb-8">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <Package className="w-5 h-5 text-vanta-blue" />
-              Acessórios em Destaque
-            </h3>
-            <p className="text-sm text-gray-500 mt-1">Selecione até 3 acessórios para exibir no processo de compra como sugestão adicional (Upsell).</p>
+        <div className="bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700/50 p-6 md:p-8 flex flex-col max-h-[800px]">
+          <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Package className="w-5 h-5 text-vanta-blue" />
+                Acessórios em Destaque
+              </h3>
+              <p className="text-sm text-gray-500 mt-1">Selecione até 3 acessórios para exibir no processo de compra como sugestão (Upsell).</p>
+            </div>
+            
+            <div className="relative w-full md:w-64 flex-shrink-0">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Pesquisar acessórios..."
+                value={searchAdicionais}
+                onChange={(e) => setSearchAdicionais(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-vanta-blue/20 focus:border-vanta-blue transition-all text-gray-900 dark:text-white"
+              />
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.filter(p => p.categoria?.toLowerCase().includes('acessóri')).map(acessorio => (
-              <div 
-                key={acessorio.id} 
-                className={`relative flex items-center justify-between p-4 rounded-2xl border-2 transition-all duration-300 ${acessorio.is_adicional ? 'border-vanta-blue bg-blue-50/30 dark:bg-vanta-blue/10' : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600'}`}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-white dark:bg-gray-900 rounded-xl overflow-hidden flex-shrink-0 shadow-sm border border-gray-100 dark:border-gray-800">
-                    <img src={acessorio.imagem_url || '/Phone.png'} alt={acessorio.nome} className="w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-sm text-gray-900 dark:text-white line-clamp-1" title={acessorio.nome}>{acessorio.nome}</span>
-                    <span className="text-xs font-semibold text-vanta-blue mt-0.5">{Number(acessorio.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
-                  </div>
-                </div>
-                
-                <button
-                  onClick={() => handleToggleAdicional(acessorio)}
-                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-vanta-blue focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${acessorio.is_adicional ? 'bg-vanta-blue' : 'bg-gray-200 dark:bg-gray-700'}`}
-                  role="switch"
-                  aria-checked={acessorio.is_adicional || false}
+          <div className="overflow-y-auto custom-scrollbar flex-1 pr-2 -mr-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
+              {products
+                .filter(p => p.categoria?.toLowerCase().includes('acessóri'))
+                .filter(p => !searchAdicionais || p.nome.toLowerCase().includes(searchAdicionais.toLowerCase()))
+                .sort((a, b) => {
+                  if (a.is_adicional && !b.is_adicional) return -1;
+                  if (!a.is_adicional && b.is_adicional) return 1;
+                  return a.nome.localeCompare(b.nome);
+                })
+                .map(acessorio => (
+                <div 
+                  key={acessorio.id} 
+                  className={`relative flex items-center justify-between p-4 rounded-2xl border-2 transition-all duration-300 ${acessorio.is_adicional ? 'border-vanta-blue bg-blue-50/30 dark:bg-vanta-blue/10' : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600'}`}
                 >
-                  <span
-                    aria-hidden="true"
-                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${acessorio.is_adicional ? 'translate-x-5' : 'translate-x-0'}`}
-                  />
-                </button>
-              </div>
-            ))}
-            {products.filter(p => p.categoria?.toLowerCase().includes('acessóri')).length === 0 && (
-              <div className="col-span-full text-center py-12 text-gray-500">
-                Nenhum acessório cadastrado na loja.
-              </div>
-            )}
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white dark:bg-gray-900 rounded-xl overflow-hidden flex-shrink-0 shadow-sm border border-gray-100 dark:border-gray-800 p-1">
+                      <img src={acessorio.imagem_url || '/Phone.png'} alt={acessorio.nome} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-sm text-gray-900 dark:text-white line-clamp-1 max-w-[120px]" title={acessorio.nome}>{acessorio.nome}</span>
+                      <span className="text-xs font-semibold text-vanta-blue mt-0.5">{Number(acessorio.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={() => handleToggleAdicional(acessorio)}
+                    className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-vanta-blue focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${acessorio.is_adicional ? 'bg-vanta-blue' : 'bg-gray-200 dark:bg-gray-700'}`}
+                    role="switch"
+                    aria-checked={acessorio.is_adicional || false}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${acessorio.is_adicional ? 'translate-x-5' : 'translate-x-0'}`}
+                    />
+                  </button>
+                </div>
+              ))}
+              {products.filter(p => p.categoria?.toLowerCase().includes('acessóri') && (!searchAdicionais || p.nome.toLowerCase().includes(searchAdicionais.toLowerCase()))).length === 0 && (
+                <div className="col-span-full text-center py-12 text-gray-500 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800 border-dashed">
+                  Nenhum acessório encontrado.
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
