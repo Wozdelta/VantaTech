@@ -227,9 +227,11 @@ export default function Fidelidade() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         {/* Quadro Azul: Pontos */}
-        <div className="bg-gradient-to-br from-gray-900 to-vanta-darkblue rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden flex flex-col justify-between h-full">
-          <div className="absolute top-0 right-0 p-8 opacity-10">
-            <Star className="w-48 h-48" />
+        <div className="bg-gradient-to-br from-gray-900 to-vanta-darkblue rounded-3xl p-8 text-white shadow-2xl relative flex flex-col justify-between h-full">
+          <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
+            <div className="absolute top-0 right-0 p-8 opacity-10">
+              <Star className="w-48 h-48" />
+            </div>
           </div>
           
           <div className="relative z-10 flex-1 flex flex-col">
