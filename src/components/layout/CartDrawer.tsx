@@ -69,9 +69,9 @@ export default function CartDrawer() {
 
   // Shipping State
   const [frete, setFrete] = useState(0);
-  const [distanciaKm, setDistanciaKm] = useState(0);
+  const [distanciaKm, setDistanciaKm] = useState(0); // eslint-disable-line @typescript-eslint/no-unused-vars
   const [isCalculatingFrete, setIsCalculatingFrete] = useState(false);
-  const [freteError, setFreteError] = useState('');
+  const [freteError, setFreteError] = useState(''); // eslint-disable-line @typescript-eslint/no-unused-vars
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -98,6 +98,7 @@ export default function CartDrawer() {
         cep: perfil.cep || '',
         rua: perfil.rua || '',
         numero: perfil.numero || '',
+        complemento: perfil.complemento || '',
         bairro: perfil.bairro || '',
         cidade: perfil.cidade || '',
         estado: perfil.estado || ''

@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
-import { Plus, Trash2, Image as ImageIcon, Loader2, X, Edit, UploadCloud, Palette, Smartphone, Package, Search, ChevronDown, Check, Undo2, LayoutGrid, List } from 'lucide-react';
+import { Plus, Trash2, Loader2, X, Edit, UploadCloud, Palette, Smartphone, Package, Search, ChevronDown, Check, Undo2, LayoutGrid, List } from 'lucide-react';
 import { Reorder } from 'framer-motion';
 import RichTextEditor from '../ui/RichTextEditor';
 import ImageCropper from './ImageCropper';

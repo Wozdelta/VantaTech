@@ -1,15 +1,16 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
-import { X, Check, ZoomIn, ZoomOut, RotateCw, Sun, Palette, Settings2 } from 'lucide-react';
+import { X, ZoomIn, ZoomOut, RotateCw, Sun, Palette, Settings2 } from 'lucide-react';
 import getCroppedImg from '../../utils/cropImage';
 
 interface ImageCropperProps {
   imageSrc: string;
   onCropComplete: (file: File, preview: string) => void;
+  onRevert?: () => void;
   onCancel: () => void;
 }
 
-export default function ImageCropper({ imageSrc, onCropComplete, onCancel }: ImageCropperProps) {
+export default function ImageCropper({ imageSrc, onCropComplete, onRevert, onCancel }: ImageCropperProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
@@ -21,7 +22,7 @@ export default function ImageCropper({ imageSrc, onCropComplete, onCancel }: Ima
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const onCropCompleteHandler = useCallback((croppedArea: any, croppedAreaPixels: any) => {
+  const onCropCompleteHandler = useCallback((_croppedArea: any, croppedAreaPixels: any) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
