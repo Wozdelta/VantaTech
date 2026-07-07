@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Trash2, ShoppingBag, MapPin, ChevronDown, AlertCircle, ArrowLeft, CreditCard, Loader2, Tag, CheckCircle } from 'lucide-react';
+import { X, Trash2, ShoppingBag, MapPin, ChevronDown, AlertCircle, ArrowLeft, CreditCard, Loader2, Tag, CheckCircle, Sparkles } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAlert } from '@/contexts/AlertContext';
@@ -912,16 +912,23 @@ export default function CartDrawer() {
 
               {step === 3 && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-                  <div className="bg-vanta-blue/5 border border-vanta-blue/20 rounded-xl p-5">
-                    <h3 className="font-black text-lg text-vanta-darkblue dark:text-white mb-2">Aproveite para levar junto</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Acessórios recomendados para você:</p>
+                  <div className="relative overflow-hidden bg-gradient-to-br from-blue-50/80 to-indigo-50/30 dark:from-blue-900/10 dark:to-indigo-900/5 border border-blue-100 dark:border-blue-800/30 rounded-[24px] p-6 shadow-sm">
+                    {/* Decorative Background Blur */}
+                    <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-vanta-blue/10 dark:bg-vanta-blue/20 blur-3xl pointer-events-none"></div>
                     
-                    <div className="space-y-3">
-                      {adicionaisDisponiveis.map((acessorio) => {
-                        const cartItem = items.find(i => i.productId === acessorio.id);
-                        const inCart = !!cartItem;
-                        return (
-                          <div key={acessorio.id} className="flex items-center justify-between p-4 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 hover:border-vanta-blue/30 rounded-2xl shadow-sm transition-all group">
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Sparkles className="w-5 h-5 text-vanta-blue" />
+                        <h3 className="font-black text-xl text-gray-900 dark:text-white tracking-tight">Aproveite para levar junto</h3>
+                      </div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Acessórios recomendados para o seu carrinho:</p>
+                      
+                      <div className="space-y-3">
+                        {adicionaisDisponiveis.map((acessorio) => {
+                          const cartItem = items.find(i => i.productId === acessorio.id);
+                          const inCart = !!cartItem;
+                          return (
+                            <div key={acessorio.id} className="relative overflow-hidden flex items-center justify-between p-4 bg-white/80 dark:bg-gray-900/60 backdrop-blur-md border border-white/40 dark:border-gray-700/50 hover:border-vanta-blue/30 rounded-[20px] shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all group">
                             <div className="flex items-center gap-4">
                               <div className="w-14 h-14 bg-gray-50 dark:bg-gray-800/80 rounded-xl overflow-hidden p-1.5 shrink-0 group-hover:scale-105 transition-transform">
                                 <img src={acessorio.imagem_url || '/Phone.png'} alt={acessorio.nome} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
@@ -964,6 +971,7 @@ export default function CartDrawer() {
                         );
                       })}
                     </div>
+                  </div>
                   </div>
                 </div>
               )}
