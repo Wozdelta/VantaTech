@@ -248,15 +248,36 @@ export default function Fidelidade() {
                   <span className="text-gray-300">Faltam {proximoNivel.pontos_minimos - pontosAcumulados} pts para {proximoNivel.nome}</span>
                 )}
               </div>
-              <div 
-                className="h-3 w-full bg-white/20 rounded-full overflow-hidden cursor-pointer hover:bg-white/30 transition-colors"
-                onClick={() => setModalType('levels')}
-                title="Ver metas de pontos dos níveis"
-              >
+              <div className="relative" onMouseLeave={() => setModalType(null)}>
                 <div 
-                  className="h-full bg-vanta-orange rounded-full transition-all duration-1000 ease-out" 
-                  style={{ width: `${progressPercentage}%` }}
-                ></div>
+                  className="h-3 w-full bg-white/20 rounded-full overflow-hidden cursor-pointer hover:bg-white/30 transition-colors"
+                  onClick={() => setModalType(modalType === 'levels' ? null : 'levels')}
+                  onMouseEnter={() => setModalType('levels')}
+                  title="Ver metas de pontos dos níveis"
+                >
+                  <div 
+                    className="h-full bg-vanta-orange rounded-full transition-all duration-1000 ease-out" 
+                    style={{ width: `${progressPercentage}%` }}
+                  ></div>
+                </div>
+                
+                {/* Janela Flutuante de Níveis (Popover) */}
+                {modalType === 'levels' && (
+                  <div className="absolute top-full left-0 right-0 md:left-auto md:right-0 mt-3 w-full md:w-64 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-4 z-50 animate-in fade-in slide-in-from-top-2">
+                    <h4 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                      <Crown className="w-4 h-4 text-vanta-orange" />
+                      Metas por Nível
+                    </h4>
+                    <div className="space-y-2">
+                      {niveis.map((n, idx) => (
+                        <div key={idx} className="flex justify-between items-center text-sm p-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                          <span className="font-medium text-gray-600 dark:text-gray-300">{n.nome}</span>
+                          <span className="font-bold text-vanta-orange">{n.pontos_minimos.toLocaleString('pt-BR')} pts</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <div className="mt-4">
@@ -524,33 +545,6 @@ export default function Fidelidade() {
         </div>
       </div>
 
-      {/* Modal Níveis */}
-      {modalType === 'levels' && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setModalType(null)}>
-          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 md:p-8 shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Crown className="w-6 h-6 text-vanta-orange" />
-                Níveis VantaClub
-              </h3>
-              <button onClick={() => setModalType(null)} className="p-2 -mr-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="space-y-3">
-              {niveis.map((n, idx) => (
-                <div key={idx} className="flex justify-between items-center p-4 rounded-2xl bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-700">
-                  <span className="font-bold text-gray-700 dark:text-gray-200 text-lg">{n.nome}</span>
-                  <div className="flex items-center gap-1.5 bg-white dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-100 dark:border-gray-600 shadow-sm">
-                    <Star className="w-4 h-4 text-vanta-orange fill-vanta-orange" />
-                    <span className="text-sm font-black text-vanta-orange">{n.pontos_minimos.toLocaleString('pt-BR')} pts</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
