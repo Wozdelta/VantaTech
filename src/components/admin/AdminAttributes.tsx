@@ -119,7 +119,7 @@ export default function AdminAttributes() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* Container Marcas */}
-      <div className="bg-white dark:bg-gray-800 shadow-soft rounded-xl p-6 border border-gray-100 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 shadow-soft rounded-xl p-4 sm:p-6 border border-gray-100 dark:border-gray-700">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-lg bg-vanta-blue/10 flex items-center justify-center">
             <Tags className="w-5 h-5 text-vanta-blue" />
@@ -130,7 +130,7 @@ export default function AdminAttributes() {
           </div>
         </div>
 
-        <form onSubmit={handleAddMarca} className="flex gap-2 mb-6">
+        <form onSubmit={handleAddMarca} className="flex flex-col sm:flex-row gap-2 mb-6">
           <input 
             type="text" 
             value={novaMarca} 
@@ -138,7 +138,7 @@ export default function AdminAttributes() {
             placeholder="Ex: Apple" 
             className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 p-2.5 text-sm outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all"
           />
-          <button type="submit" disabled={savingMarca || !novaMarca.trim()} className="px-4 py-2.5 bg-vanta-blue text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors flex items-center font-medium">
+          <button type="submit" disabled={savingMarca || !novaMarca.trim()} className="w-full sm:w-auto justify-center px-4 py-2.5 bg-vanta-blue text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors flex items-center font-medium">
             {savingMarca ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Adicionar'}
           </button>
         </form>
@@ -166,7 +166,7 @@ export default function AdminAttributes() {
       </div>
 
       {/* Container Categorias */}
-      <div className="bg-white dark:bg-gray-800 shadow-soft rounded-xl p-6 border border-gray-100 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 shadow-soft rounded-xl p-4 sm:p-6 border border-gray-100 dark:border-gray-700">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-lg bg-vanta-orange/10 flex items-center justify-center">
             <Layers className="w-5 h-5 text-vanta-orange" />
@@ -177,7 +177,7 @@ export default function AdminAttributes() {
           </div>
         </div>
 
-        <form onSubmit={handleAddCategoria} className="flex gap-2 mb-6">
+        <form onSubmit={handleAddCategoria} className="flex flex-col sm:flex-row gap-2 mb-6">
           <input 
             type="text" 
             value={novaCategoria} 
@@ -185,7 +185,7 @@ export default function AdminAttributes() {
             placeholder="Ex: Celulares" 
             className="flex-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 p-2.5 text-sm outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all"
           />
-          <button type="submit" disabled={savingCategoria || !novaCategoria.trim()} className="px-4 py-2.5 bg-vanta-blue text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors flex items-center font-medium">
+          <button type="submit" disabled={savingCategoria || !novaCategoria.trim()} className="w-full sm:w-auto justify-center px-4 py-2.5 bg-vanta-blue text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors flex items-center font-medium">
             {savingCategoria ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Adicionar'}
           </button>
         </form>
