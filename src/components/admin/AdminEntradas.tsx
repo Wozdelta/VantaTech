@@ -18,7 +18,7 @@ type EntryItem = {
   armazenamento: string;
   bateria: string;
   precoVenda: number;
-  precoCusto: number;
+  precoCusto: number | null;
   lucro: number;
   isSaving: boolean;
 };
@@ -63,7 +63,7 @@ export default function AdminEntradas() {
           product.galeria.forEach((g, index) => {
             if (g.cor || g.preco) {
               const precoVenda = g.preco ? parseFloat(g.preco) : product.preco;
-              const precoCusto = g.preco_custo ? parseFloat(g.preco_custo) : 0;
+              const precoCusto = g.preco_custo !== undefined && g.preco_custo !== null && g.preco_custo !== '' ? parseFloat(g.preco_custo) : null;
               
               entryItems.push({
                 productId: product.id,
@@ -74,7 +74,7 @@ export default function AdminEntradas() {
                 bateria: g.bateria || '',
                 precoVenda,
                 precoCusto,
-                lucro: precoVenda - precoCusto,
+                lucro: precoVenda - (precoCusto || 0),
                 isSaving: false
               });
             }
@@ -82,7 +82,7 @@ export default function AdminEntradas() {
         } else {
           // Se não tem variações explícitas, pegar o produto base pela primeira imagem
           const precoVenda = product.preco;
-          const precoCusto = product.galeria[0].preco_custo ? parseFloat(product.galeria[0].preco_custo) : 0;
+          const precoCusto = product.galeria[0].preco_custo !== undefined && product.galeria[0].preco_custo !== null && product.galeria[0].preco_custo !== '' ? parseFloat(product.galeria[0].preco_custo) : null;
           
           entryItems.push({
             productId: product.id,
@@ -93,7 +93,7 @@ export default function AdminEntradas() {
             bateria: '',
             precoVenda,
             precoCusto,
-            lucro: precoVenda - precoCusto,
+            lucro: precoVenda - (precoCusto || 0),
             isSaving: false
           });
         }
@@ -112,9 +112,9 @@ export default function AdminEntradas() {
     const newItems = [...items];
     const itemIndex = newItems.findIndex(i => i.productId === productId && i.variantIndex === variantIndex);
     if (itemIndex > -1) {
-      const newCusto = parseFloat(value) || 0;
+      const newCusto = value === '' ? null : (parseFloat(value) || 0);
       newItems[itemIndex].precoCusto = newCusto;
-      newItems[itemIndex].lucro = newItems[itemIndex].precoVenda - newCusto;
+      newItems[itemIndex].lucro = newItems[itemIndex].precoVenda - (newCusto || 0);
       setItems(newItems);
     }
   };
@@ -144,7 +144,7 @@ export default function AdminEntradas() {
           if (updatedGaleria[item.variantIndex]) {
             updatedGaleria[item.variantIndex] = {
               ...updatedGaleria[item.variantIndex],
-              preco_custo: item.precoCusto.toString()
+              preco_custo: item.precoCusto !== null ? item.precoCusto.toString() : ''
             };
           }
         });
@@ -174,7 +174,7 @@ export default function AdminEntradas() {
   const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
   const paginatedItems = filteredItems.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
-  const unfilledCount = items.filter(i => !i.precoCusto || i.precoCusto === 0).length;
+  const unfilledCount = items.filter(i => i.precoCusto === null).length;
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mt-8">
@@ -286,25 +286,23 @@ export default function AdminEntradas() {
                           type="number"
                           min="0"
                           step="0.01"
-                          value={item.precoCusto || ''}
+                          value={item.precoCusto !== null ? item.precoCusto : ''}
                           onChange={(e) => handleCustoChange(item.productId, item.variantIndex, e.target.value)}
                           disabled={item.isSaving || item.precoCusto === 0}
                           className="w-full pl-9 pr-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:border-vanta-blue focus:ring-1 focus:ring-vanta-blue transition-colors disabled:opacity-50"
                           placeholder="0.00"
                         />
                       </div>
-                      <label className="flex items-center gap-1.5 cursor-pointer group w-max mt-1">
-                        <input
-                          type="checkbox"
-                          checked={item.precoCusto === 0}
-                          onChange={(e) => {
-                            if (e.target.checked) handleCustoChange(item.productId, item.variantIndex, "0");
-                            else handleCustoChange(item.productId, item.variantIndex, "");
-                          }}
-                          className="w-4 h-4 text-vanta-blue rounded border-gray-300 dark:border-gray-600 dark:bg-gray-800 focus:ring-vanta-blue transition-all"
-                        />
-                        <span className="text-xs font-bold text-gray-400 dark:text-gray-500 group-hover:text-vanta-blue transition-colors">100% Lucro</span>
-                      </label>
+                      <button
+                        onClick={() => {
+                          if (item.precoCusto === 0) handleCustoChange(item.productId, item.variantIndex, "");
+                          else handleCustoChange(item.productId, item.variantIndex, "0");
+                        }}
+                        className={`text-[10px] uppercase font-bold px-2 py-1.5 rounded transition-all w-max mt-1 ${item.precoCusto === 0 ? 'bg-vanta-blue/10 text-vanta-blue shadow-sm' : 'bg-gray-100 dark:bg-gray-800 text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+                        title={item.precoCusto === 0 ? "Remover 100% de lucro" : "Marcar 100% de lucro"}
+                      >
+                        100% Lucro
+                      </button>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right whitespace-nowrap border-b border-gray-50 dark:border-gray-800 align-top">
@@ -371,18 +369,16 @@ export default function AdminEntradas() {
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center justify-between">
                     <label className="text-xs text-gray-500 font-bold uppercase tracking-wider">Custo (Valor Pago)</label>
-                    <label className="flex items-center gap-1.5 cursor-pointer group">
-                      <input
-                        type="checkbox"
-                        checked={item.precoCusto === 0}
-                        onChange={(e) => {
-                          if (e.target.checked) handleCustoChange(item.productId, item.variantIndex, "0");
-                          else handleCustoChange(item.productId, item.variantIndex, "");
-                        }}
-                        className="w-3.5 h-3.5 text-vanta-blue rounded border-gray-300 dark:border-gray-600 dark:bg-gray-800 focus:ring-vanta-blue transition-all"
-                      />
-                      <span className="text-[10px] uppercase font-bold text-gray-400 group-hover:text-vanta-blue transition-colors">100% Lucro</span>
-                    </label>
+                    <button
+                      onClick={() => {
+                        if (item.precoCusto === 0) handleCustoChange(item.productId, item.variantIndex, "");
+                        else handleCustoChange(item.productId, item.variantIndex, "0");
+                      }}
+                      className={`text-[10px] uppercase font-bold px-2 py-1 rounded transition-all ${item.precoCusto === 0 ? 'bg-vanta-blue/10 text-vanta-blue shadow-sm' : 'bg-gray-100 dark:bg-gray-800 text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+                      title={item.precoCusto === 0 ? "Remover 100% de lucro" : "Marcar 100% de lucro"}
+                    >
+                      100% Lucro
+                    </button>
                   </div>
                   <div className="relative w-full">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -392,7 +388,7 @@ export default function AdminEntradas() {
                       type="number"
                       min="0"
                       step="0.01"
-                      value={item.precoCusto || ''}
+                      value={item.precoCusto !== null ? item.precoCusto : ''}
                       onChange={(e) => handleCustoChange(item.productId, item.variantIndex, e.target.value)}
                       disabled={item.precoCusto === 0}
                       className="w-full pl-9 pr-3 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold focus:outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all shadow-sm disabled:opacity-50"
