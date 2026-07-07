@@ -379,14 +379,22 @@ export default function AdminProducts() {
 
       const uniqueColors = Array.from(new Set(uploadedGallery.filter(g => g.cor).map(g => g.cor))).join(', ');
 
+      const firstVariantPrice = uploadedGallery.find(g => g.preco)?.preco;
+      const finalPrice = parseFloat(formData.preco || (firstVariantPrice || '0'));
+
+      const firstVariantOldPrice = uploadedGallery.find(g => g.preco_antigo)?.preco_antigo;
+      const finalOldPrice = (temDesconto && formData.preco_antigo)
+        ? parseFloat(formData.preco_antigo)
+        : (firstVariantOldPrice ? parseFloat(firstVariantOldPrice) : null);
+
       const productData = {
         nome: formData.nome,
         marca: formData.marca,
         condicao: productType === 'aparelho' ? formData.condicao : 'Novo',
         memoria: productType === 'aparelho' ? formData.memoria : '',
         cor: productType === 'aparelho' ? uniqueColors : '',
-        preco: parseFloat(formData.preco || '0'),
-        preco_antigo: temDesconto && formData.preco_antigo ? parseFloat(formData.preco_antigo) : null,
+        preco: finalPrice,
+        preco_antigo: finalOldPrice,
         badge: formData.badge || null,
         categoria: formData.categoria,
         descricao: formData.descricao || null,
