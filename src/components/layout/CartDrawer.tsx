@@ -663,10 +663,12 @@ export default function CartDrawer() {
 
         {/* Toast Notification */}
         {cartToast && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[80] animate-in fade-in slide-in-from-top-4 duration-300">
-            <div className="bg-gray-900 text-white dark:bg-white dark:text-gray-900 px-4 py-2.5 rounded-full shadow-lg text-sm font-bold flex items-center gap-2">
-              <CheckCircle className="w-4 h-4 text-green-400 dark:text-green-500" />
-              {cartToast.message}
+          <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[80] animate-in fade-in zoom-in-95 slide-in-from-top-4 duration-300 pointer-events-none w-[90%] max-w-[320px]">
+            <div className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-4 py-3 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.12)] border border-gray-100 dark:border-gray-700 text-sm font-medium flex items-center gap-3 w-full">
+              <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0">
+                <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+              </div>
+              <span className="truncate flex-1 font-bold text-sm">{cartToast.message}</span>
             </div>
           </div>
         )}
@@ -933,9 +935,10 @@ export default function CartDrawer() {
                             {inCart ? (
                               <button 
                                 onClick={() => removeFromCart(cartItem.id)}
-                                className="px-3.5 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 text-xs font-black rounded-xl flex items-center gap-1.5 transition-colors"
+                                title="Remover acessório"
+                                className="w-9 h-9 flex items-center justify-center bg-red-50 hover:bg-red-100 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-500 rounded-full transition-colors shrink-0"
                               >
-                                <Trash2 className="w-3.5 h-3.5" /> Remover
+                                <Trash2 className="w-4 h-4" />
                               </button>
                             ) : (
                               <button 
@@ -950,11 +953,11 @@ export default function CartDrawer() {
                                     isItem: true,
                                     maxQuantity: typeof acessorio.estoque === 'number' ? acessorio.estoque : undefined
                                   });
-                                  showCartToast(`${acessorio.nome} adicionado!`);
+                                  showCartToast('Adicionado com sucesso!');
                                 }}
-                                className="px-3.5 py-2 bg-vanta-blue hover:bg-blue-600 text-white text-xs font-black rounded-xl transition-colors shadow-sm shadow-blue-500/20"
+                                className="px-4 py-2 bg-gray-900 hover:bg-black dark:bg-white dark:hover:bg-gray-100 dark:text-gray-900 text-white text-xs font-bold rounded-full transition-all flex items-center justify-center shadow-md hover:shadow-lg shrink-0"
                               >
-                                + Adicionar
+                                Adicionar
                               </button>
                             )}
                           </div>
