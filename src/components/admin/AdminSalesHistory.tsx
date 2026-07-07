@@ -181,60 +181,108 @@ export default function AdminSalesHistory() {
           Nenhuma venda concluída encontrada.
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data / Pedido</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Produto Vendido</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Valor Venda</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Lucro</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Ação</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-              {filteredItems.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-gray-900 dark:text-white">#{item.pedido_numero}</span>
-                      <span className="text-xs text-gray-500">
-                        {new Date(item.data).toLocaleDateString('pt-BR')} às {new Date(item.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
+        <>
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Data / Pedido</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Produto Vendido</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Valor Venda</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Lucro</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-center">Ação</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                {filteredItems.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-gray-900 dark:text-white">#{item.pedido_numero}</span>
+                        <span className="text-xs text-gray-500">
+                          {new Date(item.data).toLocaleDateString('pt-BR')} às {new Date(item.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-gray-900 dark:text-gray-200">
+                        {item.quantidade}x {item.produto_nome}
                       </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-sm text-gray-900 dark:text-gray-200">
-                      {item.quantidade}x {item.produto_nome}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <span className="text-sm font-bold text-gray-900 dark:text-white">
+                        R$ {(item.produto_preco * item.quantidade).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <DollarSign className={`w-3 h-3 ${item.lucro > 0 ? 'text-green-500' : 'text-gray-400'}`} />
+                        <span className={`text-sm font-bold ${item.lucro > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`}>
+                          R$ {item.lucro.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <button
+                        onClick={() => handleDeleteItem(item.pedido_id)}
+                        className="inline-flex items-center justify-center p-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-400 hover:text-red-600 rounded-lg transition-colors"
+                        title="Apagar Venda"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="md:hidden grid grid-cols-1 gap-4 p-4 bg-gray-50/50 dark:bg-gray-900/20">
+            {filteredItems.map((item) => (
+              <div key={item.id} className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col gap-4">
+                <div className="flex justify-between items-start border-b border-gray-100 dark:border-gray-700 pb-3">
+                  <div>
+                    <span className="text-sm font-black text-vanta-blue block mb-0.5">#{item.pedido_numero}</span>
+                    <span className="text-xs text-gray-500">
+                      {new Date(item.data).toLocaleDateString('pt-BR')} às {new Date(item.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <span className="text-sm font-bold text-gray-900 dark:text-white">
-                      R$ {(item.produto_preco * item.quantidade).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div className="flex items-center justify-end gap-1">
+                  </div>
+                  <button
+                    onClick={() => handleDeleteItem(item.pedido_id)}
+                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                    title="Apagar Venda"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+                
+                <div>
+                  <span className="text-sm font-bold text-gray-900 dark:text-white line-clamp-2">
+                    {item.quantidade}x {item.produto_nome}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-end pt-3 border-t border-gray-100 dark:border-gray-700">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Lucro</span>
+                    <div className="flex items-center gap-1">
                       <DollarSign className={`w-3 h-3 ${item.lucro > 0 ? 'text-green-500' : 'text-gray-400'}`} />
                       <span className={`text-sm font-bold ${item.lucro > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-400'}`}>
                         R$ {item.lucro.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <button
-                      onClick={() => handleDeleteItem(item.pedido_id)}
-                      className="inline-flex items-center justify-center p-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-400 hover:text-red-600 rounded-lg transition-colors"
-                      title="Apagar Venda"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Valor Venda</span>
+                    <span className="text-base font-black text-gray-900 dark:text-white">
+                      R$ {(item.produto_preco * item.quantidade).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
