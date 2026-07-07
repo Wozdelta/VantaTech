@@ -132,30 +132,32 @@ export default function AdminControle() {
             Configure quem tem acesso a cada módulo do sistema. Módulos definidos como <span className="font-bold text-gray-700 dark:text-gray-300">"Público"</span> ficam visíveis para todos os clientes, enquanto módulos em <span className="font-bold text-gray-700 dark:text-gray-300">"Privado"</span> são visíveis apenas para administradores.
           </p>
           
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 pr-3 border-r border-gray-200 dark:border-gray-700">
+          <div className="mt-6 flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full">
+            <div className="hidden sm:flex items-center gap-2 pr-3 border-r border-gray-200 dark:border-gray-700">
                <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">Ações Rápidas</span>
             </div>
-            <button 
-              onClick={() => handleSetAll('todos')}
-              className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-emerald-200 dark:hover:border-emerald-900/50 hover:shadow-sm hover:shadow-emerald-500/5 transition-all flex items-center gap-2 group"
-            >
-              <Globe className="w-4 h-4 text-emerald-500 group-hover:scale-110 transition-transform" />
-              Liberar Tudo
-            </button>
-            <button 
-              onClick={() => handleSetAll('admin')}
-              className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-rose-200 dark:hover:border-rose-900/50 hover:shadow-sm hover:shadow-rose-500/5 transition-all flex items-center gap-2 group"
-            >
-              <Lock className="w-4 h-4 text-rose-500 group-hover:scale-110 transition-transform" />
-              Ocultar Tudo
-            </button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <button 
+                onClick={() => handleSetAll('todos')}
+                className="flex-1 sm:flex-none justify-center px-4 py-2.5 sm:py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-emerald-200 dark:hover:border-emerald-900/50 hover:shadow-sm hover:shadow-emerald-500/5 transition-all flex items-center gap-2 group"
+              >
+                <Globe className="w-4 h-4 text-emerald-500 group-hover:scale-110 transition-transform" />
+                Liberar Tudo
+              </button>
+              <button 
+                onClick={() => handleSetAll('admin')}
+                className="flex-1 sm:flex-none justify-center px-4 py-2.5 sm:py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-rose-200 dark:hover:border-rose-900/50 hover:shadow-sm hover:shadow-rose-500/5 transition-all flex items-center gap-2 group"
+              >
+                <Lock className="w-4 h-4 text-rose-500 group-hover:scale-110 transition-transform" />
+                Ocultar Tudo
+              </button>
+            </div>
           </div>
         </div>
         <button
           onClick={handleSave}
           disabled={loading}
-          className="flex items-center gap-2 px-6 py-3 bg-vanta-blue hover:bg-vanta-darkblue text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 whitespace-nowrap"
+          className="w-full sm:w-auto flex justify-center items-center gap-2 px-6 py-3.5 sm:py-3 bg-vanta-blue hover:bg-vanta-darkblue text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 whitespace-nowrap mt-2 sm:mt-0"
         >
           {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
           Salvar Permissões
