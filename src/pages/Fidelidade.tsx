@@ -469,65 +469,70 @@ export default function Fidelidade() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {recsNivel.map(rec => (
-                      <div key={rec.id} className={`flex items-center gap-4 p-4 bg-white dark:bg-gray-800 rounded-2xl border ${isLocked ? 'border-gray-200 dark:border-gray-700 opacity-60 grayscale' : 'border-gray-100 dark:border-gray-700 hover:border-vanta-orange/40 hover:shadow-lg transition-all group cursor-default'}`}>
-                        <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-900 flex-shrink-0 border border-gray-100 dark:border-gray-800">
-                          {rec.cupom_valor ? (
-                            <div className="w-full h-full bg-gradient-to-br from-vanta-orange to-orange-600 flex flex-col items-center justify-center text-white p-2">
-                              <Ticket className="w-6 h-6 mb-1 opacity-80" />
-                              <span className="font-black text-sm text-center leading-none">
-                                {rec.cupom_tipo === 'porcentagem' ? `${rec.cupom_valor}%` : `R$ ${rec.cupom_valor}`}
-                              </span>
-                            </div>
-                          ) : (
-                            <img src={rec.imagem_url} alt={rec.nome} className={`w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal transition-transform duration-500 ${!isLocked && 'group-hover:scale-110'}`} />
-                          )}
-                          {isLocked && (
-                             <div className="absolute inset-0 bg-white/40 dark:bg-black/50 backdrop-blur-[2px] flex items-center justify-center">
-                               <Lock className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                             </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0 flex flex-col justify-center">
-                          <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <h3 className={`font-bold text-lg break-words ${isLocked ? 'text-gray-500' : 'text-gray-900 dark:text-white group-hover:text-vanta-orange transition-colors'}`}>
-                              {rec.nome}
-                            </h3>
-                            {rec.badge && (
-                              <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md uppercase whitespace-nowrap border ${isLocked ? 'bg-gray-100 text-gray-500 border-gray-200' : 'bg-vanta-orange/10 text-vanta-orange border-vanta-orange/20'}`}>
-                                {rec.badge}
-                              </span>
-                            )}
-                          </div>
-                          {isLocked && <p className="text-xs font-medium text-gray-400 mt-0.5">Desbloqueia no Nível {nivel.nome}</p>}
-                        </div>
-                        <div className={`flex flex-col items-end flex-shrink-0 pl-4 border-l ${isLocked ? 'border-gray-200 dark:border-gray-700' : 'border-gray-100 dark:border-gray-700'}`}>
-                          <div className="flex items-center gap-1.5">
-                            <Star className={`w-5 h-5 ${isLocked ? 'text-gray-400' : 'text-vanta-orange fill-vanta-orange'}`} />
-                            <span className={`font-black text-xl ${isLocked ? 'text-gray-400' : 'text-vanta-orange'}`}>{rec.pontos.toLocaleString('pt-BR')}</span>
-                          </div>
-                          <span className={`text-[11px] font-bold uppercase tracking-wider ${isLocked ? 'text-gray-400' : 'text-gray-500 dark:text-gray-400'}`}>VantaCoins</span>
-                        </div>
-                        
-                        <div className="pl-4 border-l border-gray-100 dark:border-gray-700 ml-auto">
-                           <button
-                            onClick={() => !isLocked && handleResgatar(rec)}
-                            disabled={isLocked || resgatandoId === rec.id}
-                            className={`px-4 py-2.5 rounded-xl font-bold flex items-center justify-center transition-all duration-300 min-w-[120px]
-                              ${isLocked ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700/50 dark:text-gray-500' :
-                              resgatandoId === rec.id ? 'bg-vanta-orange/50 text-white cursor-wait' :
-                              pontosAtuais >= rec.pontos ? 'bg-vanta-orange text-white shadow-md shadow-vanta-orange/20 hover:bg-orange-600 hover:shadow-lg hover:-translate-y-0.5' :
-                              'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-800'}`}
-                          >
-                            {resgatandoId === rec.id ? (
-                              <Loader2 className="w-5 h-5 animate-spin" />
-                            ) : isLocked ? (
-                              'Bloqueado'
-                            ) : pontosAtuais >= rec.pontos ? (
-                              'Resgatar'
+                      <div key={rec.id} className={`flex flex-col md:flex-row items-start md:items-center gap-4 p-4 bg-white dark:bg-gray-800 rounded-2xl border ${isLocked ? 'border-gray-200 dark:border-gray-700 opacity-60 grayscale' : 'border-gray-100 dark:border-gray-700 hover:border-vanta-orange/40 hover:shadow-lg transition-all group cursor-default'}`}>
+                        <div className="flex items-center gap-4 w-full md:w-auto md:flex-1 min-w-0">
+                          <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden bg-gray-50 dark:bg-gray-900 flex-shrink-0 border border-gray-100 dark:border-gray-800">
+                            {rec.cupom_valor ? (
+                              <div className="w-full h-full bg-gradient-to-br from-vanta-orange to-orange-600 flex flex-col items-center justify-center text-white p-2">
+                                <Ticket className="w-5 h-5 md:w-6 md:h-6 mb-1 opacity-80" />
+                                <span className="font-black text-xs md:text-sm text-center leading-none">
+                                  {rec.cupom_tipo === 'porcentagem' ? `${rec.cupom_valor}%` : `R$ ${rec.cupom_valor}`}
+                                </span>
+                              </div>
                             ) : (
-                              'Sem saldo'
+                              <img src={rec.imagem_url} alt={rec.nome} className={`w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal transition-transform duration-500 ${!isLocked && 'group-hover:scale-110'}`} />
                             )}
-                          </button>
+                            {isLocked && (
+                               <div className="absolute inset-0 bg-white/40 dark:bg-black/50 backdrop-blur-[2px] flex items-center justify-center">
+                                 <Lock className="w-4 h-4 md:w-5 md:h-5 text-gray-600 dark:text-gray-300" />
+                               </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0 flex flex-col justify-center">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <h3 className={`font-bold text-base md:text-lg break-words leading-tight ${isLocked ? 'text-gray-500' : 'text-gray-900 dark:text-white group-hover:text-vanta-orange transition-colors'}`}>
+                                {rec.nome}
+                              </h3>
+                              {rec.badge && (
+                                <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md uppercase whitespace-nowrap border ${isLocked ? 'bg-gray-100 text-gray-500 border-gray-200' : 'bg-vanta-orange/10 text-vanta-orange border-vanta-orange/20'}`}>
+                                  {rec.badge}
+                                </span>
+                              )}
+                            </div>
+                            {isLocked && <p className="text-xs font-medium text-gray-400 mt-0.5">Desbloqueia no Nível {nivel.nome}</p>}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between w-full md:w-auto md:justify-end gap-4 md:ml-auto border-t md:border-t-0 pt-4 md:pt-0 mt-2 md:mt-0 border-gray-100 dark:border-gray-700">
+                          <div className={`flex flex-col items-start md:items-end flex-shrink-0 md:pl-4 md:border-l ${isLocked ? 'md:border-gray-200 dark:md:border-gray-700' : 'md:border-gray-100 dark:md:border-gray-700'}`}>
+                            <div className="flex items-center gap-1.5">
+                              <Star className={`w-4 h-4 md:w-5 md:h-5 ${isLocked ? 'text-gray-400' : 'text-vanta-orange fill-vanta-orange'}`} />
+                              <span className={`font-black text-lg md:text-xl ${isLocked ? 'text-gray-400' : 'text-vanta-orange'}`}>{rec.pontos.toLocaleString('pt-BR')}</span>
+                            </div>
+                            <span className={`text-[10px] md:text-[11px] font-bold uppercase tracking-wider ${isLocked ? 'text-gray-400' : 'text-gray-500 dark:text-gray-400'}`}>VantaCoins</span>
+                          </div>
+                          
+                          <div className="md:pl-4 md:border-l md:border-gray-100 dark:md:border-gray-700 flex-shrink-0">
+                             <button
+                              onClick={() => !isLocked && handleResgatar(rec)}
+                              disabled={isLocked || resgatandoId === rec.id}
+                              className={`px-4 py-2 md:py-2.5 rounded-xl font-bold flex items-center justify-center transition-all duration-300 min-w-[100px] md:min-w-[120px] text-sm md:text-base
+                                ${isLocked ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700/50 dark:text-gray-500' :
+                                resgatandoId === rec.id ? 'bg-vanta-orange/50 text-white cursor-wait' :
+                                pontosAtuais >= rec.pontos ? 'bg-vanta-orange text-white shadow-md shadow-vanta-orange/20 hover:bg-orange-600 hover:shadow-lg hover:-translate-y-0.5' :
+                                'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-800'}`}
+                            >
+                              {resgatandoId === rec.id ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                              ) : isLocked ? (
+                                'Bloqueado'
+                              ) : pontosAtuais >= rec.pontos ? (
+                                'Resgatar'
+                              ) : (
+                                'Sem saldo'
+                              )}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
