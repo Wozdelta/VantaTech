@@ -114,17 +114,22 @@ export default function AdminEncomendas() {
 
     try {
       // 1. Deletar as mensagens associadas para não dar erro de restrição de chave estrangeira
-      await supabase.from('encomendas_mensagens').delete().eq('encomenda_id', id);
+      const { error: msgError } = await supabase.from('encomendas_mensagens').delete().eq('encomenda_id', id);
+      if (msgError) throw msgError;
       
-      // 2. Deletar a encomenda em si
-      const { error } = await supabase.from('encomendas_pedidos').delete().eq('id', id);
+      // 2. Deletar a encomenda em si e retornar o dado deletado para confirmar que RLS não bloqueou
+      const { data, error } = await supabase.from('encomendas_pedidos').delete().eq('id', id).select();
+      
       if (error) throw error;
+      if (!data || data.length === 0) {
+        throw new Error('O banco de dados bloqueou a exclusão. Possível falta de permissão na tabela (RLS).');
+      }
 
       setEncomendas(prev => prev.filter(e => e.id !== id));
-      showAlert({ type: 'success', message: 'Encomenda deletada.' });
-    } catch (err) {
+      showAlert({ type: 'success', message: 'Encomenda deletada com sucesso.' });
+    } catch (err: any) {
       console.error('Erro ao deletar encomenda manual:', err);
-      showAlert({ type: 'error', message: 'Erro ao deletar encomenda. Pode haver dependências não resolvidas.' });
+      showAlert({ type: 'error', message: `Erro ao deletar: ${err.message || 'Desconhecido'}` });
     }
   };
 
