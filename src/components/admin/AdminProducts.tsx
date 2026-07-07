@@ -379,12 +379,14 @@ export default function AdminProducts() {
 
       const uniqueColors = Array.from(new Set(uploadedGallery.filter(g => g.cor).map(g => g.cor))).join(', ');
 
+      const parsedPreco = parseFloat(formData.preco || '0');
       const firstVariantPrice = uploadedGallery.find(g => g.preco)?.preco;
-      const finalPrice = parseFloat(formData.preco || (firstVariantPrice || '0'));
+      const finalPrice = parsedPreco > 0 ? parsedPreco : parseFloat(firstVariantPrice || '0');
 
+      const parsedPrecoAntigo = parseFloat(formData.preco_antigo || '0');
       const firstVariantOldPrice = uploadedGallery.find(g => g.preco_antigo)?.preco_antigo;
-      const finalOldPrice = (temDesconto && formData.preco_antigo)
-        ? parseFloat(formData.preco_antigo)
+      const finalOldPrice = (temDesconto && parsedPrecoAntigo > 0)
+        ? parsedPrecoAntigo
         : (firstVariantOldPrice ? parseFloat(firstVariantOldPrice) : null);
 
       const productData = {
