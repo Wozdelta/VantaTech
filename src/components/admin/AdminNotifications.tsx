@@ -76,7 +76,7 @@ export default function AdminNotifications() {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow-soft rounded-xl p-6 max-w-3xl mx-auto">
+    <div className="bg-white dark:bg-gray-800 shadow-soft rounded-xl p-5 sm:p-8 max-w-3xl mx-auto border border-gray-100 dark:border-gray-700">
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-full bg-vanta-blue/10 flex items-center justify-center">
           <BellRing className="w-5 h-5 text-vanta-blue" />
@@ -98,7 +98,7 @@ export default function AdminNotifications() {
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
             maxLength={50}
-            className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-3 outline-none focus:border-vanta-blue text-gray-900 dark:text-white" 
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 p-3.5 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-gray-900 dark:text-white" 
             placeholder="Ex: Mega Promoção de iPhones!" 
           />
         </div>
@@ -113,11 +113,11 @@ export default function AdminNotifications() {
             value={mensagem}
             onChange={(e) => setMensagem(e.target.value)}
             maxLength={150}
-            className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-3 outline-none focus:border-vanta-blue resize-none text-gray-900 dark:text-white" 
+            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 p-3.5 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all resize-none text-gray-900 dark:text-white" 
             placeholder="Ex: Aproveite nossos descontos de até 30% em toda a linha Apple. Válido até amanhã!" 
           />
-          <div className="text-right mt-1 text-xs text-gray-500">
-            {mensagem.length}/150 caracteres
+          <div className="text-right mt-1.5 text-xs font-medium text-gray-500">
+            <span className={mensagem.length >= 150 ? "text-red-500" : ""}>{mensagem.length}</span>/150 caracteres
           </div>
         </div>
 
@@ -128,11 +128,11 @@ export default function AdminNotifications() {
           </div>
         )}
 
-        <div className="flex justify-end pt-4 border-t border-gray-100 dark:border-gray-700">
+        <div className="flex justify-end pt-5 border-t border-gray-100 dark:border-gray-700 mt-6">
           <button 
             type="submit" 
             disabled={sending || !titulo || !mensagem} 
-            className="px-6 py-3 rounded-lg bg-vanta-blue text-white font-bold hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2 transition-colors shadow-sm"
+            className="w-full sm:w-auto px-6 py-3.5 sm:py-3 rounded-lg bg-vanta-blue text-white font-bold hover:bg-blue-600 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors shadow-sm"
           >
             {sending ? (
               <>
