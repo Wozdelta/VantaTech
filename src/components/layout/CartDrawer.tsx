@@ -44,7 +44,7 @@ function deg2rad(deg: number) {
 }
 
 export default function CartDrawer() {
-  const { isCartOpen, setIsCartOpen, items, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
+  const { isCartOpen, setIsCartOpen, items, removeFromCart, updateQuantity, cartTotal, clearCart, addToCart } = useCart();
   const { user, perfil, refreshPerfil } = useAuth();
   const { showAlert } = useAlert();
 
@@ -918,7 +918,16 @@ export default function CartDrawer() {
                             ) : (
                               <button 
                                 onClick={() => {
-                                  updateQuantity(acessorio.id, 1, acessorio);
+                                  addToCart({
+                                    productId: acessorio.id,
+                                    name: acessorio.nome,
+                                    price: Number(acessorio.preco),
+                                    image: acessorio.imagem_url || '/Phone.png',
+                                    category: acessorio.categoria,
+                                    quantity: 1,
+                                    isItem: true,
+                                    maxQuantity: typeof acessorio.estoque === 'number' ? acessorio.estoque : undefined
+                                  });
                                   showAlert({ title: 'Oba!', message: `${acessorio.nome} adicionado ao carrinho.`, type: 'success' });
                                 }}
                                 className="px-3 py-1.5 bg-vanta-blue hover:bg-blue-600 text-white text-xs font-bold rounded-lg transition-colors flex flex-col items-center shadow-sm"
