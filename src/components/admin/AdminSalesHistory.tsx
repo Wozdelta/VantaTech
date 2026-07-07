@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
-import { Loader2, Trash2, Search, History, DollarSign } from 'lucide-react';
+import { Loader2, Trash2, Search, History, DollarSign, AlertTriangle, X } from 'lucide-react';
 
 interface SoldItem {
   id: string; // id do item
@@ -19,6 +19,8 @@ export default function AdminSalesHistory() {
   const [soldItems, setSoldItems] = useState<SoldItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { showAlert } = useAlert();
 
   useEffect(() => {
@@ -125,22 +127,29 @@ export default function AdminSalesHistory() {
   }, []);
 
   const handleDeleteItem = async (pedidoId: string) => {
-    const confirmed = window.confirm('Deseja realmente apagar este registro? Isso excluirá o pedido correspondente.');
-    if (!confirmed) return;
+    setItemToDelete(pedidoId);
+  };
 
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+    
+    setIsDeleting(true);
     try {
       const { error } = await supabase
         .from('pedidos')
         .delete()
-        .eq('id', pedidoId);
+        .eq('id', itemToDelete);
 
       if (error) throw error;
 
       showAlert({ title: 'Sucesso', message: 'Venda apagada do histórico.', type: 'success' });
       fetchHistory(); // Recarrega
+      setItemToDelete(null);
     } catch (error) {
       console.error('Erro ao apagar:', error);
       showAlert({ title: 'Erro', message: 'Falha ao apagar venda.', type: 'error' });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -150,7 +159,8 @@ export default function AdminSalesHistory() {
   );
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mt-8">
+    <>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mt-8">
       <div className="p-6 border-b border-gray-100 dark:border-gray-700">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -285,5 +295,51 @@ export default function AdminSalesHistory() {
         </>
       )}
     </div>
+
+    {/* Delete Confirmation Modal */}
+    {itemToDelete && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="p-6">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 mb-4 mx-auto">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <h3 className="text-xl font-black text-center text-gray-900 dark:text-white mb-2">
+              Apagar Venda?
+            </h3>
+            <p className="text-center text-gray-500 dark:text-gray-400 mb-6">
+              Deseja realmente apagar este registro? Isso excluirá o pedido correspondente permanentemente.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setItemToDelete(null)}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 font-bold rounded-xl transition-colors disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Apagando...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-5 h-5" />
+                    Apagar
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
