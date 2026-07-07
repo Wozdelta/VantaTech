@@ -143,10 +143,13 @@ export default function CartDrawer() {
   }, [isCartOpen]);
 
   useEffect(() => {
-    if (step === 3 && Math.max(0, cartTotal - (cupomAplicado?.valor_desconto || 0)) + frete === 0) {
+    const isFree = Math.max(0, cartTotal - (cupomAplicado?.valor_desconto || 0)) + frete === 0;
+    if (isFree && pagamento !== 'Vanta Club') {
       setPagamento('Vanta Club');
+    } else if (!isFree && pagamento === 'Vanta Club') {
+      setPagamento('PIX');
     }
-  }, [step, cartTotal, frete, cupomAplicado]);
+  }, [cartTotal, frete, cupomAplicado, pagamento]);
 
   // Monitora continuamente a validade do cupom aplicado
   useEffect(() => {
