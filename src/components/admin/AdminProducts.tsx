@@ -430,15 +430,15 @@ export default function AdminProducts() {
         )}
       </div>
 
-      <div className="flex gap-2 overflow-x-auto no-scrollbar mb-6">
+      <div className="inline-flex bg-gray-100/80 dark:bg-gray-900/80 p-1.5 rounded-2xl mb-6 border border-gray-200/60 dark:border-gray-700/60 shadow-inner">
         {(['Produtos', 'Adicionais'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
+            className={`px-8 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 whitespace-nowrap ${
               activeTab === tab 
-                ? 'bg-vanta-blue text-white shadow-md shadow-blue-500/20' 
-                : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+                ? 'bg-white dark:bg-gray-800 text-vanta-blue shadow-sm ring-1 ring-black/5 dark:ring-white/10' 
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-white/60 dark:hover:bg-gray-800/60'
             }`}
           >
             {tab}
