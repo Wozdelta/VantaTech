@@ -1,4 +1,4 @@
-import { ChevronDown, Ticket, Package, CreditCard, User, Smartphone, Truck } from 'lucide-react';
+import { ChevronDown, Ticket, Package, CreditCard, User, Smartphone, Truck, Star } from 'lucide-react';
 import * as Accordion from '@radix-ui/react-accordion';
 
 export const FAQ_DATA = [
@@ -48,6 +48,16 @@ export const FAQ_DATA = [
       { pergunta: 'Prazo', resposta: 'O prazo médio para encomendas varia entre 15 e 30 dias úteis, dependendo do modelo solicitado.' },
       { pergunta: 'Pagamento inicial', resposta: 'Para confirmar a encomenda, é necessário um sinal que varia conforme o aparelho. O restante é pago na entrega.' },
       { pergunta: 'Rastreamento', resposta: 'Assim que o fornecedor despachar o aparelho, enviaremos atualizações diretamente pelo sistema ou via WhatsApp.' },
+    ]
+  },
+  {
+    categoria: 'VantaClub',
+    icon: Star,
+    items: [
+      { pergunta: 'Como ganhar pontos?', resposta: 'Você ganha VantaCoins ao realizar compras, e principalmente indicando amigos com seu link de afiliado. Quando um amigo compra, os pontos vão para você!' },
+      { pergunta: 'Para que servem os pontos?', resposta: 'Seus pontos podem ser trocados por cupons de desconto, brindes e recompensas exclusivas diretamente na aba do VantaClub.' },
+      { pergunta: 'Os pontos têm validade?', resposta: 'Atualmente, os VantaCoins não possuem prazo de validade e permanecem na sua conta para sempre.' },
+      { pergunta: 'Como subir de nível?', resposta: 'Acumulando pontos, você avança de nível automaticamente. Níveis mais altos desbloqueiam recompensas exclusivas e de maior valor.' },
     ]
   }
 ];
