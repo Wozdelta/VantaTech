@@ -53,6 +53,7 @@ export default function AdminProducts() {
   const [showTypeSelector, setShowTypeSelector] = useState(false);
   const [productType, setProductType] = useState<'aparelho' | 'item' | null>(null);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<'Produtos' | 'Adicionais'>('Produtos');
 
   const [editId, setEditId] = useState<string | null>(null);
   const [temDesconto, setTemDesconto] = useState(false);
@@ -419,15 +420,35 @@ export default function AdminProducts() {
           <h2 className="text-xl font-bold text-gray-900 dark:text-white">Produtos</h2>
           <p className="text-sm text-gray-500">Gerencie o catálogo da sua loja.</p>
         </div>
-        <button
-          onClick={openTypeSelector}
-          className="flex items-center gap-2 px-4 py-2 bg-vanta-blue text-white rounded-lg hover:bg-blue-600 transition-colors"
-        >
-          <Plus className="w-4 h-4" /> Novo Produto
-        </button>
+        {activeTab === 'Produtos' && (
+          <button
+            onClick={openTypeSelector}
+            className="flex items-center gap-2 px-4 py-2 bg-vanta-blue text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            <Plus className="w-4 h-4" /> Novo Produto
+          </button>
+        )}
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
+      <div className="flex gap-2 overflow-x-auto no-scrollbar mb-6">
+        {(['Produtos', 'Adicionais'] as const).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
+              activeTab === tab 
+                ? 'bg-vanta-blue text-white shadow-md shadow-blue-500/20' 
+                : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'Produtos' ? (
+        <>
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="flex-1 relative">
           <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
@@ -636,6 +657,12 @@ export default function AdminProducts() {
               )}
             </tbody>
           </table>
+        </div>
+      )}
+      </>
+      ) : (
+        <div className="text-center py-20 text-gray-500 dark:text-gray-400">
+          Módulo de Adicionais em construção...
         </div>
       )}
 
