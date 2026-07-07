@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
-import { Plus, Trash2, Image as ImageIcon, Loader2, X, Edit, UploadCloud, Palette, Smartphone, Package, Search, ChevronDown, Check, Undo2 } from 'lucide-react';
+import { Plus, Trash2, Image as ImageIcon, Loader2, X, Edit, UploadCloud, Palette, Smartphone, Package, Search, ChevronDown, Check, Undo2, LayoutGrid, List } from 'lucide-react';
 import { Reorder } from 'framer-motion';
 import RichTextEditor from '../ui/RichTextEditor';
 import ImageCropper from './ImageCropper';
@@ -53,6 +53,7 @@ export default function AdminProducts() {
   const { showAlert } = useAlert();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'detailed'|'minimal'>('detailed');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showTypeSelector, setShowTypeSelector] = useState(false);
   const [productType, setProductType] = useState<'aparelho' | 'item' | null>(null);
@@ -501,8 +502,6 @@ export default function AdminProducts() {
             {tab}
           </button>
         ))}
-      </div>
-
       {activeTab === 'Produtos' ? (
         <>
           <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -516,12 +515,29 @@ export default function AdminProducts() {
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-vanta-blue/20 focus:border-vanta-blue transition-all text-gray-900 dark:text-white"
           />
         </div>
+        
+        <div className="flex md:hidden items-center bg-gray-100 dark:bg-gray-800 p-1.5 rounded-xl border border-gray-200 dark:border-gray-700 mx-auto w-full max-w-sm justify-between">
+          <button 
+            onClick={() => setViewMode('detailed')}
+            className={`flex-1 p-2 px-3 rounded-lg flex items-center justify-center gap-2 text-xs font-bold transition-all ${viewMode === 'detailed' ? 'bg-white dark:bg-gray-700 text-vanta-blue shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+          >
+            <LayoutGrid className="w-4 h-4" /> Detalhada
+          </button>
+          <button 
+            onClick={() => setViewMode('minimal')}
+            className={`flex-1 p-2 px-3 rounded-lg flex items-center justify-center gap-2 text-xs font-bold transition-all ${viewMode === 'minimal' ? 'bg-white dark:bg-gray-700 text-vanta-blue shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+          >
+            <List className="w-4 h-4" /> Minimalista
+          </button>
+        </div>
       </div>
 
       {loading ? (
         <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-vanta-blue" /></div>
       ) : (
-        <div className="overflow-x-auto min-h-[380px]">
+        <>
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto min-h-[380px]">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead>
               <tr>
@@ -690,10 +706,10 @@ export default function AdminProducts() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button onClick={() => handleEdit(product)} className="text-blue-600 hover:text-blue-900 ml-4">
+                    <button onClick={() => handleEdit(product)} className="text-blue-600 hover:text-blue-900 ml-4 p-1">
                       <Edit className="w-5 h-5" />
                     </button>
-                    <button onClick={() => handleDelete(product.id)} className="text-red-600 hover:text-red-900 ml-4">
+                    <button onClick={() => handleDelete(product.id)} className="text-red-600 hover:text-red-900 ml-4 p-1">
                       <Trash2 className="w-5 h-5" />
                     </button>
                   </td>
@@ -715,6 +731,108 @@ export default function AdminProducts() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile List View */}
+        <div className="md:hidden">
+          <div className="flex items-center gap-2 mb-4 px-2">
+            <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Produtos</span>
+            <div className="h-px bg-gray-200 dark:bg-gray-800 flex-1"></div>
+          </div>
+          
+          <div className={`${viewMode === 'minimal' ? 'space-y-0 divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-2' : 'space-y-4'}`}>
+            {products
+              .filter(p => {
+                if (searchTerm && !p.nome.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+                if (filterCategoria && p.categoria !== filterCategoria) return false;
+                if (filterStatus) {
+                  const isAtivo = filterStatus === 'ativo';
+                  if (p.ativo !== isAtivo) return false;
+                }
+                return true;
+              })
+              .sort((a, b) => {
+                if (filterPreco === 'maior') return b.preco - a.preco;
+                if (filterPreco === 'menor') return a.preco - b.preco;
+                return 0;
+              })
+              .map((product) => {
+                const isAparelho = product.cor || product.memoria || (product.galeria && product.galeria.length > 0 && product.galeria.some((g:any)=>g.cor));
+                const subtitle = isAparelho ? [product.cor, product.memoria].filter(Boolean).join(' • ') : `Estoque: ${product.estoque !== null && product.estoque !== undefined ? product.estoque : 0} un.`;
+
+                return viewMode === 'minimal' ? (
+                  <div key={product.id} className="flex flex-col gap-2 py-3 px-2 first:pt-2 last:pb-2 relative group">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 h-12 w-12 bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700">
+                        <img className="h-full w-full object-cover" src={product.imagem_url} alt="" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-bold text-gray-900 dark:text-white truncate pr-2">{product.nome}</div>
+                        {subtitle && (
+                          <div className={`text-xs truncate ${!isAparelho ? 'text-vanta-blue font-semibold' : 'text-gray-500'}`}>{subtitle}</div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button onClick={() => handleEdit(product)} className="text-blue-600 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors">
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleDelete(product.id)} className="text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div key={product.id} className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 shadow-sm relative overflow-hidden">
+                     <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0 h-20 w-20 bg-gray-50 dark:bg-gray-900 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-700">
+                          <img className="h-full w-full object-cover" src={product.imagem_url} alt="" />
+                        </div>
+                        <div className="flex-1 min-w-0 pt-1">
+                          <div className="text-sm font-bold text-gray-900 dark:text-white leading-tight mb-1 line-clamp-2">{product.nome}</div>
+                          <div className="text-xs text-gray-500 mb-2 font-medium">
+                            {product.categoria}
+                          </div>
+                          <div className="text-lg font-black text-vanta-blue">
+                            R$ {product.preco.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </div>
+                        </div>
+                     </div>
+                     
+                     <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                        <span className={`px-2.5 py-1 text-[10px] uppercase tracking-wider font-bold rounded-lg ${product.ativo ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                          {product.ativo ? 'Ativo' : 'Oculto'}
+                        </span>
+                        
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => handleEdit(product)} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold transition-colors">
+                            <Edit className="w-3.5 h-3.5" /> Editar
+                          </button>
+                          <button onClick={() => handleDelete(product.id)} className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-bold transition-colors">
+                            <Trash2 className="w-3.5 h-3.5" /> Excluir
+                          </button>
+                        </div>
+                     </div>
+                  </div>
+                );
+              })}
+              
+              {products.filter(p => {
+                if (searchTerm && !p.nome.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+                if (filterCategoria && p.categoria !== filterCategoria) return false;
+                if (filterStatus) {
+                  const isAtivo = filterStatus === 'ativo';
+                  if (p.ativo !== isAtivo) return false;
+                }
+                return true;
+              }).length === 0 && (
+                <div className="text-center py-10 text-gray-500 text-sm">
+                  Nenhum produto encontrado.
+                </div>
+              )}
+          </div>
+        </div>
+        </>
+      )}       </div>
       )}
       </>
       ) : (
