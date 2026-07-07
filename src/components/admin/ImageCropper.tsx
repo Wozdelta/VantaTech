@@ -10,7 +10,7 @@ interface ImageCropperProps {
   onCancel: () => void;
 }
 
-export default function ImageCropper({ imageSrc, onCropComplete, onRevert, onCancel }: ImageCropperProps) {
+export default function ImageCropper({ imageSrc, onCropComplete, onCancel }: ImageCropperProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
