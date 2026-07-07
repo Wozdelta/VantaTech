@@ -277,20 +277,34 @@ export default function AdminEntradas() {
                     R$ {item.precoVenda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap border-b border-gray-50 dark:border-gray-800 align-top">
-                    <div className="relative w-full max-w-[150px]">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <DollarSign className="h-4 w-4 text-gray-400" />
+                    <div className="flex flex-col gap-2">
+                      <div className="relative w-full max-w-[150px]">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <DollarSign className="h-4 w-4 text-gray-400" />
+                        </div>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.precoCusto || ''}
+                          onChange={(e) => handleCustoChange(item.productId, item.variantIndex, e.target.value)}
+                          disabled={item.isSaving || item.precoCusto === 0}
+                          className="w-full pl-9 pr-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:border-vanta-blue focus:ring-1 focus:ring-vanta-blue transition-colors disabled:opacity-50"
+                          placeholder="0.00"
+                        />
                       </div>
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={item.precoCusto || ''}
-                        onChange={(e) => handleCustoChange(item.productId, item.variantIndex, e.target.value)}
-                        disabled={item.isSaving}
-                        className="w-full pl-9 pr-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:outline-none focus:border-vanta-blue focus:ring-1 focus:ring-vanta-blue transition-colors disabled:opacity-50"
-                        placeholder="0.00"
-                      />
+                      <label className="flex items-center gap-1.5 cursor-pointer group w-max mt-1">
+                        <input
+                          type="checkbox"
+                          checked={item.precoCusto === 0}
+                          onChange={(e) => {
+                            if (e.target.checked) handleCustoChange(item.productId, item.variantIndex, "0");
+                            else handleCustoChange(item.productId, item.variantIndex, "");
+                          }}
+                          className="w-4 h-4 text-vanta-blue rounded border-gray-300 dark:border-gray-600 dark:bg-gray-800 focus:ring-vanta-blue transition-all"
+                        />
+                        <span className="text-xs font-bold text-gray-400 dark:text-gray-500 group-hover:text-vanta-blue transition-colors">100% Lucro</span>
+                      </label>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right whitespace-nowrap border-b border-gray-50 dark:border-gray-800 align-top">
@@ -355,7 +369,21 @@ export default function AdminEntradas() {
                 </div>
                 
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs text-gray-500 font-bold uppercase tracking-wider">Custo (Valor Pago)</label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs text-gray-500 font-bold uppercase tracking-wider">Custo (Valor Pago)</label>
+                    <label className="flex items-center gap-1.5 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={item.precoCusto === 0}
+                        onChange={(e) => {
+                          if (e.target.checked) handleCustoChange(item.productId, item.variantIndex, "0");
+                          else handleCustoChange(item.productId, item.variantIndex, "");
+                        }}
+                        className="w-3.5 h-3.5 text-vanta-blue rounded border-gray-300 dark:border-gray-600 dark:bg-gray-800 focus:ring-vanta-blue transition-all"
+                      />
+                      <span className="text-[10px] uppercase font-bold text-gray-400 group-hover:text-vanta-blue transition-colors">100% Lucro</span>
+                    </label>
+                  </div>
                   <div className="relative w-full">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <DollarSign className="h-4 w-4 text-gray-400" />
@@ -366,7 +394,8 @@ export default function AdminEntradas() {
                       step="0.01"
                       value={item.precoCusto || ''}
                       onChange={(e) => handleCustoChange(item.productId, item.variantIndex, e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold focus:outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all shadow-sm"
+                      disabled={item.precoCusto === 0}
+                      className="w-full pl-9 pr-3 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold focus:outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all shadow-sm disabled:opacity-50"
                       placeholder="0.00"
                     />
                   </div>
