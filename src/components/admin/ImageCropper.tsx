@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
-import { X, Check, ZoomIn, ZoomOut, RotateCw } from 'lucide-react';
+import { X, Check, ZoomIn, ZoomOut, RotateCw, Sun, Palette, Settings2 } from 'lucide-react';
 import getCroppedImg from '../../utils/cropImage';
 
 interface ImageCropperProps {
@@ -13,6 +13,11 @@ export default function ImageCropper({ imageSrc, onCropComplete, onCancel }: Ima
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
+  const [saturation, setSaturation] = useState(100);
+  const [brightness, setBrightness] = useState(100);
+  const [contrast, setContrast] = useState(100);
+  const [flipH, setFlipH] = useState(false);
+  const [flipV, setFlipV] = useState(false);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -24,7 +29,9 @@ export default function ImageCropper({ imageSrc, onCropComplete, onCancel }: Ima
     if (!croppedAreaPixels) return;
     try {
       setIsProcessing(true);
-      const croppedFile = await getCroppedImg(imageSrc, croppedAreaPixels, rotation);
+      const flip = { horizontal: flipH, vertical: flipV };
+      const filters = { saturation, brightness, contrast };
+      const croppedFile = await getCroppedImg(imageSrc, croppedAreaPixels, rotation, flip, filters);
       const previewUrl = URL.createObjectURL(croppedFile);
       onCropComplete(croppedFile, previewUrl);
     } catch (e) {
@@ -48,52 +55,84 @@ export default function ImageCropper({ imageSrc, onCropComplete, onCancel }: Ima
 
         {/* Cropper Area */}
         <div className="relative w-full h-[50vh] bg-gray-50 dark:bg-black/50">
-          <Cropper
-            image={imageSrc}
-            crop={crop}
-            zoom={zoom}
-            rotation={rotation}
-            aspect={1} // Square aspect ratio
-            onCropChange={setCrop}
-            onCropComplete={onCropCompleteHandler}
-            onZoomChange={setZoom}
-            onRotationChange={setRotation}
-          />
+          <div style={{ width: '100%', height: '100%', transform: `scaleX(${flipH ? -1 : 1}) scaleY(${flipV ? -1 : 1})` }}>
+            <Cropper
+              image={imageSrc}
+              crop={crop}
+              zoom={zoom}
+              rotation={rotation}
+              aspect={1} // Square aspect ratio
+              onCropChange={setCrop}
+              onCropComplete={onCropCompleteHandler}
+              onZoomChange={setZoom}
+              onRotationChange={setRotation}
+              style={{
+                mediaStyle: { filter: `saturate(${saturation}%) brightness(${brightness}%) contrast(${contrast}%)` }
+              }}
+            />
+          </div>
         </div>
 
         {/* Controls */}
         <div className="p-6 bg-white dark:bg-gray-900 flex flex-col gap-6">
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
             {/* Zoom Control */}
-            <div className="flex items-center gap-4">
-              <ZoomOut className="w-4 h-4 text-gray-400 shrink-0" />
-              <input
-                type="range"
-                value={zoom}
-                min={1}
-                max={3}
-                step={0.1}
-                aria-labelledby="Zoom"
-                onChange={(e) => setZoom(Number(e.target.value))}
-                className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-vanta-blue"
-              />
-              <ZoomIn className="w-4 h-4 text-gray-400 shrink-0" />
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Zoom</span>
+              <div className="flex items-center gap-3">
+                <ZoomOut className="w-4 h-4 text-gray-400 shrink-0" />
+                <input type="range" value={zoom} min={1} max={3} step={0.1} onChange={(e) => setZoom(Number(e.target.value))} className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-vanta-blue" />
+                <ZoomIn className="w-4 h-4 text-gray-400 shrink-0" />
+              </div>
             </div>
 
             {/* Rotation Control */}
-            <div className="flex items-center gap-4">
-              <RotateCw className="w-4 h-4 text-gray-400 shrink-0" />
-              <input
-                type="range"
-                value={rotation}
-                min={0}
-                max={360}
-                step={1}
-                aria-labelledby="Rotation"
-                onChange={(e) => setRotation(Number(e.target.value))}
-                className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-vanta-blue"
-              />
-              <span className="text-xs text-gray-500 font-medium w-8 text-right">{rotation}°</span>
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Rotação</span>
+              <div className="flex items-center gap-3">
+                <RotateCw className="w-4 h-4 text-gray-400 shrink-0" />
+                <input type="range" value={rotation} min={0} max={360} step={1} onChange={(e) => setRotation(Number(e.target.value))} className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-vanta-blue" />
+                <span className="text-xs text-gray-500 font-medium w-6 text-right">{rotation}°</span>
+              </div>
+            </div>
+
+            {/* Saturation */}
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Saturação</span>
+              <div className="flex items-center gap-3">
+                <Palette className="w-4 h-4 text-gray-400 shrink-0" />
+                <input type="range" value={saturation} min={0} max={200} step={1} onChange={(e) => setSaturation(Number(e.target.value))} className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-vanta-blue" />
+                <span className="text-xs text-gray-500 font-medium w-6 text-right">{saturation}%</span>
+              </div>
+            </div>
+
+            {/* Brightness */}
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Brilho</span>
+              <div className="flex items-center gap-3">
+                <Sun className="w-4 h-4 text-gray-400 shrink-0" />
+                <input type="range" value={brightness} min={0} max={200} step={1} onChange={(e) => setBrightness(Number(e.target.value))} className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-vanta-blue" />
+                <span className="text-xs text-gray-500 font-medium w-6 text-right">{brightness}%</span>
+              </div>
+            </div>
+
+            {/* Contrast */}
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Contraste</span>
+              <div className="flex items-center gap-3">
+                <Settings2 className="w-4 h-4 text-gray-400 shrink-0" />
+                <input type="range" value={contrast} min={0} max={200} step={1} onChange={(e) => setContrast(Number(e.target.value))} className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-vanta-blue" />
+                <span className="text-xs text-gray-500 font-medium w-6 text-right">{contrast}%</span>
+              </div>
+            </div>
+            
+            {/* Flip Options */}
+            <div className="flex flex-col gap-2 justify-center">
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Inverter (Espelhar)</span>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setFlipH(!flipH)} className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-colors ${flipH ? 'bg-vanta-blue text-white border-vanta-blue' : 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 hover:bg-gray-100'}`}>Horizontal</button>
+                <button onClick={() => setFlipV(!flipV)} className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-colors ${flipV ? 'bg-vanta-blue text-white border-vanta-blue' : 'bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 hover:bg-gray-100'}`}>Vertical</button>
+              </div>
             </div>
           </div>
 

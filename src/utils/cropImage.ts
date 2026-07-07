@@ -3,7 +3,9 @@ export const createImage = (url: string): Promise<HTMLImageElement> =>
     const image = new Image();
     image.addEventListener('load', () => resolve(image));
     image.addEventListener('error', (error) => reject(error));
-    image.setAttribute('crossOrigin', 'anonymous'); // needed to avoid CORS issues on downloaded images
+    if (!url.startsWith('blob:') && !url.startsWith('data:')) {
+      image.setAttribute('crossOrigin', 'anonymous');
+    }
     image.src = url;
   });
 
@@ -26,7 +28,8 @@ export default async function getCroppedImg(
   imageSrc: string,
   pixelCrop: { x: number; y: number; width: number; height: number },
   rotation = 0,
-  flip = { horizontal: false, vertical: false }
+  flip = { horizontal: false, vertical: false },
+  filters = { saturation: 100, brightness: 100, contrast: 100 }
 ): Promise<File> {
   const image = await createImage(imageSrc);
   const canvas = document.createElement('canvas');
@@ -55,7 +58,8 @@ export default async function getCroppedImg(
   ctx.scale(flip.horizontal ? -1 : 1, flip.vertical ? -1 : 1);
   ctx.translate(-image.width / 2, -image.height / 2);
 
-  // draw rotated image
+  // draw rotated image with filters
+  ctx.filter = `saturate(${filters.saturation}%) brightness(${filters.brightness}%) contrast(${filters.contrast}%)`;
   ctx.drawImage(image, 0, 0);
 
   // croppedAreaPixels values are bounding box relative
