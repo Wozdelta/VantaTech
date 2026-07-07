@@ -43,18 +43,18 @@ export default function ImageCropper({ imageSrc, onCropComplete, onCancel }: Ima
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-black sm:bg-black/90 sm:p-6 backdrop-blur-xl animate-in fade-in duration-200">
-      <div className="bg-black sm:bg-[#121212] sm:rounded-[32px] sm:shadow-2xl sm:border sm:border-white/10 w-full h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:max-w-4xl mx-auto overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-[100] flex flex-col bg-gray-50/90 dark:bg-black/90 sm:p-6 backdrop-blur-xl animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-gray-900 sm:rounded-[32px] sm:shadow-2xl sm:border sm:border-gray-200 dark:sm:border-gray-800 w-full h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:max-w-4xl mx-auto overflow-hidden flex flex-col">
         
         {/* Header (Top Bar) */}
-        <div className="flex justify-between items-center p-4 sm:p-6 shrink-0 z-10 bg-black sm:bg-transparent">
-          <button onClick={onCancel} className="text-white/70 hover:text-white transition-colors p-2 bg-white/5 rounded-full">
+        <div className="flex justify-between items-center p-4 sm:p-6 shrink-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
+          <button onClick={onCancel} className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors p-2 bg-gray-100 dark:bg-gray-800 rounded-full">
             <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
           
           <div className="flex flex-col items-center">
             <span className="text-[10px] sm:text-xs font-bold text-vanta-blue tracking-widest uppercase mb-0.5">Editor</span>
-            <span className="text-sm font-medium text-white">Ajustar Imagem</span>
+            <span className="text-sm font-bold text-gray-900 dark:text-white">Ajustar Imagem</span>
           </div>
 
           <button 
@@ -67,7 +67,7 @@ export default function ImageCropper({ imageSrc, onCropComplete, onCancel }: Ima
         </div>
 
         {/* Cropper Area */}
-        <div className="relative flex-1 w-full bg-black min-h-[40vh]">
+        <div className="relative flex-1 w-full bg-gray-50 dark:bg-black/50 min-h-[40vh]">
           <div style={{ width: '100%', height: '100%', transform: `scaleX(${flipH ? -1 : 1}) scaleY(${flipV ? -1 : 1})` }}>
             <Cropper
               image={imageSrc}
@@ -80,16 +80,16 @@ export default function ImageCropper({ imageSrc, onCropComplete, onCancel }: Ima
               onZoomChange={setZoom}
               onRotationChange={setRotation}
               style={{
-                containerStyle: { background: 'black' },
+                containerStyle: { background: 'transparent' },
                 mediaStyle: { filter: `saturate(${saturation}%) brightness(${brightness}%) contrast(${contrast}%)` },
-                cropAreaStyle: { border: '2px solid rgba(255,255,255,0.8)', boxShadow: '0 0 0 9999em rgba(0,0,0,0.8)' }
+                cropAreaStyle: { border: '2px solid rgba(255,255,255,0.8)', boxShadow: '0 0 0 9999em rgba(0,0,0,0.6)' }
               }}
             />
           </div>
         </div>
 
         {/* Controls Panel (Bottom Sheet style on mobile) */}
-        <div className="bg-[#121212] sm:bg-transparent flex flex-col shrink-0 border-t border-white/5 rounded-t-[24px] sm:rounded-none">
+        <div className="bg-white dark:bg-gray-900 flex flex-col shrink-0 border-t border-gray-100 dark:border-gray-800 rounded-t-[24px] sm:rounded-none">
           
           <div className="flex items-center justify-between px-6 pt-4 pb-2">
              <button
@@ -103,7 +103,7 @@ export default function ImageCropper({ imageSrc, onCropComplete, onCancel }: Ima
                   setFlipH(false);
                   setFlipV(false);
                 }}
-                className="text-xs font-bold text-white/50 hover:text-white transition-colors"
+                className="text-xs font-bold text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
               >
                 Resetar Tudo
               </button>
@@ -112,13 +112,13 @@ export default function ImageCropper({ imageSrc, onCropComplete, onCancel }: Ima
               <div className="flex items-center gap-1">
                 <button 
                   onClick={() => setFlipH(!flipH)} 
-                  className={`p-2.5 rounded-full transition-all ${flipH ? 'bg-vanta-blue/20 text-vanta-blue' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+                  className={`p-2.5 rounded-full transition-all ${flipH ? 'bg-vanta-blue/10 text-vanta-blue' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20v-2"/><path d="M12 14v-2"/><path d="M12 8V6"/><path d="M12 2v2"/><path d="M17 19l4-7-4-7"/><path d="M7 19l-4-7 4-7"/></svg>
                 </button>
                 <button 
                   onClick={() => setFlipV(!flipV)} 
-                  className={`p-2.5 rounded-full transition-all ${flipV ? 'bg-vanta-blue/20 text-vanta-blue' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+                  className={`p-2.5 rounded-full transition-all ${flipV ? 'bg-vanta-blue/10 text-vanta-blue' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="rotate-90"><path d="M12 20v-2"/><path d="M12 14v-2"/><path d="M12 8V6"/><path d="M12 2v2"/><path d="M17 19l4-7-4-7"/><path d="M7 19l-4-7 4-7"/></svg>
                 </button>
@@ -130,42 +130,42 @@ export default function ImageCropper({ imageSrc, onCropComplete, onCancel }: Ima
               
               {/* Zoom Control */}
               <div className="flex items-center gap-4 group">
-                <ZoomOut className="w-4 h-4 text-white/50 group-hover:text-vanta-blue transition-colors shrink-0" />
+                <ZoomOut className="w-4 h-4 text-gray-400 group-hover:text-vanta-blue transition-colors shrink-0" />
                 <input type="range" value={zoom} min={1} max={3} step={0.01} onChange={(e) => setZoom(Number(e.target.value))} 
-                  className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white hover:[&::-webkit-slider-thumb]:bg-vanta-blue [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:scale-125 transition-all" />
-                <ZoomIn className="w-4 h-4 text-white/50 group-hover:text-vanta-blue transition-colors shrink-0" />
+                  className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full appearance-none cursor-pointer outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-gray-300 dark:[&::-webkit-slider-thumb]:border-gray-500 hover:[&::-webkit-slider-thumb]:bg-vanta-blue hover:[&::-webkit-slider-thumb]:border-vanta-blue [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:scale-125 transition-all" />
+                <ZoomIn className="w-4 h-4 text-gray-400 group-hover:text-vanta-blue transition-colors shrink-0" />
               </div>
 
               {/* Rotation Control */}
               <div className="flex items-center gap-4 group">
-                <RotateCw className="w-4 h-4 text-white/50 group-hover:text-vanta-blue transition-colors shrink-0" />
+                <RotateCw className="w-4 h-4 text-gray-400 group-hover:text-vanta-blue transition-colors shrink-0" />
                 <input type="range" value={rotation} min={0} max={360} step={1} onChange={(e) => setRotation(Number(e.target.value))} 
-                  className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white hover:[&::-webkit-slider-thumb]:bg-vanta-blue [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:scale-125 transition-all" />
-                <span className="text-[11px] text-white/50 font-medium w-7 text-right font-mono">{rotation}°</span>
+                  className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full appearance-none cursor-pointer outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-gray-300 dark:[&::-webkit-slider-thumb]:border-gray-500 hover:[&::-webkit-slider-thumb]:bg-vanta-blue hover:[&::-webkit-slider-thumb]:border-vanta-blue [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:scale-125 transition-all" />
+                <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium w-7 text-right font-mono">{rotation}°</span>
               </div>
 
               {/* Saturation */}
               <div className="flex items-center gap-4 group">
-                <Palette className="w-4 h-4 text-white/50 group-hover:text-vanta-blue transition-colors shrink-0" />
+                <Palette className="w-4 h-4 text-gray-400 group-hover:text-vanta-blue transition-colors shrink-0" />
                 <input type="range" value={saturation} min={0} max={200} step={1} onChange={(e) => setSaturation(Number(e.target.value))} 
-                  className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white hover:[&::-webkit-slider-thumb]:bg-vanta-blue [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:scale-125 transition-all" />
-                <span className="text-[11px] text-white/50 font-medium w-7 text-right font-mono">{saturation}%</span>
+                  className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full appearance-none cursor-pointer outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-gray-300 dark:[&::-webkit-slider-thumb]:border-gray-500 hover:[&::-webkit-slider-thumb]:bg-vanta-blue hover:[&::-webkit-slider-thumb]:border-vanta-blue [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:scale-125 transition-all" />
+                <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium w-7 text-right font-mono">{saturation}%</span>
               </div>
 
               {/* Brightness */}
               <div className="flex items-center gap-4 group">
-                <Sun className="w-4 h-4 text-white/50 group-hover:text-vanta-blue transition-colors shrink-0" />
+                <Sun className="w-4 h-4 text-gray-400 group-hover:text-vanta-blue transition-colors shrink-0" />
                 <input type="range" value={brightness} min={0} max={200} step={1} onChange={(e) => setBrightness(Number(e.target.value))} 
-                  className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white hover:[&::-webkit-slider-thumb]:bg-vanta-blue [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:scale-125 transition-all" />
-                <span className="text-[11px] text-white/50 font-medium w-7 text-right font-mono">{brightness}%</span>
+                  className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full appearance-none cursor-pointer outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-gray-300 dark:[&::-webkit-slider-thumb]:border-gray-500 hover:[&::-webkit-slider-thumb]:bg-vanta-blue hover:[&::-webkit-slider-thumb]:border-vanta-blue [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:scale-125 transition-all" />
+                <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium w-7 text-right font-mono">{brightness}%</span>
               </div>
 
               {/* Contrast */}
               <div className="flex items-center gap-4 group">
-                <Settings2 className="w-4 h-4 text-white/50 group-hover:text-vanta-blue transition-colors shrink-0" />
+                <Settings2 className="w-4 h-4 text-gray-400 group-hover:text-vanta-blue transition-colors shrink-0" />
                 <input type="range" value={contrast} min={0} max={200} step={1} onChange={(e) => setContrast(Number(e.target.value))} 
-                  className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white hover:[&::-webkit-slider-thumb]:bg-vanta-blue [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:scale-125 transition-all" />
-                <span className="text-[11px] text-white/50 font-medium w-7 text-right font-mono">{contrast}%</span>
+                  className="w-full h-1 bg-gray-200 dark:bg-gray-700 rounded-full appearance-none cursor-pointer outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-gray-300 dark:[&::-webkit-slider-thumb]:border-gray-500 hover:[&::-webkit-slider-thumb]:bg-vanta-blue hover:[&::-webkit-slider-thumb]:border-vanta-blue [&::-webkit-slider-thumb]:rounded-full hover:[&::-webkit-slider-thumb]:scale-125 transition-all" />
+                <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium w-7 text-right font-mono">{contrast}%</span>
               </div>
             </div>
           </div>
