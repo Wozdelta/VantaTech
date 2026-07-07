@@ -81,6 +81,17 @@ export default function CartDrawer() {
   const [isApplyingCupom, setIsApplyingCupom] = useState(false);
   const [cupomMessage, setCupomMessage] = useState<{ text: string, type: 'error' | 'success' } | null>(null);
 
+  // Toast Notification State
+  const [cartToast, setCartToast] = useState<{ message: string, id: number } | null>(null);
+
+  const showCartToast = (message: string) => {
+    const id = Date.now();
+    setCartToast({ message, id });
+    setTimeout(() => {
+      setCartToast(prev => prev?.id === id ? null : prev);
+    }, 2000);
+  };
+
   useEffect(() => {
     if (perfil) {
       setEndereco({
@@ -650,6 +661,16 @@ export default function CartDrawer() {
 
       <div className="fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-gray-900 z-[70] shadow-2xl flex flex-col animate-in slide-in-from-right duration-300 border-l border-gray-100 dark:border-gray-800">
 
+        {/* Toast Notification */}
+        {cartToast && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[80] animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className="bg-gray-900 text-white dark:bg-white dark:text-gray-900 px-4 py-2.5 rounded-full shadow-lg text-sm font-bold flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-green-400 dark:text-green-500" />
+              {cartToast.message}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800 shrink-0">
           <div className="flex items-center gap-3 text-vanta-darkblue dark:text-white">
             {step === 1 ? (
@@ -929,7 +950,7 @@ export default function CartDrawer() {
                                     isItem: true,
                                     maxQuantity: typeof acessorio.estoque === 'number' ? acessorio.estoque : undefined
                                   });
-                                  showAlert({ title: 'Oba!', message: `${acessorio.nome} adicionado ao carrinho.`, type: 'success' });
+                                  showCartToast(`${acessorio.nome} adicionado!`);
                                 }}
                                 className="px-3.5 py-2 bg-vanta-blue hover:bg-blue-600 text-white text-xs font-black rounded-xl transition-colors shadow-sm shadow-blue-500/20"
                               >
