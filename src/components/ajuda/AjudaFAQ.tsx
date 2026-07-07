@@ -56,7 +56,7 @@ export const FAQ_DATA = [
     categoria: 'VantaClub',
     icon: Star,
     items: [
-      { pergunta: 'Como ganhar pontos?', resposta: 'Você ganha VantaCoins ao realizar compras, e principalmente indicando amigos com seu link de afiliado. Quando um amigo compra, os pontos vão para você!' },
+      { pergunta: 'Como ganhar pontos?', resposta: 'Você ganha VantaCoins ao realizar compras, e principalmente indicando amigos com seu link de afiliado. Quando um amigo criar uma conta pelo seu link e fizer a primeira compra, os pontos vão para você! Atenção: válido apenas para contas novas e somente na primeira compra.' },
       { pergunta: 'Para que servem os pontos?', resposta: 'Seus pontos podem ser trocados por cupons de desconto, brindes e recompensas exclusivas diretamente na aba do VantaClub.' },
       { pergunta: 'Os pontos têm validade?', resposta: 'Atualmente, os VantaCoins não possuem prazo de validade e permanecem na sua conta para sempre.' },
       { pergunta: 'Como subir de nível?', resposta: 'Acumulando pontos, você avança de nível automaticamente. Níveis mais altos desbloqueiam recompensas exclusivas e de maior valor.' },
