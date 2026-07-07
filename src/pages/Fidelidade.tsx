@@ -236,9 +236,9 @@ export default function Fidelidade() {
           
           <div className="relative z-10 flex-1 flex flex-col">
             <h2 className="text-xl font-medium text-gray-300 mb-2">Seus Pontos Atuais</h2>
-            <div className="flex items-end gap-3 mb-8">
-              <span className="text-6xl font-black text-vanta-orange">{pontosAtuais}</span>
-              <span className="text-xl font-bold mb-2">VantaCoins</span>
+            <div className="flex flex-wrap md:flex-nowrap items-end gap-x-2 gap-y-1 md:gap-3 mb-8">
+              <span className="text-5xl md:text-6xl font-black text-vanta-orange break-all md:break-normal">{pontosAtuais}</span>
+              <span className="text-lg md:text-xl font-bold mb-1 md:mb-2">VantaCoins</span>
             </div>
             
             <div className="mb-4 mt-auto">
