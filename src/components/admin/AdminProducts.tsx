@@ -1063,29 +1063,31 @@ export default function AdminProducts() {
               </div>
 
               {/* Seção: Variações e Preço */}
-              <div>
-                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Preço Principal</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {!images.some(img => img.isVariant) && (
+                <div>
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Preço Principal</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-                  <div>
-                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Preço Base (R$)</label>
-                    <input required type="number" step="0.01" value={formData.preco} onChange={e => setFormData({ ...formData, preco: e.target.value })} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-sm font-medium" placeholder="Ex: 5999.00" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1.5 h-5">
-                      <input type="checkbox" id="temDesconto" checked={temDesconto} onChange={e => {
-                        setTemDesconto(e.target.checked);
-                        if (!e.target.checked) setFormData({ ...formData, preco_antigo: '' });
-                      }} className="w-4 h-4 text-vanta-blue rounded border-gray-300 dark:border-gray-600 dark:bg-gray-800 focus:ring-vanta-blue cursor-pointer transition-colors" />
-                      <label htmlFor="temDesconto" className="block text-sm font-bold text-gray-700 dark:text-gray-300 cursor-pointer leading-none mt-0.5">Tem preço antigo? (Desconto)</label>
+                    <div>
+                      <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Preço Base (R$)</label>
+                      <input required type="number" step="0.01" value={formData.preco} onChange={e => setFormData({ ...formData, preco: e.target.value })} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-sm font-medium" placeholder="Ex: 5999.00" />
                     </div>
-                    {temDesconto && (
-                      <input type="number" step="0.01" value={formData.preco_antigo} onChange={e => setFormData({ ...formData, preco_antigo: e.target.value })} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-sm font-medium" placeholder="Ex: 8299.00" />
-                    )}
+                    <div>
+                      <div className="flex items-center gap-2 mb-1.5 h-5">
+                        <input type="checkbox" id="temDesconto" checked={temDesconto} onChange={e => {
+                          setTemDesconto(e.target.checked);
+                          if (!e.target.checked) setFormData({ ...formData, preco_antigo: '' });
+                        }} className="w-4 h-4 text-vanta-blue rounded border-gray-300 dark:border-gray-600 dark:bg-gray-800 focus:ring-vanta-blue cursor-pointer transition-colors" />
+                        <label htmlFor="temDesconto" className="block text-sm font-bold text-gray-700 dark:text-gray-300 cursor-pointer leading-none mt-0.5">Tem preço antigo? (Desconto)</label>
+                      </div>
+                      {temDesconto && (
+                        <input type="number" step="0.01" value={formData.preco_antigo} onChange={e => setFormData({ ...formData, preco_antigo: e.target.value })} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-sm font-medium" placeholder="Ex: 8299.00" />
+                      )}
+                    </div>
                   </div>
+                  <p className="text-xs text-gray-500 mt-3">Se uma imagem da galeria tiver um preço preenchido, ele vai substituir este preço base quando a cor for selecionada.</p>
                 </div>
-                <p className="text-xs text-gray-500 mt-3">Se uma imagem da galeria tiver um preço preenchido, ele vai substituir este preço base quando a cor for selecionada.</p>
-              </div>
+              )}
 
               {/* Seção: Descrição */}
               <div>
