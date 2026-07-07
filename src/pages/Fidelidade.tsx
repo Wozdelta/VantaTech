@@ -44,7 +44,7 @@ export default function Fidelidade() {
   const [historico, setHistorico] = useState<Historico[]>([]);
   const [loading, setLoading] = useState(true);
   const [resgatandoId, setResgatandoId] = useState<string | null>(null);
-  const [modalType, setModalType] = useState<'points' | 'history' | null>(null);
+  const [modalType, setModalType] = useState<'points' | 'history' | 'levels' | null>(null);
   const { settings } = useSettings();
 
   const showFidelidade = settings?.acesso_fidelidade === 'todos' || perfil?.cargo === 'Admin';
@@ -248,7 +248,11 @@ export default function Fidelidade() {
                   <span className="text-gray-300">Faltam {proximoNivel.pontos_minimos - pontosAcumulados} pts para {proximoNivel.nome}</span>
                 )}
               </div>
-              <div className="h-3 w-full bg-white/20 rounded-full overflow-hidden">
+              <div 
+                className="h-3 w-full bg-white/20 rounded-full overflow-hidden cursor-pointer hover:bg-white/30 transition-colors"
+                onClick={() => setModalType('levels')}
+                title="Ver metas de pontos dos níveis"
+              >
                 <div 
                   className="h-full bg-vanta-orange rounded-full transition-all duration-1000 ease-out" 
                   style={{ width: `${progressPercentage}%` }}
@@ -256,7 +260,7 @@ export default function Fidelidade() {
               </div>
             </div>
             <div className="mt-4">
-              <Link to="/" className="inline-block px-6 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg font-bold transition-colors">
+              <Link to="/ajuda" className="inline-block px-6 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg font-bold transition-colors">
                 Como ganhar mais?
               </Link>
             </div>
@@ -518,7 +522,36 @@ export default function Fidelidade() {
             </div>
           )}
         </div>
+        </div>
       </div>
+
+      {/* Modal Níveis */}
+      {modalType === 'levels' && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setModalType(null)}>
+          <div className="bg-white dark:bg-gray-800 rounded-3xl p-6 md:p-8 shadow-2xl max-w-sm w-full animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Crown className="w-6 h-6 text-vanta-orange" />
+                Níveis VantaClub
+              </h3>
+              <button onClick={() => setModalType(null)} className="p-2 -mr-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              {niveis.map((n, idx) => (
+                <div key={idx} className="flex justify-between items-center p-4 rounded-2xl bg-gray-50 dark:bg-gray-700/50 border border-gray-100 dark:border-gray-700">
+                  <span className="font-bold text-gray-700 dark:text-gray-200 text-lg">{n.nome}</span>
+                  <div className="flex items-center gap-1.5 bg-white dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-gray-100 dark:border-gray-600 shadow-sm">
+                    <Star className="w-4 h-4 text-vanta-orange fill-vanta-orange" />
+                    <span className="text-sm font-black text-vanta-orange">{n.pontos_minimos.toLocaleString('pt-BR')} pts</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
