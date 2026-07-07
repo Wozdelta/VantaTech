@@ -4,6 +4,7 @@ import { useAlert } from '../../contexts/AlertContext';
 import { Plus, Trash2, Image as ImageIcon, Loader2, X, Edit, UploadCloud, Palette, Smartphone, Package, Search, ChevronDown, Check } from 'lucide-react';
 import { Reorder } from 'framer-motion';
 import RichTextEditor from '../ui/RichTextEditor';
+import ImageCropper from './ImageCropper';
 
 type Product = {
   id: string;
@@ -58,6 +59,7 @@ export default function AdminProducts() {
 
   const [editId, setEditId] = useState<string | null>(null);
   const [temDesconto, setTemDesconto] = useState(false);
+  const [croppingImage, setCroppingImage] = useState<ImageUploadItem | null>(null);
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -927,7 +929,10 @@ export default function AdminProducts() {
                       }}
                       className="relative bg-white dark:bg-gray-900 p-3 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm w-56 flex flex-col group gap-2 cursor-grab active:cursor-grabbing hover:border-vanta-blue transition-colors"
                     >
-                      <button type="button" onClick={() => handleRemoveImage(img.id)} className="absolute -top-3 -right-3 bg-red-500 text-white p-1.5 rounded-full shadow hover:bg-red-600 z-10 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-4 h-4" /></button>
+                      <div className="absolute -top-3 -right-3 flex gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button type="button" onClick={() => setCroppingImage(img)} className="bg-vanta-blue text-white p-1.5 rounded-full shadow hover:bg-blue-600"><Edit className="w-4 h-4" /></button>
+                        <button type="button" onClick={() => handleRemoveImage(img.id)} className="bg-red-500 text-white p-1.5 rounded-full shadow hover:bg-red-600"><X className="w-4 h-4" /></button>
+                      </div>
                       <div className="h-28 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800">
                         <img src={img.preview} draggable={false} alt="" className="max-h-full max-w-full object-contain pointer-events-none select-none" />
                       </div>
@@ -1121,6 +1126,20 @@ export default function AdminProducts() {
             </form>
           </div>
         </div>
+      )}
+      {croppingImage && (
+        <ImageCropper
+          imageSrc={croppingImage.preview}
+          onCropComplete={(file, preview) => {
+            setImages(images.map(img => 
+              img.id === croppingImage.id
+                ? { ...img, file, preview }
+                : img
+            ));
+            setCroppingImage(null);
+          }}
+          onCancel={() => setCroppingImage(null)}
+        />
       )}
     </div>
   );
