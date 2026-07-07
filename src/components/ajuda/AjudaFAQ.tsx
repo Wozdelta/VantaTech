@@ -1,5 +1,7 @@
 import { ChevronDown, Ticket, Package, CreditCard, User, Smartphone, Truck, Star } from 'lucide-react';
 import * as Accordion from '@radix-ui/react-accordion';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 export const FAQ_DATA = [
   {
@@ -63,13 +65,30 @@ export const FAQ_DATA = [
 ];
 
 export default function AjudaFAQ({ onOpenTicket }: { onOpenTicket: () => void }) {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash) {
+      const id = location.hash.replace('#', '');
+      const element = document.getElementById(id);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300);
+      }
+    }
+  }, [location.hash]);
+
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {FAQ_DATA.map((secao, idx) => (
-          <div key={idx} className="bg-white dark:bg-gray-800/80 rounded-2xl p-7 shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md transition-shadow">
+        {FAQ_DATA.map((secao, idx) => {
+          const sectionId = secao.categoria.toLowerCase();
+          const isTargetSection = location.hash === `#${sectionId}`;
+          return (
+          <div key={idx} id={sectionId} className={`bg-white dark:bg-gray-800/80 rounded-2xl p-7 shadow-sm border ${isTargetSection ? 'border-vanta-orange shadow-vanta-orange/10 shadow-lg' : 'border-gray-100 dark:border-gray-700/50 hover:shadow-md'} transition-all duration-500`}>
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-vanta-blue/10 flex items-center justify-center text-vanta-blue shadow-inner border border-blue-100/50 dark:border-vanta-blue/20">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-inner border ${isTargetSection ? 'bg-orange-50 dark:bg-vanta-orange/10 text-vanta-orange border-orange-100/50 dark:border-vanta-orange/20' : 'bg-blue-50 dark:bg-vanta-blue/10 text-vanta-blue border-blue-100/50 dark:border-vanta-blue/20'}`}>
                 <secao.icon className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
@@ -77,7 +96,7 @@ export default function AjudaFAQ({ onOpenTicket }: { onOpenTicket: () => void })
               </h3>
             </div>
             
-            <Accordion.Root type="single" collapsible className="w-full">
+            <Accordion.Root type="single" collapsible className="w-full" defaultValue={isTargetSection ? `${idx}-0` : undefined}>
               {secao.items.map((item, itemIdx) => (
                 <Accordion.Item 
                   key={itemIdx} 
@@ -102,7 +121,7 @@ export default function AjudaFAQ({ onOpenTicket }: { onOpenTicket: () => void })
               ))}
             </Accordion.Root>
           </div>
-        ))}
+        )})}
       </div>
 
       {/* Banner de Ajuda Extra */}

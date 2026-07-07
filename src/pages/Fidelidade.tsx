@@ -260,7 +260,7 @@ export default function Fidelidade() {
               </div>
             </div>
             <div className="mt-4">
-              <Link to="/ajuda" className="inline-block px-6 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg font-bold transition-colors">
+              <Link to="/ajuda#vantaclub" className="inline-block px-6 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg font-bold transition-colors">
                 Como ganhar mais?
               </Link>
             </div>
