@@ -113,18 +113,27 @@ export default function AdminEncomendas() {
     if (!confirmed) return;
 
     try {
-      await supabase.from('encomendas_pedidos').delete().eq('id', id);
+      // 1. Deletar as mensagens associadas para não dar erro de restrição de chave estrangeira
+      await supabase.from('encomendas_mensagens').delete().eq('encomenda_id', id);
+      
+      // 2. Deletar a encomenda em si
+      const { error } = await supabase.from('encomendas_pedidos').delete().eq('id', id);
+      if (error) throw error;
+
       setEncomendas(prev => prev.filter(e => e.id !== id));
       showAlert({ type: 'success', message: 'Encomenda deletada.' });
     } catch (err) {
       console.error('Erro ao deletar encomenda manual:', err);
-      showAlert({ type: 'error', message: 'Erro ao deletar encomenda.' });
+      showAlert({ type: 'error', message: 'Erro ao deletar encomenda. Pode haver dependências não resolvidas.' });
     }
   };
 
   const handleDeleteCancelado = async (id: string) => {
     try {
-      await supabase.from('encomendas_pedidos').delete().eq('id', id);
+      await supabase.from('encomendas_mensagens').delete().eq('encomenda_id', id);
+      const { error } = await supabase.from('encomendas_pedidos').delete().eq('id', id);
+      if (error) throw error;
+      
       setEncomendas(prev => prev.filter(e => e.id !== id));
       showAlert({ type: 'success', message: 'Encomenda deletada automaticamente.' });
     } catch (err) {
