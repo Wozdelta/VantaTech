@@ -69,7 +69,9 @@ export default function CartDrawer() {
 
   // Shipping State
   const [frete, setFrete] = useState(0);
+  const [, setDistanciaKm] = useState(0);
   const [isCalculatingFrete, setIsCalculatingFrete] = useState(false);
+  const [, setFreteError] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
