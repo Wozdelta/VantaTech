@@ -48,7 +48,8 @@ export default function CartDrawer() {
   const { user, perfil, refreshPerfil } = useAuth();
   const { showAlert } = useAlert();
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [adicionaisDisponiveis, setAdicionaisDisponiveis] = useState<any[]>([]);
 
   const [pagamento, setPagamento] = useState('PIX');
   const [showPagamento, setShowPagamento] = useState(false);
@@ -92,6 +93,26 @@ export default function CartDrawer() {
       });
     }
   }, [perfil]);
+
+  useEffect(() => {
+    async function fetchAdicionais() {
+      if (isCartOpen) {
+        try {
+          const { data } = await supabase
+            .from('produtos')
+            .select('*')
+            .eq('is_adicional', true)
+            .eq('ativo', true)
+            .limit(3);
+          
+          setAdicionaisDisponiveis(data || []);
+        } catch (err) {
+          console.error('Erro ao buscar adicionais:', err);
+        }
+      }
+    }
+    fetchAdicionais();
+  }, [isCartOpen]);
 
   // Reset parcelas if payment method changes from Credit Card
   useEffect(() => {
@@ -250,7 +271,11 @@ export default function CartDrawer() {
         }
 
         // Sucesso
-        setStep(3);
+        if (adicionaisDisponiveis.length > 0) {
+          setStep(3);
+        } else {
+          setStep(4);
+        }
       } else {
         setFreteError('Não encontramos o endereço no mapa. Digite com mais precisão.');
       }
@@ -631,7 +656,13 @@ export default function CartDrawer() {
             ) : (
               <button
                 onClick={() => {
-                  setStep((prev) => (prev - 1) as 1 | 2);
+                  if (step === 4) {
+                    setStep(adicionaisDisponiveis.length > 0 ? 3 : 2);
+                  } else if (step === 3) {
+                    setStep(2);
+                  } else if (step === 2) {
+                    setStep(1);
+                  }
                   setFreteError('');
                 }}
                 className="p-1.5 -ml-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
@@ -643,7 +674,8 @@ export default function CartDrawer() {
             <h2 className="text-lg font-black tracking-tight">
               {step === 1 && "Meu Carrinho"}
               {step === 2 && "Endereço de Entrega"}
-              {step === 3 && "Pagamento"}
+              {step === 3 && "Aproveite também"}
+              {step === 4 && "Pagamento"}
             </h2>
           </div>
           <button
@@ -656,7 +688,7 @@ export default function CartDrawer() {
 
         {items.length > 0 && (
           <div className="flex bg-gray-100 dark:bg-gray-800 h-1">
-            <div className={`bg-vanta-blue h-full transition-all duration-300 ${step === 1 ? 'w-1/3' : step === 2 ? 'w-2/3' : 'w-full'}`}></div>
+            <div className={`bg-vanta-blue h-full transition-all duration-300 ${step === 1 ? 'w-1/4' : step === 2 ? 'w-2/4' : step === 3 ? 'w-3/4' : 'w-full'}`}></div>
           </div>
         )}
 
@@ -854,6 +886,53 @@ export default function CartDrawer() {
               )}
 
               {step === 3 && (
+                <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div className="bg-vanta-blue/5 border border-vanta-blue/20 rounded-xl p-5">
+                    <h3 className="font-black text-lg text-vanta-darkblue dark:text-white mb-2">Aproveite para levar junto</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Acessórios recomendados para você:</p>
+                    
+                    <div className="space-y-3">
+                      {adicionaisDisponiveis.map((acessorio) => {
+                        const inCart = items.some(i => i.id === acessorio.id);
+                        return (
+                          <div key={acessorio.id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-lg shadow-sm">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 bg-gray-50 dark:bg-gray-800 rounded-md overflow-hidden p-1 shrink-0">
+                                <img src={acessorio.imagem_url || '/Phone.png'} alt={acessorio.nome} className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal" />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="font-bold text-sm text-gray-900 dark:text-white line-clamp-1 max-w-[150px]">{acessorio.nome}</span>
+                                <span className="text-xs font-black text-vanta-blue">{Number(acessorio.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                              </div>
+                            </div>
+                            
+                            {inCart ? (
+                              <button 
+                                disabled
+                                className="px-3 py-1.5 bg-green-100 text-green-700 text-xs font-bold rounded-lg flex items-center gap-1 opacity-70"
+                              >
+                                <CheckCircle className="w-3.5 h-3.5" /> Adicionado
+                              </button>
+                            ) : (
+                              <button 
+                                onClick={() => {
+                                  updateQuantity(acessorio.id, 1, acessorio);
+                                  showAlert({ title: 'Oba!', message: `${acessorio.nome} adicionado ao carrinho.`, type: 'success' });
+                                }}
+                                className="px-3 py-1.5 bg-vanta-blue hover:bg-blue-600 text-white text-xs font-bold rounded-lg transition-colors flex flex-col items-center shadow-sm"
+                              >
+                                <span>+ Adicionar</span>
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {step === 4 && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
                   {finalTotal > 0 ? (
                     <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-5 border border-gray-100 dark:border-gray-800">
@@ -1021,21 +1100,21 @@ export default function CartDrawer() {
                 </div>
               )}
 
-              {step === 3 && frete > 0 && (
+              {step === 4 && frete > 0 && (
                 <div className="flex items-center justify-between animate-in slide-in-from-top-1 duration-300">
                   <span className="text-gray-500 font-medium text-sm">Frete</span>
                   <span className="text-sm font-bold text-gray-500">+ {formatPrice(frete)}</span>
                 </div>
               )}
 
-              {step === 3 && frete === 0 && (
+              {step === 4 && frete === 0 && (
                 <div className="flex items-center justify-between animate-in slide-in-from-top-1 duration-300">
                   <span className="text-gray-500 font-medium text-sm">Frete</span>
                   <span className="text-sm font-bold text-green-500">Grátis</span>
                 </div>
               )}
 
-              {step === 3 && pagamento === 'Cartão de Crédito' && parcelas > 1 && (
+              {step === 4 && pagamento === 'Cartão de Crédito' && parcelas > 1 && (
                 <div className="flex items-center justify-between text-orange-500 animate-in slide-in-from-top-1 duration-300">
                   <span className="font-medium text-xs">Juros (Maquininha)</span>
                   <span className="text-xs font-bold">+ {formatPrice(interestValue)}</span>
@@ -1045,7 +1124,7 @@ export default function CartDrawer() {
               <div className="flex items-center justify-between pt-2 mt-2 border-t border-gray-100 dark:border-gray-800">
                 <span className="text-gray-700 dark:text-gray-300 font-black text-lg">Total</span>
                 <span className="text-2xl font-black text-vanta-blue">
-                  {step === 3 ? formatPrice(finalTotal) : formatPrice(Math.max(0, cartTotal - cupomDiscount))}
+                  {step === 4 ? formatPrice(finalTotal) : formatPrice(Math.max(0, cartTotal - cupomDiscount))}
                 </span>
               </div>
               
@@ -1086,6 +1165,15 @@ export default function CartDrawer() {
             )}
 
             {step === 3 && (
+              <button
+                onClick={() => setStep(4)}
+                className="w-full bg-vanta-blue hover:bg-blue-600 text-white py-3.5 rounded-xl font-bold flex items-center justify-center transition-all hover:-translate-y-1 hover:shadow-lg"
+              >
+                Ir para o Pagamento
+              </button>
+            )}
+
+            {step === 4 && (
               <button
                 onClick={handleCheckout}
                 disabled={isSubmitting}
