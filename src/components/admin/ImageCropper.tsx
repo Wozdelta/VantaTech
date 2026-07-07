@@ -6,10 +6,11 @@ import getCroppedImg from '../../utils/cropImage';
 interface ImageCropperProps {
   imageSrc: string;
   onCropComplete: (file: File, preview: string) => void;
+  onRevert?: () => void;
   onCancel: () => void;
 }
 
-export default function ImageCropper({ imageSrc, onCropComplete, onCancel }: ImageCropperProps) {
+export default function ImageCropper({ imageSrc, onCropComplete, onRevert, onCancel }: ImageCropperProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
@@ -137,25 +138,37 @@ export default function ImageCropper({ imageSrc, onCropComplete, onCancel }: Ima
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 px-6 py-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-800">
-            <button
-              onClick={onCancel}
-              className="px-5 py-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={isProcessing}
-              className="px-5 py-2.5 rounded-xl font-bold text-white bg-vanta-blue hover:bg-blue-600 transition-colors flex items-center gap-2 shadow-lg shadow-blue-500/20 disabled:opacity-50"
-            >
-              {isProcessing ? (
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-              ) : (
-                <Check className="w-4 h-4" />
-              )}
-              {isProcessing ? 'Cortando...' : 'Cortar e Salvar'}
-            </button>
+          <div className="flex justify-between items-center px-6 py-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-800">
+            {onRevert ? (
+              <button
+                onClick={onRevert}
+                className="text-xs font-bold text-gray-500 hover:text-red-500 transition-colors"
+              >
+                Restaurar Original
+              </button>
+            ) : (
+              <div></div>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={onCancel}
+                className="px-5 py-2.5 rounded-xl font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={isProcessing}
+                className="px-5 py-2.5 rounded-xl font-bold text-white bg-vanta-blue hover:bg-blue-600 transition-colors flex items-center gap-2 shadow-lg shadow-blue-500/20 disabled:opacity-50"
+              >
+                {isProcessing ? (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                ) : (
+                  <Check className="w-4 h-4" />
+                )}
+                {isProcessing ? 'Cortando...' : 'Cortar e Salvar'}
+              </button>
+            </div>
           </div>
         </div>
       </div>

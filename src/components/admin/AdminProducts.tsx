@@ -28,7 +28,9 @@ type Product = {
 type ImageUploadItem = {
   id: string;
   file?: File;
+  originalFile?: File;
   preview: string;
+  originalPreview?: string;
   isVariant?: boolean;
   color: string;
   existingUrl?: string;
@@ -226,6 +228,7 @@ export default function AdminProducts() {
       setImages(product.galeria.map((g: any, idx) => ({
         id: `existing-${idx}`,
         preview: g.url,
+        originalPreview: g.url,
         isVariant: !!(g.cor || g.memoria || g.bateria || g.preco || g.preco_antigo),
         color: g.cor || '',
         existingUrl: g.url,
@@ -239,6 +242,7 @@ export default function AdminProducts() {
       setImages([{
         id: 'existing-0',
         preview: product.imagem_url,
+        originalPreview: product.imagem_url,
         color: product.cor || '',
         existingUrl: product.imagem_url
       }]);
@@ -285,7 +289,9 @@ export default function AdminProducts() {
       const newImages = Array.from(e.target.files).map(file => ({
         id: Math.random().toString(36).substr(2, 9),
         file,
+        originalFile: file,
         preview: URL.createObjectURL(file),
+        originalPreview: URL.createObjectURL(file),
         isVariant: false,
         color: ''
       }));
@@ -1129,11 +1135,24 @@ export default function AdminProducts() {
       )}
       {croppingImage && (
         <ImageCropper
-          imageSrc={croppingImage.preview}
+          imageSrc={croppingImage.originalPreview || croppingImage.preview}
           onCropComplete={(file, preview) => {
             setImages(images.map(img => 
               img.id === croppingImage.id
-                ? { ...img, file, preview }
+                ? { ...img, file, preview, existingUrl: undefined }
+                : img
+            ));
+            setCroppingImage(null);
+          }}
+          onRevert={() => {
+            setImages(images.map(img => 
+              img.id === croppingImage.id
+                ? { 
+                    ...img, 
+                    file: img.originalFile, 
+                    preview: img.originalPreview || img.preview,
+                    existingUrl: img.originalPreview?.startsWith('http') ? img.originalPreview : undefined
+                  }
                 : img
             ));
             setCroppingImage(null);
