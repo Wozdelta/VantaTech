@@ -6,11 +6,10 @@ import getCroppedImg from '../../utils/cropImage';
 interface ImageCropperProps {
   imageSrc: string;
   onCropComplete: (file: File, preview: string) => void;
-  onRevert?: () => void;
   onCancel: () => void;
 }
 
-export default function ImageCropper({ imageSrc, onCropComplete, onRevert, onCancel }: ImageCropperProps) {
+export default function ImageCropper({ imageSrc, onCropComplete, onCancel }: ImageCropperProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
@@ -139,16 +138,21 @@ export default function ImageCropper({ imageSrc, onCropComplete, onRevert, onCan
 
           {/* Actions */}
           <div className="flex justify-between items-center px-6 py-4 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-800">
-            {onRevert ? (
-              <button
-                onClick={onRevert}
-                className="text-xs font-bold text-gray-500 hover:text-red-500 transition-colors"
-              >
-                Restaurar Original
-              </button>
-            ) : (
-              <div></div>
-            )}
+            <button
+              onClick={() => {
+                setCrop({ x: 0, y: 0 });
+                setZoom(1);
+                setRotation(0);
+                setSaturation(100);
+                setBrightness(100);
+                setContrast(100);
+                setFlipH(false);
+                setFlipV(false);
+              }}
+              className="text-xs font-bold text-gray-500 hover:text-vanta-blue transition-colors"
+            >
+              Resetar Ajustes
+            </button>
             <div className="flex gap-3">
               <button
                 onClick={onCancel}

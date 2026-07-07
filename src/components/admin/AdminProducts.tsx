@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
-import { Plus, Trash2, Image as ImageIcon, Loader2, X, Edit, UploadCloud, Palette, Smartphone, Package, Search, ChevronDown, Check } from 'lucide-react';
+import { Plus, Trash2, Image as ImageIcon, Loader2, X, Edit, UploadCloud, Palette, Smartphone, Package, Search, ChevronDown, Check, Undo2 } from 'lucide-react';
 import { Reorder } from 'framer-motion';
 import RichTextEditor from '../ui/RichTextEditor';
 import ImageCropper from './ImageCropper';
@@ -305,6 +305,19 @@ export default function AdminProducts() {
 
   function handleUpdateImageField(id: string, field: keyof ImageUploadItem, value: any) {
     setImages(images.map(img => img.id === id ? { ...img, [field]: value } : img));
+  }
+
+  function handleUndoCrop(id: string) {
+    setImages(images.map(img => 
+      img.id === id
+        ? { 
+            ...img, 
+            file: img.originalFile, 
+            preview: img.originalPreview || img.preview,
+            existingUrl: img.originalPreview?.startsWith('http') ? img.originalPreview : undefined
+          }
+        : img
+    ));
   }
 
   function handleRemoveImage(id: string) {
@@ -936,8 +949,11 @@ export default function AdminProducts() {
                       className="relative bg-white dark:bg-gray-900 p-3 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm w-56 flex flex-col group gap-2 cursor-grab active:cursor-grabbing hover:border-vanta-blue transition-colors"
                     >
                       <div className="absolute -top-3 -right-3 flex gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button type="button" onClick={() => setCroppingImage(img)} className="bg-vanta-blue text-white p-1.5 rounded-full shadow hover:bg-blue-600"><Edit className="w-4 h-4" /></button>
-                        <button type="button" onClick={() => handleRemoveImage(img.id)} className="bg-red-500 text-white p-1.5 rounded-full shadow hover:bg-red-600"><X className="w-4 h-4" /></button>
+                        {(img.preview !== img.originalPreview && img.originalPreview) && (
+                          <button type="button" onClick={() => handleUndoCrop(img.id)} title="Desfazer Corte" className="bg-orange-500 text-white p-1.5 rounded-full shadow hover:bg-orange-600"><Undo2 className="w-4 h-4" /></button>
+                        )}
+                        <button type="button" onClick={() => setCroppingImage(img)} title="Editar/Cortar" className="bg-vanta-blue text-white p-1.5 rounded-full shadow hover:bg-blue-600"><Edit className="w-4 h-4" /></button>
+                        <button type="button" onClick={() => handleRemoveImage(img.id)} title="Remover" className="bg-red-500 text-white p-1.5 rounded-full shadow hover:bg-red-600"><X className="w-4 h-4" /></button>
                       </div>
                       <div className="h-28 flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800">
                         <img src={img.preview} draggable={false} alt="" className="max-h-full max-w-full object-contain pointer-events-none select-none" />
