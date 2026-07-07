@@ -271,7 +271,8 @@ export default function CartDrawer() {
         }
 
         // Sucesso
-        if (adicionaisDisponiveis.length > 0) {
+        const temAparelho = items.some(item => !item.isItem);
+        if (adicionaisDisponiveis.length > 0 && temAparelho) {
           setStep(3);
         } else {
           setStep(4);
@@ -657,7 +658,8 @@ export default function CartDrawer() {
               <button
                 onClick={() => {
                   if (step === 4) {
-                    setStep(adicionaisDisponiveis.length > 0 ? 3 : 2);
+                    const temAparelho = items.some(item => !item.isItem);
+                    setStep(adicionaisDisponiveis.length > 0 && temAparelho ? 3 : 2);
                   } else if (step === 3) {
                     setStep(2);
                   } else if (step === 2) {
