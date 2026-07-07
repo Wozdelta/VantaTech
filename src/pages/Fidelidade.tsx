@@ -522,7 +522,6 @@ export default function Fidelidade() {
             </div>
           )}
         </div>
-        </div>
       </div>
 
       {/* Modal Níveis */}
