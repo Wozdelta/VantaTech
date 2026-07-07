@@ -132,21 +132,23 @@ export default function AdminControle() {
             Configure quem tem acesso a cada módulo do sistema. Módulos definidos como <span className="font-bold text-gray-700 dark:text-gray-300">"Público"</span> ficam visíveis para todos os clientes, enquanto módulos em <span className="font-bold text-gray-700 dark:text-gray-300">"Privado"</span> são visíveis apenas para administradores.
           </p>
           
-          <div className="mt-5 flex flex-wrap items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-700/50 w-fit">
-            <span className="text-sm font-bold text-gray-700 dark:text-gray-300">Ação Rápida:</span>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 pr-3 border-r border-gray-200 dark:border-gray-700">
+               <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">Ações Rápidas</span>
+            </div>
             <button 
               onClick={() => handleSetAll('todos')}
-              className="px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg text-xs font-bold hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors flex items-center gap-1.5"
+              className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-emerald-200 dark:hover:border-emerald-900/50 hover:shadow-sm hover:shadow-emerald-500/5 transition-all flex items-center gap-2 group"
             >
-              <Globe className="w-3.5 h-3.5" />
-              Tornar Tudo Público
+              <Globe className="w-4 h-4 text-emerald-500 group-hover:scale-110 transition-transform" />
+              Liberar Tudo
             </button>
             <button 
               onClick={() => handleSetAll('admin')}
-              className="px-3 py-1.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg text-xs font-bold hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors flex items-center gap-1.5"
+              className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-rose-200 dark:hover:border-rose-900/50 hover:shadow-sm hover:shadow-rose-500/5 transition-all flex items-center gap-2 group"
             >
-              <Lock className="w-3.5 h-3.5" />
-              Tornar Tudo Privado
+              <Lock className="w-4 h-4 text-rose-500 group-hover:scale-110 transition-transform" />
+              Ocultar Tudo
             </button>
           </div>
         </div>
