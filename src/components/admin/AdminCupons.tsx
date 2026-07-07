@@ -268,7 +268,7 @@ export default function AdminCupons() {
 
       {/* Formulário */}
       <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden shadow-sm">
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 border-b border-gray-100 dark:border-gray-800 pb-4">
             {isEditing ? 'Editar Cupom' : 'Criar Novo Cupom'}
           </h3>
@@ -380,13 +380,13 @@ export default function AdminCupons() {
               </label>
             </div>
 
-            <div className="flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
-              <button type="submit" disabled={loading} className="flex items-center gap-2 bg-vanta-blue text-white px-6 py-2.5 rounded-xl font-bold hover:bg-vanta-darkblue transition-colors disabled:opacity-50">
+            <div className="flex flex-col sm:flex-row items-center gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+              <button type="submit" disabled={loading} className="w-full sm:w-auto justify-center flex items-center gap-2 bg-vanta-blue text-white px-6 py-3 sm:py-2.5 rounded-xl font-bold hover:bg-vanta-darkblue transition-colors disabled:opacity-50">
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
                 {isEditing ? 'Atualizar Cupom' : 'Criar Cupom'}
               </button>
               {isEditing && (
-                <button type="button" onClick={resetForm} className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-6 py-2.5 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <button type="button" onClick={resetForm} className="w-full sm:w-auto justify-center flex items-center gap-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-6 py-3 sm:py-2.5 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                   <X className="w-5 h-5" />
                   Cancelar
                 </button>
@@ -401,7 +401,132 @@ export default function AdminCupons() {
         <div className="p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
           <h3 className="font-bold text-gray-900 dark:text-white">Cupons Cadastrados</h3>
         </div>
-        <div className="overflow-x-auto">
+
+        {/* Versão Mobile (Cards) */}
+        <div className="grid grid-cols-1 gap-4 p-4 md:hidden">
+          {loading && cupons.length === 0 ? (
+            <div className="py-8 text-center text-gray-500 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-800">
+              <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-vanta-blue" />
+              <p>Carregando cupons...</p>
+            </div>
+          ) : cupons.length === 0 ? (
+            <div className="py-8 text-center text-gray-500 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-800">
+              Nenhum cupom cadastrado.
+            </div>
+          ) : (
+            cupons.map(cupom => (
+              <div key={cupom.id} className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col gap-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex flex-col gap-1 items-start">
+                    <span className="font-bold text-vanta-blue px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800/30 w-max text-sm tracking-wider">
+                      {cupom.codigo}
+                    </span>
+                    <span className="font-bold text-gray-900 dark:text-white mt-1">
+                      {formatDiscount(cupom)}
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => editCupom(cupom)} className="p-2 text-vanta-blue hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors" title="Editar">
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDeleteCupom(cupom.id)} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors" title="Excluir">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col gap-2 text-xs">
+                  {cupom.quantidade_disponivel !== null && (
+                    <span className="text-gray-500 font-medium">{cupom.quantidade_disponivel} usos restantes</span>
+                  )}
+                  {cupom.user_id && <span className="text-purple-600 font-medium flex items-center gap-1.5"><Users className="w-3.5 h-3.5"/> Restrito a cliente</span>}
+                  {cupom.categoria_nome && <span className="text-orange-600 font-medium flex items-center gap-1.5"><Box className="w-3.5 h-3.5"/> Cat: {cupom.categoria_nome}</span>}
+                  {cupom.nivel_id && <span className="text-blue-600 font-medium flex items-center gap-1.5"><Tag className="w-3.5 h-3.5"/> Nível: {niveis.find(n => n.id === cupom.nivel_id)?.nome} +</span>}
+                  {cupom.data_expiracao && <span className="text-red-600 font-medium flex items-center gap-1.5"><Clock className="w-3.5 h-3.5"/> Exp: {new Date(cupom.data_expiracao).toLocaleDateString()}</span>}
+                  {(cupom.valor_minimo || cupom.valor_maximo) && (
+                    <span className="text-gray-500 flex items-center gap-1.5">
+                      <DollarSign className="w-3.5 h-3.5"/> R$ {cupom.valor_minimo || 0} - {cupom.valor_maximo ? formatMoney(cupom.valor_maximo) : '∞'}
+                    </span>
+                  )}
+                  {!cupom.user_id && !cupom.categoria_nome && !cupom.data_expiracao && !cupom.valor_minimo && !cupom.valor_maximo && !cupom.nivel_id && (
+                    <span className="text-gray-400 italic">Sem restrições extras</span>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between mt-2 pt-3 border-t border-gray-100 dark:border-gray-700">
+                  {(() => {
+                    let isExpired = false;
+                    let isEsgotado = cupom.quantidade_disponivel !== null && cupom.quantidade_disponivel <= 0;
+                    
+                    if (cupom.data_expiracao) {
+                      let expDateStr = cupom.data_expiracao;
+                      if (!expDateStr.endsWith('Z') && !expDateStr.includes('+') && !expDateStr.includes('-')) {
+                        expDateStr += 'Z';
+                      }
+                      const expDate = new Date(expDateStr);
+                      isExpired = expDate < currentTime;
+                    }
+
+                    if (!cupom.ativo) {
+                      return (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-gray-100 dark:bg-gray-800 text-gray-500 border border-gray-200 dark:border-gray-700">
+                          <XCircle className="w-3.5 h-3.5" /> Inativo
+                        </span>
+                      );
+                    }
+                    
+                    if (isEsgotado || isExpired) {
+                      return (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border border-orange-100 dark:border-orange-800/30">
+                          <Clock className="w-3.5 h-3.5" /> {isEsgotado ? 'Esgotado' : 'Expirado'}
+                        </span>
+                      );
+                    }
+
+                    return (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border border-green-100 dark:border-green-800/30">
+                        <CheckCircle className="w-3.5 h-3.5" /> Ativo
+                      </span>
+                    );
+                  })()}
+
+                  {/* Timer super bonito e integrado */}
+                  {(() => {
+                    let isEsgotado = cupom.quantidade_disponivel !== null && cupom.quantidade_disponivel <= 0;
+                    let deletionTime: Date | null = null;
+                    if (cupom.data_expiracao) {
+                      let expDateStr = cupom.data_expiracao;
+                      if (!expDateStr.endsWith('Z') && !expDateStr.includes('+') && !expDateStr.includes('-')) {
+                        expDateStr += 'Z';
+                      }
+                      const expDate = new Date(expDateStr);
+                      if (expDate < currentTime || isEsgotado) {
+                        deletionTime = new Date(expDate.getTime() + 60 * 60 * 1000);
+                      }
+                    }
+                    
+                    if (deletionTime) {
+                      const diffMs = deletionTime.getTime() - currentTime.getTime();
+                      if (diffMs > 0) {
+                        const mins = Math.floor(diffMs / 60000);
+                        const secs = Math.floor((diffMs % 60000) / 1000);
+                        return (
+                          <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded-lg border border-red-100 dark:border-red-800/30 animate-fade-in">
+                            <span className="text-[10px] font-bold text-red-600 dark:text-red-400">Apaga em {mins}m {secs}s</span>
+                          </div>
+                        );
+                      }
+                    }
+                    return null;
+                  })()}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Versão Desktop (Tabela) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="min-w-full text-left">
             <thead className="bg-gray-50 dark:bg-gray-900/50 text-gray-500 dark:text-gray-400 text-xs uppercase font-bold tracking-wider">
               <tr>
