@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
-import { Users, ShoppingBag, DollarSign, Activity, ListOrdered, BellRing, Package, History, Award, Tag, LogOut, LayoutDashboard, Moon, Sun, ShieldCheck, PackageSearch, MessageCircle, Bot } from 'lucide-react';
+import { Users, ShoppingBag, DollarSign, Activity, ListOrdered, BellRing, Package, History, Award, Tag, LogOut, LayoutDashboard, Moon, Sun, ShieldCheck, PackageSearch, MessageCircle, Bot, Menu, X } from 'lucide-react';
 import AdminProducts from '../components/admin/AdminProducts';
 import AdminCategories from '../components/admin/AdminCategories';
 import AdminNotifications from '../components/admin/AdminNotifications';
@@ -41,6 +41,7 @@ export default function AdminDashboard() {
   const [totalClientes, setTotalClientes] = useState(0);
   const [crescimentoClientes, setCrescimentoClientes] = useState(0);
   const [topUser, setTopUser] = useState({ nome: 'Nenhum', pontos: 0 });
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const [pendingPedidosCount, setPendingPedidosCount] = useState(0);
   const [pendingFidelidadeCount, setPendingFidelidadeCount] = useState(0);
@@ -336,38 +337,70 @@ export default function AdminDashboard() {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         
-        {/* Mobile Nav */}
-        <div className="lg:hidden bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 p-4">
-          <div className="flex overflow-x-auto no-scrollbar gap-2 pb-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id as any)}
-                  className={`flex items-center gap-2 px-4 py-2 whitespace-nowrap rounded-lg text-sm font-bold transition-colors ${
-                    isActive 
-                      ? 'bg-vanta-blue text-white' 
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {item.label}
-                  {/* @ts-ignore */}
-                  {item.badge !== undefined && item.badge > 0 && (
-                    <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] leading-none ${
-                      isActive ? 'bg-white text-vanta-blue' : 'bg-red-500 text-white'
-                    }`}>
-                      {/* @ts-ignore */}
-                      {item.badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+        {/* Mobile Header & Nav */}
+        <div className="lg:hidden bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 p-4 flex items-center justify-between z-20">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-vanta-blue to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+              <LayoutDashboard className="w-4 h-4 text-white" />
+            </div>
+            <h2 className="text-xl font-black tracking-tight text-gray-900 dark:text-white">
+              Vanta<span className="text-vanta-blue">Admin</span>
+            </h2>
           </div>
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 -mr-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          >
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
+
+        {/* Mobile Menu Drawer */}
+        {isMobileMenuOpen && (
+          <div className="lg:hidden absolute inset-0 top-[73px] z-30 bg-white dark:bg-gray-800 flex flex-col h-[calc(100vh-73px)] border-t border-gray-100 dark:border-gray-700">
+            <div className="flex-1 overflow-y-auto p-4 space-y-1">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveTab(item.id as any);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold transition-all duration-300 ${
+                      isActive 
+                        ? 'bg-vanta-blue text-white shadow-md shadow-blue-500/20 translate-x-1' 
+                        : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-gray-500'}`} />
+                    <span className="flex-1 text-left">{item.label}</span>
+                    {/* @ts-ignore */}
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                        isActive ? 'bg-white text-vanta-blue' : 'bg-red-500 text-white'
+                      }`}>
+                        {/* @ts-ignore */}
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+              <Link
+                to="/"
+                className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-white dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-colors shadow-sm"
+              >
+                <LogOut className="w-4 h-4" />
+                Voltar para a Loja
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Topbar Desktop */}
         <header className="hidden lg:flex items-center justify-between px-8 py-5 bg-white/50 dark:bg-gray-900/50 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 sticky top-0 z-0">
