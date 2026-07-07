@@ -38,18 +38,18 @@ export async function executeTool(intent: string, entities: Entities): Promise<T
   if (intent === 'comprar' || intent === 'pagamento') {
     if (entities.produto) {
       const searchTerm = `${entities.produto} ${entities.modelo || ''}`.trim();
-      
+
       try {
         const { data: grupos } = await supabase
           .from('tabela_precos_grupos')
           .select('*')
           .ilike('nome', `%${searchTerm}%`)
           .limit(3);
-          
+
         if (grupos && grupos.length > 0) {
           let responseText = `Aqui estão os valores para ${searchTerm}:\n\n`;
           let hasVariations = false;
-          
+
           for (const grupo of grupos) {
             const { data: variacoes } = await supabase
               .from('tabela_precos_variacoes')
@@ -57,25 +57,25 @@ export async function executeTool(intent: string, entities: Entities): Promise<T
               .eq('grupo_id', grupo.id)
               .order('ordem', { ascending: true, nullsFirst: false })
               .order('valor_venda', { ascending: true });
-              
+
             if (variacoes && variacoes.length > 0) {
               hasVariations = true;
               variacoes.forEach(v => {
-                 const formatPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v.valor_venda);
-                 const groupNameUpper = grupo.nome.toUpperCase();
-                 const varNameUpper = v.nome.toUpperCase();
-                 
-                 // Evita repetir "Iphone 15 Iphone 15 Pro Max" e apenas junta
-                 const fullName = varNameUpper.includes(groupNameUpper) 
-                   ? v.nome 
-                   : `${grupo.nome} ${v.nome}`;
-                   
-                 responseText += `${fullName} - ${formatPrice}\n`;
+                const formatPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v.valor_venda);
+                const groupNameUpper = grupo.nome.toUpperCase();
+                const varNameUpper = v.nome.toUpperCase();
+
+                // Evita repetir "Iphone 15 Iphone 15 Pro Max" e apenas junta
+                const fullName = varNameUpper.includes(groupNameUpper)
+                  ? v.nome
+                  : `${grupo.nome} ${v.nome}`;
+
+                responseText += `${fullName} - ${formatPrice}\n`;
               });
-              responseText += '\n'; 
+              responseText += '\n';
             }
           }
-          
+
           if (hasVariations) {
             return {
               text: responseText.trim() + '\n\nEstes são nossos valores atuais de venda! Para fechar a compra, basta acessar a aba Produtos ou falar com nossos especialistas.',

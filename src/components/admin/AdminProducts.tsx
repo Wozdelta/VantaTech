@@ -21,6 +21,7 @@ type Product = {
   descricao: string | null;
   estoque: number | null;
   galeria: { url: string; cor: string; cor_tipo?: string; cor_valor?: string; memoria?: string; bateria?: string; mostrar_bateria?: boolean; preco?: string; preco_antigo?: string }[];
+  is_adicional?: boolean;
 };
 
 type ImageUploadItem = {
@@ -153,13 +154,37 @@ export default function AdminProducts() {
         .from('produtos')
         .update({ ativo: !currentAtivo })
         .eq('id', id);
-        
+
       if (error) throw error;
-      
       setProducts(products.map(p => p.id === id ? { ...p, ativo: !currentAtivo } : p));
     } catch (error) {
-      console.error('Erro ao alterar status:', error);
-      showAlert({ title: 'Erro', message: 'Erro ao alterar status do produto.', type: 'error' });
+      console.error('Erro ao atualizar status:', error);
+      showAlert({ title: 'Erro', message: 'Erro ao atualizar status.', type: 'error' });
+    }
+  }
+
+  async function handleToggleAdicional(product: Product) {
+    const isCurrentlyAdicional = product.is_adicional || false;
+    
+    if (!isCurrentlyAdicional) {
+      const activeCount = products.filter(p => p.categoria?.toLowerCase().includes('acessóri') && p.is_adicional).length;
+      if (activeCount >= 3) {
+        showAlert({ title: 'Limite Atingido', message: 'Você só pode ativar no máximo 3 acessórios como adicionais.', type: 'warning' });
+        return;
+      }
+    }
+
+    try {
+      const { error } = await supabase
+        .from('produtos')
+        .update({ is_adicional: !isCurrentlyAdicional })
+        .eq('id', product.id);
+
+      if (error) throw error;
+      setProducts(products.map(p => p.id === product.id ? { ...p, is_adicional: !isCurrentlyAdicional } : p));
+    } catch (error) {
+      console.error('Erro ao atualizar adicional:', error);
+      showAlert({ title: 'Erro de Banco de Dados', message: 'Não foi possível salvar. Certifique-se de que a coluna "is_adicional" (booleano) foi criada na tabela "produtos".', type: 'error' });
     }
   }
 
@@ -661,8 +686,50 @@ export default function AdminProducts() {
       )}
       </>
       ) : (
-        <div className="text-center py-20 text-gray-500 dark:text-gray-400">
-          Módulo de Adicionais em construção...
+        <div className="bg-white dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-700/50 p-6 md:p-8">
+          <div className="mb-8">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <Package className="w-5 h-5 text-vanta-blue" />
+              Acessórios em Destaque
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">Selecione até 3 acessórios para exibir no processo de compra como sugestão adicional (Upsell).</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {products.filter(p => p.categoria?.toLowerCase().includes('acessóri')).map(acessorio => (
+              <div 
+                key={acessorio.id} 
+                className={`relative flex items-center justify-between p-4 rounded-2xl border-2 transition-all duration-300 ${acessorio.is_adicional ? 'border-vanta-blue bg-blue-50/30 dark:bg-vanta-blue/10' : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600'}`}
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 bg-white dark:bg-gray-900 rounded-xl overflow-hidden flex-shrink-0 shadow-sm border border-gray-100 dark:border-gray-800">
+                    <img src={acessorio.imagem_url || '/Phone.png'} alt={acessorio.nome} className="w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-sm text-gray-900 dark:text-white line-clamp-1" title={acessorio.nome}>{acessorio.nome}</span>
+                    <span className="text-xs font-semibold text-vanta-blue mt-0.5">{Number(acessorio.preco).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+                  </div>
+                </div>
+                
+                <button
+                  onClick={() => handleToggleAdicional(acessorio)}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-vanta-blue focus:ring-offset-2 dark:focus:ring-offset-gray-900 ${acessorio.is_adicional ? 'bg-vanta-blue' : 'bg-gray-200 dark:bg-gray-700'}`}
+                  role="switch"
+                  aria-checked={acessorio.is_adicional || false}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${acessorio.is_adicional ? 'translate-x-5' : 'translate-x-0'}`}
+                  />
+                </button>
+              </div>
+            ))}
+            {products.filter(p => p.categoria?.toLowerCase().includes('acessóri')).length === 0 && (
+              <div className="col-span-full text-center py-12 text-gray-500">
+                Nenhum acessório cadastrado na loja.
+              </div>
+            )}
+          </div>
         </div>
       )}
 
