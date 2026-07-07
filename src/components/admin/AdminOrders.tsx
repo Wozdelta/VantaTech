@@ -34,6 +34,7 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
   const [filterStatus, setFilterStatus] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [openStatusMenu, setOpenStatusMenu] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Pedido | null>(null);
 
@@ -639,18 +640,43 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
                           Atualizando...
                         </div>
                       ) : (
-                        <select
-                          value={pedido.status}
-                          onChange={(e) => updateOrderStatus(pedido.id, e.target.value, pedido.status, pedido.itens_pedido, pedido.user_id, pedido.afiliado_id, pedido.total)}
-                          disabled={updating === pedido.id}
-                          className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-vanta-blue dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600 transition-colors"
-                        >
-                          {['Pendente', 'Pago', 'Enviado', 'Entregue', 'Cancelado', 'Cancelado pelo cliente'].map((status) => (
-                            <option key={status} value={status}>
-                              {status}
-                            </option>
-                          ))}
-                        </select>
+                        <div className="relative">
+                          <button
+                            onClick={() => setOpenStatusMenu(openStatusMenu === pedido.id ? null : pedido.id)}
+                            disabled={updating === pedido.id}
+                            className={`flex items-center justify-between gap-2 px-3 py-2 text-xs font-bold uppercase tracking-wider rounded-lg border shadow-sm transition-all w-[150px] ${
+                              openStatusMenu === pedido.id 
+                                ? 'bg-vanta-blue text-white border-vanta-blue ring-2 ring-vanta-blue/20'
+                                : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600'
+                            }`}
+                          >
+                            <span className="truncate">{pedido.status}</span>
+                            <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform ${openStatusMenu === pedido.id ? 'rotate-180 text-white/70' : 'text-gray-400'}`} />
+                          </button>
+                          
+                          {openStatusMenu === pedido.id && (
+                            <>
+                              <div className="fixed inset-0 z-40" onClick={() => setOpenStatusMenu(null)}></div>
+                              <div className="absolute right-0 top-full mt-1.5 w-[220px] bg-white dark:bg-gray-800 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.3)] border border-gray-100 dark:border-gray-700 py-1.5 z-50 overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-200">
+                                {['Pendente', 'Pago', 'Enviado', 'Entregue', 'Cancelado', 'Cancelado pelo cliente'].map((status) => (
+                                  <button 
+                                    key={status}
+                                    onClick={() => {
+                                      updateOrderStatus(pedido.id, status, pedido.status, pedido.itens_pedido, pedido.user_id, pedido.afiliado_id, pedido.total);
+                                      setOpenStatusMenu(null);
+                                    }}
+                                    className={`w-full text-left px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between transition-colors ${
+                                      pedido.status === status ? 'text-vanta-blue bg-blue-50/50 dark:bg-blue-900/10' : 'text-gray-700 dark:text-gray-300'
+                                    }`}
+                                  >
+                                    <span className="truncate">{status}</span>
+                                    {pedido.status === status && <Check className="w-3.5 h-3.5 text-vanta-blue shrink-0 ml-2" />}
+                                  </button>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
                       )}
                       
                       <button
@@ -739,24 +765,49 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
                 
                 <div className="flex items-center gap-2 w-full">
                   {updating === pedido.id ? (
-                    <div className="flex-1 px-3 py-2 flex items-center justify-center text-xs font-bold text-gray-500 bg-gray-50 rounded-xl">
+                    <div className="flex-1 px-3 py-2 flex items-center justify-center text-xs font-bold text-gray-500 bg-gray-50 rounded-xl border border-transparent">
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       Atualizando...
                     </div>
                   ) : (
-                    <select
-                      value={pedido.status}
-                      onChange={(e) => updateOrderStatus(pedido.id, e.target.value, pedido.status, pedido.itens_pedido, pedido.user_id, pedido.afiliado_id, pedido.total)}
-                      disabled={updating === pedido.id}
-                      className="flex-1 px-3 py-2.5 text-xs font-bold uppercase tracking-wider text-gray-700 bg-gray-50 border border-gray-200 rounded-xl shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-vanta-blue dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600 transition-colors appearance-none cursor-pointer"
-                    >
-                      {['Pendente', 'Pago', 'Enviado', 'Entregue', 'Cancelado', 'Cancelado pelo cliente'].map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
-                    </select>
-                    )}
+                    <div className="flex-1 relative">
+                      <button
+                        onClick={() => setOpenStatusMenu(openStatusMenu === pedido.id ? null : pedido.id)}
+                        disabled={updating === pedido.id}
+                        className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl border shadow-sm transition-all ${
+                          openStatusMenu === pedido.id 
+                            ? 'bg-vanta-blue text-white border-vanta-blue ring-2 ring-vanta-blue/20'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        <span className="truncate">{pedido.status}</span>
+                        <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${openStatusMenu === pedido.id ? 'rotate-180 text-white/70' : 'text-gray-400 dark:text-gray-500'}`} />
+                      </button>
+                      
+                      {openStatusMenu === pedido.id && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setOpenStatusMenu(null)}></div>
+                          <div className="absolute left-0 right-0 bottom-full mb-1.5 bg-white dark:bg-gray-800 rounded-xl shadow-[0_-10px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.3)] border border-gray-100 dark:border-gray-700 py-1.5 z-50 overflow-hidden flex flex-col animate-in fade-in slide-in-from-bottom-2 duration-200 origin-bottom">
+                            {['Pendente', 'Pago', 'Enviado', 'Entregue', 'Cancelado', 'Cancelado pelo cliente'].map((status) => (
+                              <button 
+                                key={status}
+                                onClick={() => {
+                                  updateOrderStatus(pedido.id, status, pedido.status, pedido.itens_pedido, pedido.user_id, pedido.afiliado_id, pedido.total);
+                                  setOpenStatusMenu(null);
+                                }}
+                                className={`w-full text-left px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between transition-colors ${
+                                  pedido.status === status ? 'text-vanta-blue bg-blue-50/50 dark:bg-blue-900/10' : 'text-gray-700 dark:text-gray-300'
+                                }`}
+                              >
+                                <span className="truncate">{status}</span>
+                                {pedido.status === status && <Check className="w-3.5 h-3.5 text-vanta-blue shrink-0 ml-2" />}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
                   
                   <button
                     onClick={() => setSelectedOrder(pedido)}
