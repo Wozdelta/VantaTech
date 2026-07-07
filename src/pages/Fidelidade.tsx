@@ -404,42 +404,42 @@ export default function Fidelidade() {
                 </div>
                 
                 {viewMode === 'detailed' ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
                     {recsNivel.map(rec => (
-                      <div key={rec.id} className={`group bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-3xl overflow-hidden shadow-soft transition-all flex flex-col h-full ${isLocked ? 'opacity-60 grayscale' : 'hover:-translate-y-2 hover:shadow-2xl hover:border-vanta-orange/30'}`}>
+                      <div key={rec.id} className={`group bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl md:rounded-3xl overflow-hidden shadow-soft transition-all flex flex-col h-full ${isLocked ? 'opacity-60 grayscale' : 'hover:-translate-y-2 hover:shadow-2xl hover:border-vanta-orange/30'}`}>
                         <div className="aspect-square relative bg-gray-50 dark:bg-gray-900 overflow-hidden">
                           {rec.badge && (
-                            <span className={`absolute top-4 left-4 z-10 px-3 py-1 text-[11px] uppercase tracking-wider font-bold rounded-lg shadow-sm backdrop-blur-md border border-white/20 ${isLocked ? 'bg-gray-300/80 text-gray-700' : (rec.cupom_valor ? 'bg-white text-vanta-orange shadow-xl border-none' : 'bg-vanta-orange/90 text-white')}`}>
+                            <span className={`absolute top-2 left-2 md:top-4 md:left-4 z-10 px-2 md:px-3 py-1 text-[9px] md:text-[11px] uppercase tracking-wider font-bold rounded-lg shadow-sm backdrop-blur-md border border-white/20 ${isLocked ? 'bg-gray-300/80 text-gray-700' : (rec.cupom_valor ? 'bg-white text-vanta-orange shadow-xl border-none' : 'bg-vanta-orange/90 text-white')}`}>
                               {rec.badge}
                             </span>
                           )}
                           {rec.cupom_valor ? (
-                            <div className="w-full h-full bg-gradient-to-br from-vanta-orange to-orange-600 flex flex-col items-center justify-center text-white p-4">
-                              <Ticket className={`w-12 h-12 mb-2 opacity-80 transition-transform duration-500 ${!isLocked && 'group-hover:scale-110'}`} />
-                              <span className="font-black text-2xl text-center leading-tight">
+                            <div className="w-full h-full bg-gradient-to-br from-vanta-orange to-orange-600 flex flex-col items-center justify-center text-white p-2 md:p-4">
+                              <Ticket className={`w-8 h-8 md:w-12 md:h-12 mb-1 md:mb-2 opacity-80 transition-transform duration-500 ${!isLocked && 'group-hover:scale-110'}`} />
+                              <span className="font-black text-xl md:text-2xl text-center leading-tight">
                                 {rec.cupom_tipo === 'porcentagem' ? `${rec.cupom_valor}%` : `R$ ${rec.cupom_valor}`}
                               </span>
-                              <span className="text-xs uppercase tracking-widest opacity-80 font-bold mt-1 text-center">Desconto</span>
+                              <span className="text-[10px] md:text-xs uppercase tracking-widest opacity-80 font-bold mt-1 text-center">Desconto</span>
                             </div>
                           ) : (
                             <img src={rec.imagem_url} alt={rec.nome} className={`w-full h-full object-cover mix-blend-multiply dark:mix-blend-normal transition-transform duration-500 ${!isLocked && 'group-hover:scale-110'}`} />
                           )}
                           {isLocked && (
                             <div className="absolute inset-0 bg-white/30 dark:bg-black/40 backdrop-blur-[3px] flex items-center justify-center">
-                              <div className="bg-white/90 dark:bg-gray-800/90 p-4 rounded-full shadow-xl border border-gray-200 dark:border-gray-700 backdrop-blur-md">
-                                <Lock className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+                              <div className="bg-white/90 dark:bg-gray-800/90 p-3 md:p-4 rounded-full shadow-xl border border-gray-200 dark:border-gray-700 backdrop-blur-md">
+                                <Lock className="w-6 h-6 md:w-8 md:h-8 text-gray-400 dark:text-gray-500" />
                               </div>
                             </div>
                           )}
                         </div>
-                        <div className="p-6 relative bg-white dark:bg-gray-800 flex flex-col flex-1">
-                          <h3 className={`font-bold text-lg mb-4 break-words leading-tight ${isLocked ? 'text-gray-500' : 'text-gray-900 dark:text-white group-hover:text-vanta-orange transition-colors'}`}>
+                        <div className="p-4 md:p-6 relative bg-white dark:bg-gray-800 flex flex-col flex-1">
+                          <h3 className={`font-bold text-sm md:text-lg mb-3 md:mb-4 break-words leading-tight ${isLocked ? 'text-gray-500' : 'text-gray-900 dark:text-white group-hover:text-vanta-orange transition-colors'}`}>
                             {rec.nome}
                           </h3>
-                          <div className="flex items-center gap-2 mt-auto">
-                            <Star className={`w-6 h-6 ${isLocked ? 'text-gray-400' : 'text-vanta-orange fill-vanta-orange drop-shadow-sm'}`} />
-                            <span className={`font-black text-2xl ${isLocked ? 'text-gray-400' : 'text-vanta-orange'}`}>
-                              {rec.pontos.toLocaleString('pt-BR')} <span className="text-sm font-bold opacity-70">pts</span>
+                          <div className="flex items-center gap-1 md:gap-2 mt-auto">
+                            <Star className={`w-4 h-4 md:w-6 md:h-6 ${isLocked ? 'text-gray-400' : 'text-vanta-orange fill-vanta-orange drop-shadow-sm'}`} />
+                            <span className={`font-black text-lg md:text-2xl ${isLocked ? 'text-gray-400' : 'text-vanta-orange'}`}>
+                              {rec.pontos.toLocaleString('pt-BR')} <span className="text-xs md:text-sm font-bold opacity-70">pts</span>
                             </span>
                           </div>
                           
