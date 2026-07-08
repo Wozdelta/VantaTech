@@ -384,7 +384,7 @@ export default function AdminTabelaPrecos() {
         </div>
         
         {/* Pills Filtro de Marca */}
-        <div className="flex items-center gap-2 overflow-x-auto w-full lg:w-auto pb-2 lg:pb-0 hide-scrollbar">
+        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
           <button
             onClick={() => setSelectedMarcaId('all')}
             className={`px-5 py-2.5 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${
@@ -534,12 +534,12 @@ export default function AdminTabelaPrecos() {
                       <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                           <thead>
-                            <tr className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                              <th className="pb-3 px-4">Modelo / Variedade</th>
-                              <th className="pb-3 px-4">Custo</th>
-                              <th className="pb-3 px-4">Venda</th>
-                              <th className="pb-3 px-4">Lucro</th>
-                              <th className="pb-3 px-4 text-right">Ação</th>
+                            <tr className="text-[10px] sm:text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                              <th className="pb-3 px-2 sm:px-4">Modelo / Variedade</th>
+                              <th className="pb-3 px-2 sm:px-4">Custo</th>
+                              <th className="pb-3 px-2 sm:px-4">Venda</th>
+                              <th className="pb-3 px-4 hidden sm:table-cell">Lucro</th>
+                              <th className="pb-3 px-2 sm:px-4 text-right">Ação</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -606,19 +606,19 @@ export default function AdminTabelaPrecos() {
                                   onDragEnd={() => handleVariantDragEnd(grupo.id)}
                                   onDragOver={(e) => e.preventDefault()}
                                 >
-                                  <td className="py-3 px-4 font-bold text-gray-900 dark:text-white text-sm flex items-center gap-2">
+                                  <td className="py-3 px-2 sm:px-4 font-bold text-gray-900 dark:text-white text-xs sm:text-sm flex items-center gap-1 sm:gap-2">
                                     <div className="text-gray-300 dark:text-gray-600 cursor-grab hover:text-gray-500">
-                                      <GripVertical className="w-4 h-4" />
+                                      <GripVertical className="w-3 h-3 sm:w-4 sm:h-4" />
                                     </div>
-                                    {variacao.nome}
+                                    <span className="truncate max-w-[100px] sm:max-w-none">{variacao.nome}</span>
                                   </td>
-                                  <td className="py-3 px-4 font-medium text-gray-500 dark:text-gray-400 text-sm">
+                                  <td className="py-3 px-2 sm:px-4 font-medium text-gray-500 dark:text-gray-400 text-xs sm:text-sm">
                                     {Number(variacao.valor_pago).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                   </td>
-                                  <td className="py-3 px-4 font-black text-gray-900 dark:text-white text-sm">
+                                  <td className="py-3 px-2 sm:px-4 font-black text-gray-900 dark:text-white text-xs sm:text-sm">
                                     {Number(variacao.valor_venda).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                                   </td>
-                                  <td className="py-3 px-4">
+                                  <td className="py-3 px-4 hidden sm:table-cell">
                                     <div className="flex flex-col">
                                       <span className="font-bold text-green-600 dark:text-green-400 text-sm flex items-center gap-1">
                                         <TrendingUp className="w-3.5 h-3.5" />
@@ -627,8 +627,8 @@ export default function AdminTabelaPrecos() {
                                       <span className="text-[10px] font-bold text-gray-400 uppercase">Margem: {margem}%</span>
                                     </div>
                                   </td>
-                                  <td className="py-3 px-4 text-right">
-                                    <div className="flex justify-end gap-1 opacity-0 group-hover/row:opacity-100 transition-all">
+                                  <td className="py-3 px-2 sm:px-4 text-right">
+                                    <div className="flex justify-end gap-1 opacity-100 sm:opacity-0 sm:group-hover/row:opacity-100 transition-all">
                                       <button 
                                         onClick={() => {
                                           setEditingVariantId(variacao.id);
