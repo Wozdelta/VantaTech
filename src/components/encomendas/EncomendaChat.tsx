@@ -496,12 +496,12 @@ export default function EncomendaChat({ encomenda, onClose }: EncomendaChatProps
               <MessageCircle className="w-5 h-5 text-vanta-blue" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-3">
+              <h2 className="text-lg font-black text-gray-900 dark:text-white flex flex-wrap items-center gap-2 sm:gap-3">
                 Chat da Encomenda
                 {timeLeft !== null && (
-                  <span className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2.5 py-1 rounded-md text-xs font-bold border border-red-200 dark:border-red-800 flex items-center gap-1.5 animate-pulse" title="Tempo restante antes do chat ser deletado permanentemente">
-                    <Clock className="w-3.5 h-3.5" />
-                    {formatTime(timeLeft)} para apagar as mensagens
+                  <span className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-bold border border-red-200 dark:border-red-800 flex items-center gap-1 sm:gap-1.5 animate-pulse whitespace-nowrap" title="Tempo restante antes do chat ser deletado permanentemente">
+                    <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    {formatTime(timeLeft)} <span className="hidden sm:inline">para apagar as mensagens</span>
                   </span>
                 )}
               </h2>
