@@ -314,13 +314,13 @@ export default function AdminFidelidade() {
       <div className="flex overflow-x-auto pb-2 -mx-2 px-2 sm:mx-0 sm:px-0 sm:pb-0 sm:flex-wrap gap-2 sm:gap-4 mb-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <button
           onClick={() => setActiveTab('geral')}
-          className={`px-4 py-2 rounded-lg font-bold transition-colors ${activeTab === 'geral' ? 'bg-vanta-blue text-white' : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
+          className={`px-4 py-2 rounded-lg font-bold transition-colors whitespace-nowrap ${activeTab === 'geral' ? 'bg-vanta-blue text-white' : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
         >
           Visão Geral
         </button>
         <button
           onClick={() => setActiveTab('config')}
-          className={`px-4 py-2 rounded-lg font-bold transition-colors flex items-center gap-2 ${activeTab === 'config' ? 'bg-vanta-blue text-white' : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
+          className={`px-4 py-2 rounded-lg font-bold transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'config' ? 'bg-vanta-blue text-white' : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
         >
           <Settings className="w-4 h-4" /> Configurações de Níveis
         </button>
