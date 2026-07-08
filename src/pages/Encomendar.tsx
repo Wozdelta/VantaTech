@@ -193,7 +193,7 @@ export default function Encomendar() {
   // Tela de Termos caso o usuário não tenha aceito
   if (perfil && !perfil.termos_encomenda_aceitos) {
     return (
-      <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900 pt-24 pb-12">
+      <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900 pt-6 lg:pt-24 pb-12">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
             <div className="p-8 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex flex-col items-center text-center">
@@ -247,7 +247,7 @@ export default function Encomendar() {
   // Tela principal (já aceitou os termos)
   return (
     <>
-      <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900 pt-24 pb-12">
+      <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900 pt-6 lg:pt-24 pb-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
             <div>
