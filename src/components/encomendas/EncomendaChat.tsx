@@ -446,12 +446,12 @@ export default function EncomendaChat({ encomenda, onClose }: EncomendaChatProps
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center sm:p-4">
       <div 
         className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
         onClick={onClose}
       />
-      <div className={`relative bg-white dark:bg-gray-800 rounded-3xl w-full ${perfil?.cargo === 'Admin' ? 'max-w-4xl' : 'max-w-2xl'} h-[85vh] min-h-[600px] flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden`}>
+      <div className={`relative bg-white dark:bg-gray-800 sm:rounded-3xl w-full ${perfil?.cargo === 'Admin' ? 'max-w-4xl' : 'max-w-2xl'} h-[100dvh] sm:h-[85vh] sm:min-h-[600px] flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden`}>
         
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
