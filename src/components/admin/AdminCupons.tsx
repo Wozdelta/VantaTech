@@ -26,7 +26,6 @@ type Perfil = {
 };
 
 type Categoria = {
-  id: string;
   nome: string;
 };
 
@@ -630,7 +629,6 @@ export default function AdminCupons() {
                       {(() => {
                         let isExpired = false;
                         let isEsgotado = cupom.quantidade_disponivel !== null && cupom.quantidade_disponivel <= 0;
-                        let deletionTime: Date | null = null;
                         
                         if (cupom.data_expiracao) {
                           let expDateStr = cupom.data_expiracao;
@@ -639,9 +637,6 @@ export default function AdminCupons() {
                           }
                           const expDate = new Date(expDateStr);
                           isExpired = expDate < currentTime;
-                          if (isExpired || isEsgotado) {
-                            deletionTime = new Date(expDate.getTime() + 60 * 60 * 1000);
-                          }
                         } else if (isEsgotado) {
                           // Se nao tiver data, mas esgotou, a gente nao tem como saber quando, 
                           // entao fica só como esgotado mesmo

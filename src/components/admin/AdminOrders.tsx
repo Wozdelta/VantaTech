@@ -21,6 +21,7 @@ interface Pedido {
   status: string;
   criado_em: string;
   afiliado_id?: string;
+  cupom_id?: string | null;
   itens_pedido: ItemPedido[];
 }
 
