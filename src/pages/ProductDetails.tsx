@@ -6,12 +6,7 @@ import { useAlert } from '../contexts/AlertContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { useAuth } from '../contexts/AuthContext';
 import BlockScreen from '../components/common/BlockScreen';
-import { Loader2, ArrowLeft, ShieldCheck, Truck, ArrowRight, ShoppingCart, Battery } from 'lucide-react';
-
-type GaleriaImage = {
-  url: string;
-  cor: string;
-};
+import { Loader2, ArrowLeft, ShieldCheck, Truck, ShoppingCart, Battery } from 'lucide-react';
 
 export default function ProductDetails() {
   const { id } = useParams();

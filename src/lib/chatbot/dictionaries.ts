@@ -1,19 +1,4 @@
-export const VALID_WORDS: string[] = [
-  'celular', 'smartphone', 'aparelho', 'telefone', 'iphone', 'samsung', 'xiaomi', 'motorola', 'apple', 'galaxy',
-  'tela', 'amoled', 'bateria', 'ram', 'gb', 'carregador', 'capinha', 'pelicula', 'sedex', 'pac',
-  'estorno', 'nfe', 'nota', 'fiscal', 'cabo', 'fone', 'bluetooth', 'camera', 'lente', 'processador',
-  'memoria', 'armazenamento', 'garantia', 'defeito', 'assistencia', 'reparo', 'conserto', 'troca', 'devolucao', 'reembolso',
-  'compra', 'pedido', 'carrinho', 'pagamento', 'pix', 'cartao', 'boleto', 'parcela', 'juros', 'desconto',
-  'promocao', 'cupom', 'oferta', 'frete', 'entrega', 'rastreio', 'codigo', 'transportadora', 'correios', 'prazo',
-  'atraso', 'chegou', 'recebi', 'veio', 'novo', 'usado', 'seminovo', 'vitrine', 'recondicionado', 'lacrado',
-  'original', 'falsificado', 'paralelo', 'película', 'vidro', '3d', 'privacidade', 'capa', 'silicone', 'anti-impacto',
-  'fonte', 'usb', 'tipo', 'c', 'lightning', 'bivolt', 'turbo', 'fast', 'charge', 'sem', 'fio',
-  'wireless', 'magsafe', 'airpods', 'galaxybuds', 'watch', 'smartwatch', 'applewatch', 'band', 'pulseira', 'tela',
-  'quebrada', 'trincada', 'riscada', 'mancha', 'pixel', 'morto', 'bateria', 'viciada', 'descarregando', 'rapido',
-  'esquentando', 'travando', 'lento', 'reiniciando', 'nao', 'liga', 'apaga', 'som', 'microfone', 'alto-falante',
-  'audio', 'chiado', 'baixo', 'wifi', 'sinal', 'rede', 'chip', 'sim', 'esim', 'gaveta',
-  'botao', 'volume', 'power', 'biometria', 'digital', 'face', 'id', 'facial', 'suporte', 'atendimento'
-];
+
 
 export const ABBREVIATIONS: Record<string, string> = {
   // Comuns
@@ -60,36 +45,7 @@ export const ABBREVIATIONS: Record<string, string> = {
   este: 'este', esta: 'esta', estes: 'estes', estas: 'estas', aquele: 'aquele', aquela: 'aquela', aqueles: 'aqueles', aquelas: 'aquelas'
 };
 
-export const SYNONYMS: Record<string, string[]> = {
-  comprar: [
-    'adquirir', 'pegar', 'levar', 'quero', 'interessa', 'preciso', 'gostaria', 'procurando', 'compro', 'comprando',
-    'fechar negócio', 'encomendar', 'obter', 'fazer pedido', 'botar no carrinho', 'comprar agora', 'levar hoje'
-  ],
-  pagamento: [
-    'pix', 'cartão', 'boleto', 'parcela', 'parcelamento', 'pagar', 'valor', 'preço', 'custa', 'dinheiro',
-    'vista', 'juros', 'transferência', 'cobrança', 'fatura', 'débito', 'crédito', 'cotação', 'custo'
-  ],
-  garantia: [
-    'defeito', 'estragou', 'quebrou', 'não liga', 'bugou', 'problema', 'assistência', 'falha', 'pifou', 'ruim',
-    'garantir', 'conserto', 'reparo', 'arrumar', 'técnico', 'manutenção', 'vício', 'trincou', 'pane', 'queimou'
-  ],
-  troca: [
-    'devolução', 'trocar', 'substituir', 'reembolso', 'cancelamento', 'devolver', 'arrepender', 'arrependimento', 'estorno', 'dinheiro de volta',
-    'desistir', 'desistência', 'voltar atrás', 'mandar de volta', 'ressarcimento', 'substituição'
-  ],
-  rastreamento: [
-    'rastreio', 'cade', 'onde', 'chegar', 'chegou', 'correios', 'transportadora', 'entregar', 'entrega', 'caminho',
-    'código de rastreio', 'status', 'acompanhar', 'encomenda', 'pacote', 'logística', 'frete', 'demora', 'prazo'
-  ],
-  produto: [
-    'celular', 'aparelho', 'smartphone', 'iphone', 'samsung', 'motorola', 'telefone', 'mobile', 'dispositivo', 'gadget',
-    'eletrônico', 'equipamento', 'máquina', 'telefone celular', 'android', 'ios'
-  ],
-  suporte: [
-    'ajuda', 'atendente', 'humano', 'pessoa', 'falar com alguém', 'atendimento', 'especialista', 'ticket', 'chamado',
-    'reclamação', 'ouvidoria', 'contato', 'falar com vcs', 'falar com atendente', 'ajuda humana', 'suporte técnico'
-  ]
-};
+
 
 export const EMOTION_KEYWORDS = {
   angry: [

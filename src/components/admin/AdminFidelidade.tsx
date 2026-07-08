@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
 import { CustomSelect } from '../ui/CustomSelect';
-import { Plus, Trash2, Image as ImageIcon, Loader2, X, Edit, UploadCloud, Award, Medal, Package, Settings, Users, Gift, Star, Ticket } from 'lucide-react';
+import { Plus, Trash2, Image as ImageIcon, Loader2, X, Edit, Award, Medal, Package, Settings, Users, Gift, Star, Ticket } from 'lucide-react';
 import AdminOrders from './AdminOrders';
 
 type Nivel = {

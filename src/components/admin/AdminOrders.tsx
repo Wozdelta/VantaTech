@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
 import { CustomSelect } from '../ui/CustomSelect';
-import { Package, ChevronDown, CheckCircle, Truck, XCircle, Clock, Loader2, ExternalLink, Trash2, Check, Search, FileText, X, DollarSign, CreditCard, Tag, ChevronLeft, ChevronRight, LayoutGrid, List } from 'lucide-react';
+import { Package, ChevronDown, CheckCircle, Truck, XCircle, Clock, Loader2, Trash2, Check, Search, FileText, X, DollarSign, CreditCard, Tag, ChevronLeft, ChevronRight, LayoutGrid, List } from 'lucide-react';
 
 interface ItemPedido {
   id: string;

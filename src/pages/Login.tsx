@@ -48,9 +48,8 @@ export default function Login() {
       } else if (view === 'register') {
         if (!email || !password || !nome) throw new Error('Preencha todos os campos.');
         
-        const afiliadoId = localStorage.getItem('afiliado_id');
         
-        const { error, data } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
           options: { 

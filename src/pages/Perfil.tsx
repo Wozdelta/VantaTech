@@ -5,17 +5,14 @@ import { User, Mail, Shield, MapPin, Loader2, Check, Camera, Edit2, Trash2 } fro
 import { supabase } from '../lib/supabase';
 import { useAlert } from '../contexts/AlertContext';
 import { useSettings } from '../contexts/SettingsContext';
-import BlockScreen from '../components/common/BlockScreen';
 
 export default function Perfil() {
-  const { user, perfil, refreshPerfil, loading } = useAuth();
+  const { user, perfil, refreshPerfil } = useAuth();
   const { showAlert } = useAlert();
   const { settings } = useSettings();
   const [searchParams, setSearchParams] = useSearchParams();
   const userName = perfil?.nome_completo || user?.user_metadata?.nome_completo || user?.user_metadata?.full_name || user?.user_metadata?.name || 'Usuário';
   const userAvatar = perfil?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
-
-  const showPerfil = settings?.acesso_perfil === 'todos' || perfil?.cargo === 'Admin';
 
   // Estados de endereço
   const [isEditingAddress, setIsEditingAddress] = useState(false);
@@ -222,7 +219,7 @@ export default function Perfil() {
           cidade: data.city || '',
           estado: data.state || ''
         }));
-      } catch (err) {
+      } catch {
         setErrorMsg('CEP inválido ou não encontrado.');
       } finally {
         setLoadingAddress(false);

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
-import { Loader2, Trash2, Search, History, DollarSign, AlertTriangle, X } from 'lucide-react';
+import { Loader2, Trash2, Search, History, DollarSign, AlertTriangle } from 'lucide-react';
 
 interface SoldItem {
   id: string; // id do item

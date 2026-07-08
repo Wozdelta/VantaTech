@@ -1,6 +1,6 @@
 import { useAuth } from '../contexts/AuthContext';
 import { useSettings } from '../contexts/SettingsContext';
-import { Copy, Gift, Star, Target, CheckCircle2, Share2, Award, Crown, Diamond, LayoutGrid, List, Lock, Check, Medal, Trophy, Loader2, Ticket, TrendingUp } from 'lucide-react';
+import { Copy, Gift, Star, Target, CheckCircle2, Share2, Award, Crown, Diamond, LayoutGrid, List, Lock, Check, Loader2, Ticket, TrendingUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';

@@ -1,13 +1,13 @@
 import axios from 'axios';
 
 // Interfaces baseadas na documentação do Checkout InfinitePay
-export interface CheckoutItem {
+interface CheckoutItem {
   quantity: number;
   price: number; // Em centavos
   description: string;
 }
 
-export interface CheckoutCustomer {
+interface CheckoutCustomer {
   name: string;
   email?: string;
 }

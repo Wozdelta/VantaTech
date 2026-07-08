@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
-import { Search, Loader2, MessageCircle, MoreVertical, Trash2, Package, Check, X as CloseIcon, User } from 'lucide-react';
+import { Search, Loader2, MessageCircle, Trash2, Package, Check, X as CloseIcon, User } from 'lucide-react';
 import EncomendaChat from '../encomendas/EncomendaChat';
 
 const CancelTimer = ({ enc, onExpired }: { enc: any, onExpired: (id: string) => void }) => {

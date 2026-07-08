@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useAlert } from '../contexts/AlertContext';
 import { useSettings } from '../contexts/SettingsContext';
 import BlockScreen from '../components/common/BlockScreen';
-import { Package, Clock, ShoppingBag, Loader2, XCircle } from 'lucide-react';
+import { Package, ShoppingBag, Loader2, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 

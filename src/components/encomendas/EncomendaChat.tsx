@@ -389,7 +389,8 @@ export default function EncomendaChat({ encomenda, onClose }: EncomendaChatProps
       try {
         payload = JSON.parse(msg.mensagem.split(':::')[1]);
         isOrcamento = true;
-      } catch (e) {}
+      } catch {
+      }
     } else if (msg.mensagem.startsWith('[ORCAMENTO]:::')) {
       // Retrocompatibilidade para os primeiros testes que vc fez
       payload = {

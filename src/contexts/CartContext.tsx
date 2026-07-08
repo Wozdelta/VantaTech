@@ -35,7 +35,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (saved) {
       try {
         return JSON.parse(saved);
-      } catch (e) {
+      } catch {
         return [];
       }
     }

@@ -13,7 +13,7 @@ export default function Home() {
   const { settings } = useSettings();
   const { perfil } = useAuth();
   
-  const showFidelidade = settings.acesso_fidelidade === 'todos' || perfil?.cargo === 'Admin';
+
   const showLoja = settings.acesso_loja === 'todos' || perfil?.cargo === 'Admin';
 
   if (!showLoja) {

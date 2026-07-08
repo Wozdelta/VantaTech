@@ -50,7 +50,7 @@ export async function getAnalytics() {
       emotionCounts,
       recentLogs: logs.slice(0, 50)
     };
-  } catch (e) {
+  } catch {
     return null;
   }
 }

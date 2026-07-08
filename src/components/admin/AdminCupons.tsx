@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
 import { CustomSelect } from '../ui/CustomSelect';
-import { Plus, Trash2, Edit, CheckCircle, XCircle, Tag, Loader2, Save, X, Users, Box, Clock, DollarSign } from 'lucide-react';
+import { Trash2, Edit, CheckCircle, XCircle, Tag, Loader2, Save, X, Users, Box, Clock, DollarSign } from 'lucide-react';
 
 type Cupom = {
   id: string;
@@ -656,19 +656,7 @@ export default function AdminCupons() {
                         }
                         
                         if (isEsgotado || isExpired) {
-                          let timeString = '';
-                          let canDelete = false;
-                          if (deletionTime) {
-                            const diffMs = deletionTime.getTime() - currentTime.getTime();
-                            if (diffMs > 0) {
-                              const mins = Math.floor(diffMs / 60000);
-                              const secs = Math.floor((diffMs % 60000) / 1000);
-                              timeString = `${mins}m ${secs}s`;
-                              canDelete = true;
-                            } else {
-                              timeString = 'Apagando...';
-                            }
-                          }
+
                           return (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border border-orange-100 dark:border-orange-800/30">
                               <Clock className="w-3.5 h-3.5" /> {isEsgotado ? 'Esgotado' : 'Expirado'}

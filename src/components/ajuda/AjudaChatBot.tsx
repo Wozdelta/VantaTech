@@ -49,7 +49,7 @@ export default function AjudaChatBot({ onOpenTicket }: { onOpenTicket: () => voi
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const handleAction = (action?: string, actionData?: any) => {
+  const handleAction = (action?: string) => {
     if (action === 'OPEN_TICKET') onOpenTicket();
     if (action === 'OPEN_TRACKING') {
       navigate('/perfil?tab=encomendas');
@@ -98,7 +98,7 @@ export default function AjudaChatBot({ onOpenTicket }: { onOpenTicket: () => voi
           action: response.action,
           actionData: response.actionData
         }]);
-      } catch (error) {
+      } catch {
         setMessages(prev => [...prev, {
           id: Date.now().toString(),
           type: 'bot',

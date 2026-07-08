@@ -9,7 +9,7 @@ export default function Cupons() {
   const [cupons, setCupons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isResgatando, setIsResgatando] = useState<string | null>(null);
+
   const { settings } = useSettings();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const { showAlert } = useAlert();
