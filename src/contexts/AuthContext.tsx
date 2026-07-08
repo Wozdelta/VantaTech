@@ -86,9 +86,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setTimeout(() => fetchPerfil(userId, tentativas - 1), 1000);
           return;
         }
-        // Se der erro ao buscar o perfil e esgotar tentativas, deslogamos por segurança
+        // Se der erro ao buscar o perfil e esgotar tentativas, deslogamos preventivamente
+        console.warn('Falha crítica de sessão: Perfil não encontrado ou acesso negado. Encerrando sessão por segurança.');
         signOut();
-        throw error;
+        return;
       }
       setPerfil(data);
     } catch (error) {

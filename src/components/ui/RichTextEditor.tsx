@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, List, ListOrdered } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 interface RichTextEditorProps {
   value: string;
@@ -15,7 +16,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
     if (editorRef.current && value !== editorRef.current.innerHTML) {
       // Só atualiza se o conteúdo real mudou para evitar que o cursor pule para o início
       if (editorRef.current.innerHTML !== value && value != null) {
-        editorRef.current.innerHTML = value;
+        editorRef.current.innerHTML = DOMPurify.sanitize(value);
       }
     }
   }, [value]);
@@ -23,14 +24,14 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   const execCommand = (command: string, arg?: string) => {
     document.execCommand(command, false, arg);
     if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
+      onChange(DOMPurify.sanitize(editorRef.current.innerHTML));
     }
     editorRef.current?.focus();
   };
 
   const handleInput = () => {
     if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
+      onChange(DOMPurify.sanitize(editorRef.current.innerHTML));
     }
   };
 

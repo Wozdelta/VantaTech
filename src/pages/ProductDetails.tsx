@@ -7,6 +7,7 @@ import { useSettings } from '../contexts/SettingsContext';
 import { useAuth } from '../contexts/AuthContext';
 import BlockScreen from '../components/common/BlockScreen';
 import { Loader2, ArrowLeft, ShieldCheck, Truck, ShoppingCart, Battery } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -637,7 +638,7 @@ export default function ProductDetails() {
                 <div className={`relative transition-all duration-300 ${!showFullDescription ? 'max-h-24 overflow-hidden' : ''}`}>
                   <div 
                     className="text-gray-600 dark:text-gray-400 leading-relaxed [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_b]:font-black [&_i]:italic [&_u]:underline whitespace-pre-wrap"
-                    dangerouslySetInnerHTML={{ __html: product.descricao }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(product.descricao) }}
                   />
                   {!showFullDescription && product.descricao.length > 200 && (
                     <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-white dark:from-gray-950 to-transparent pointer-events-none"></div>
