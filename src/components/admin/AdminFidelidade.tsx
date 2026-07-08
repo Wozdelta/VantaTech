@@ -311,25 +311,25 @@ export default function AdminFidelidade() {
   return (
     <div className="space-y-6">
       {/* Abas Superiores */}
-      <div className="flex overflow-x-auto pb-2 -mx-2 px-2 sm:mx-0 sm:px-0 sm:pb-0 sm:flex-wrap gap-2 sm:gap-4 mb-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-6">
         <button
           onClick={() => setActiveTab('geral')}
-          className={`px-4 py-2 rounded-lg font-bold transition-colors whitespace-nowrap ${activeTab === 'geral' ? 'bg-vanta-blue text-white' : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
+          className={`w-full sm:w-auto px-4 py-3 sm:py-2 rounded-xl sm:rounded-lg font-bold transition-colors whitespace-nowrap justify-center flex items-center gap-2 ${activeTab === 'geral' ? 'bg-vanta-blue text-white' : 'bg-gray-100 sm:bg-gray-200 text-gray-700 sm:text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
         >
           Visão Geral
         </button>
         <button
           onClick={() => setActiveTab('config')}
-          className={`px-4 py-2 rounded-lg font-bold transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'config' ? 'bg-vanta-blue text-white' : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
+          className={`w-full sm:w-auto px-4 py-3 sm:py-2 rounded-xl sm:rounded-lg font-bold transition-colors flex items-center justify-center gap-2 whitespace-nowrap ${activeTab === 'config' ? 'bg-vanta-blue text-white' : 'bg-gray-100 sm:bg-gray-200 text-gray-700 sm:text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
         >
           <Settings className="w-4 h-4" /> Configurações de Níveis
         </button>
           <button
             onClick={() => setActiveTab('pedidos')}
-            className={`px-6 py-2.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
+            className={`w-full sm:w-auto px-4 py-3 sm:py-2.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center justify-center gap-2 ${
               activeTab === 'pedidos' 
                 ? 'bg-vanta-blue text-white shadow-lg shadow-blue-500/25' 
-                : 'bg-white dark:bg-gray-800 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700'
+                : 'bg-white dark:bg-gray-800 text-gray-700 sm:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 sm:border-transparent'
             }`}
           >
             <Package className="w-4 h-4" />
