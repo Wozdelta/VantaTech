@@ -253,7 +253,7 @@ export default function AdminTickets() {
 
   if (selectedTicket) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col h-[750px] animate-fade-in">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col h-[calc(100dvh-130px)] md:h-[750px] animate-fade-in">
         {/* Chat Header */}
         <div className="p-4 md:p-6 border-b border-gray-100 dark:border-gray-700 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gray-50 dark:bg-gray-900/50">
           <div className="flex items-start md:items-center gap-3 md:gap-4">
