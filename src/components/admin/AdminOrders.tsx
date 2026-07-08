@@ -772,7 +772,7 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
                       Atualizando...
                     </div>
                   ) : (
-                    <div className="flex-1 relative">
+                    <div className="flex-1 relative min-w-0">
                       <button
                         onClick={() => setOpenStatusMenu(openStatusMenu === pedido.id ? null : pedido.id)}
                         disabled={updating === pedido.id}
@@ -782,7 +782,7 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
                             : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600'
                         }`}
                       >
-                        <span className="truncate">{pedido.status}</span>
+                        <span className="truncate text-left block">{pedido.status}</span>
                         <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${openStatusMenu === pedido.id ? 'rotate-180 text-white/70' : 'text-gray-400 dark:text-gray-500'}`} />
                       </button>
                       
