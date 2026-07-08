@@ -44,6 +44,7 @@ export default function AdminEncomendas() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'Pendentes' | 'Em Andamento' | 'Histórico'>('Pendentes');
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [activeChat, setActiveChat] = useState<any | null>(null);
   const [trackingInput, setTrackingInput] = useState<{ id: string, codigo: string } | null>(null);
   const { showAlert } = useAlert();
@@ -293,26 +294,43 @@ export default function AdminEncomendas() {
                 <div className="p-5 border-t border-gray-100 dark:border-gray-700 bg-gray-50/30 dark:bg-gray-800/30 space-y-4">
                    <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
                      <div className="w-full sm:w-auto relative">
-                        <select
-                          value={enc.status}
-                          onChange={(e) => handleUpdateStatus(enc.id, e.target.value)}
-                          className={`text-xs font-bold rounded-xl px-3 py-2 outline-none cursor-pointer border w-full sm:w-auto transition-colors appearance-none pr-8 ${
-                            enc.status === 'Concluído' ? 'bg-green-100 text-green-700 border-green-200' :
-                            enc.status === 'Em Andamento' ? 'bg-blue-100 text-blue-700 border-blue-200' :
-                            enc.status === 'Pagamento pendente' ? 'bg-purple-100 text-purple-700 border-purple-200' :
-                            enc.status === 'Cancelado' ? 'bg-red-100 text-red-700 border-red-200' :
-                            'bg-orange-100 text-orange-700 border-orange-200'
+                        <button 
+                          onClick={() => setOpenDropdownId(openDropdownId === enc.id ? null : enc.id)}
+                          className={`flex items-center justify-between gap-2 text-xs font-bold rounded-xl px-4 py-2.5 outline-none cursor-pointer border w-full sm:w-auto transition-colors appearance-none ${
+                            enc.status === 'Concluído' ? 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200' :
+                            enc.status === 'Em Andamento' ? 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200' :
+                            enc.status === 'Pagamento pendente' ? 'bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-200' :
+                            enc.status === 'Cancelado' ? 'bg-red-100 text-red-700 border-red-200 hover:bg-red-200' :
+                            'bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-200'
                           }`}
                         >
-                          <option value="Pendente">Pendente</option>
-                          <option value="Pagamento pendente">Pagamento pendente</option>
-                          <option value="Em Andamento">Em Andamento</option>
-                          <option value="Concluído">Concluído</option>
-                          <option value="Cancelado">Cancelado</option>
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                           <svg className="w-4 h-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </div>
+                          {enc.status}
+                          <svg className={`w-4 h-4 transition-transform duration-200 ${openDropdownId === enc.id ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                        
+                        {openDropdownId === enc.id && (
+                          <>
+                            <div className="fixed inset-0 z-40" onClick={() => setOpenDropdownId(null)} />
+                            <div className="absolute left-0 bottom-full mb-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                              {['Pendente', 'Pagamento pendente', 'Em Andamento', 'Concluído', 'Cancelado'].map(statusOption => (
+                                <button
+                                  key={statusOption}
+                                  onClick={() => {
+                                    handleUpdateStatus(enc.id, statusOption);
+                                    setOpenDropdownId(null);
+                                  }}
+                                  className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                                    enc.status === statusOption 
+                                      ? 'bg-vanta-blue/10 text-vanta-blue font-bold' 
+                                      : 'text-gray-700 dark:text-gray-200'
+                                  }`}
+                                >
+                                  {statusOption}
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        )}
                         <CancelTimer enc={enc} onExpired={handleDeleteCancelado} />
                      </div>
 
