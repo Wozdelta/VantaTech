@@ -374,43 +374,45 @@ export default function Perfil() {
           
           {/* Dados da Conta */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-soft">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
-                <Shield className="w-5 h-5 mr-2 text-vanta-blue" />
+                <Shield className="w-5 h-5 mr-2 text-vanta-blue shrink-0" />
                 Dados da Conta
               </h3>
               {!isEditingProfile && (
                 <button 
                   onClick={() => setIsEditingProfile(true)}
-                  className="text-sm font-medium text-vanta-blue hover:text-vanta-darkblue transition-colors flex items-center"
+                  className="text-sm font-bold text-vanta-blue hover:text-vanta-darkblue transition-colors flex items-center bg-blue-50 dark:bg-blue-900/20 px-4 py-2 rounded-xl w-fit"
                 >
-                  <Edit2 className="w-4 h-4 mr-1" />
-                  Editar
+                  <Edit2 className="w-4 h-4 mr-1.5" />
+                  Editar Perfil
                 </button>
               )}
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome Completo</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Nome Completo</label>
                 <input 
                   type="text" 
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   readOnly={!isEditingProfile}
-                  className={`w-full px-4 py-2 bg-gray-50 dark:bg-gray-900 border rounded-lg text-gray-900 dark:text-white outline-none transition-all ${
+                  className={`w-full px-4 py-3 border rounded-xl text-sm font-medium outline-none transition-all ${
                     isEditingProfile 
-                    ? 'border-gray-300 dark:border-gray-600 focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20' 
-                    : 'border-transparent text-gray-600 dark:text-gray-400 cursor-not-allowed'
+                    ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 text-gray-900 dark:text-white shadow-sm' 
+                    : 'bg-gray-50 dark:bg-gray-900/50 border-transparent text-gray-700 dark:text-gray-300'
                   }`} 
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">E-mail <span className="text-gray-400 font-normal">(Não editável)</span></label>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                  E-mail <span className="text-gray-400 font-normal ml-1 lowercase">(não editável)</span>
+                </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input type="email" value={user.email || ''} readOnly className="w-full pl-10 pr-4 py-2 bg-gray-50 dark:bg-gray-900 border border-transparent rounded-lg text-gray-500 cursor-not-allowed" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input type="email" value={user.email || ''} readOnly className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-transparent rounded-xl text-sm font-medium text-gray-500 cursor-not-allowed" />
                 </div>
               </div>
 
@@ -437,26 +439,26 @@ export default function Perfil() {
           
           {/* Endereço de Entrega */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-soft">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
-                <MapPin className="w-5 h-5 mr-2 text-vanta-orange" />
+                <MapPin className="w-5 h-5 mr-2 text-vanta-orange shrink-0" />
                 Endereço de Entrega
               </h3>
               {hasAddress && !isEditingAddress && (
-                <div className="flex gap-4 items-center">
+                <div className="flex gap-3 items-center">
                   <button 
                     onClick={() => setIsEditingAddress(true)}
-                    className="text-sm font-medium text-vanta-blue hover:text-vanta-darkblue transition-colors flex items-center"
+                    className="text-sm font-bold text-vanta-blue hover:text-vanta-darkblue transition-colors flex items-center bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded-xl"
                   >
-                    <Edit2 className="w-4 h-4 mr-1" />
+                    <Edit2 className="w-4 h-4 mr-1.5" />
                     Editar
                   </button>
                   <button 
                     onClick={handleDeleteAddress}
-                    className="text-sm font-medium text-red-500 hover:text-red-700 transition-colors flex items-center"
+                    className="text-sm font-bold text-red-500 hover:text-red-700 transition-colors flex items-center bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded-xl"
                     disabled={saving}
                   >
-                    <Trash2 className="w-4 h-4 mr-1" />
+                    <Trash2 className="w-4 h-4 mr-1.5" />
                     Apagar
                   </button>
                 </div>
