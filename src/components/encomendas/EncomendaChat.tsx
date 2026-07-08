@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Send, MessageCircle, DollarSign, FileText, CheckCircle, Clock, ShieldCheck } from 'lucide-react';
+import { X, Send, MessageCircle, DollarSign, FileText, CheckCircle, Clock, ShieldCheck, Info } from 'lucide-react';
 import CheckoutButton from './CheckoutButton';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -22,6 +22,7 @@ export default function EncomendaChat({ encomenda, onClose }: EncomendaChatProps
   const [encomendaDetails, setEncomendaDetails] = useState(encomenda);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Formatador de tempo para o timer (HH:MM:SS)
@@ -474,12 +475,23 @@ export default function EncomendaChat({ encomenda, onClose }: EncomendaChatProps
               </p>
             </div>
           </div>
-          <button 
-            onClick={onClose}
-            className="p-2 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full shadow-sm transition-colors"
-          >
-            <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-          </button>
+          <div className="flex items-center gap-2">
+            {perfil?.cargo === 'Admin' && (
+              <button 
+                onClick={() => setIsSidebarOpen(true)}
+                className="md:hidden p-2 text-vanta-blue bg-vanta-blue/10 hover:bg-vanta-blue/20 rounded-xl transition-colors flex items-center gap-2 text-sm font-bold"
+              >
+                <Info className="w-5 h-5" />
+                <span className="hidden sm:inline">Detalhes</span>
+              </button>
+            )}
+            <button 
+              onClick={onClose}
+              className="p-2 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full shadow-sm transition-colors"
+            >
+              <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-1 overflow-hidden">
@@ -602,8 +614,18 @@ export default function EncomendaChat({ encomenda, onClose }: EncomendaChatProps
           </div>
 
           {/* Right Column: Admin Panel */}
+          {isSidebarOpen && (
+            <div 
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden transition-opacity"
+              onClick={() => setIsSidebarOpen(false)}
+            />
+          )}
+
           {perfil?.cargo === 'Admin' && encomendaDetails.status === 'Pagamento pendente' ? (
-            <div className="w-80 bg-green-50/50 dark:bg-green-900/10 p-6 overflow-y-auto custom-scrollbar flex flex-col border-l border-gray-100 dark:border-gray-700">
+            <div className={`w-[85vw] max-w-[320px] md:w-80 bg-green-50 dark:bg-green-900/10 p-6 overflow-y-auto custom-scrollbar flex flex-col border-l border-gray-100 dark:border-gray-700 fixed md:relative right-0 top-0 bottom-0 z-50 md:z-0 transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}`}>
+              <div className="flex md:hidden justify-end mb-4">
+                <button onClick={() => setIsSidebarOpen(false)} className="p-2 bg-white dark:bg-gray-800 rounded-full text-gray-500 shadow-sm"><X className="w-5 h-5"/></button>
+              </div>
               <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
                 <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 text-green-500 rounded-full flex items-center justify-center mb-2">
                   <CheckCircle className="w-8 h-8" />
@@ -646,7 +668,10 @@ export default function EncomendaChat({ encomenda, onClose }: EncomendaChatProps
               </div>
             </div>
           ) : perfil?.cargo === 'Admin' && encomendaDetails.status === 'Pendente' ? (
-            <div className="w-80 bg-gray-50/80 dark:bg-gray-900/50 p-6 overflow-y-auto custom-scrollbar flex flex-col border-l border-gray-100 dark:border-gray-700">
+            <div className={`w-[85vw] max-w-[320px] md:w-80 bg-gray-50 dark:bg-gray-900 p-6 overflow-y-auto custom-scrollbar flex flex-col border-l border-gray-100 dark:border-gray-700 fixed md:relative right-0 top-0 bottom-0 z-50 md:z-0 transition-transform duration-300 ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}`}>
+              <div className="flex md:hidden justify-end mb-4">
+                <button onClick={() => setIsSidebarOpen(false)} className="p-2 bg-white dark:bg-gray-800 rounded-full text-gray-500 shadow-sm"><X className="w-5 h-5"/></button>
+              </div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   <FileText className="w-5 h-5 text-vanta-blue" />
