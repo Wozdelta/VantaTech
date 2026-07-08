@@ -39,19 +39,21 @@ export default function Ajuda() {
         </div>
         
         {/* Quick Tabs no Header Mobile */}
-        <div className="flex bg-gray-100 dark:bg-gray-900 p-1.5 rounded-2xl overflow-x-auto hide-scrollbar w-full md:w-auto">
+        <div className="grid grid-cols-2 md:flex bg-gray-100 dark:bg-gray-900 p-1.5 rounded-2xl w-full md:w-auto gap-1.5">
           {[
             { id: 'faq', label: 'FAQ', icon: FileText },
             { id: 'chat', label: 'Assistente IA', icon: MessageCircle },
             { id: 'tickets', label: 'Meus Tickets', icon: Ticket }
-          ].map(tab => {
+          ].map((tab, idx) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as TabType)}
-                className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
+                className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
+                  idx === 2 ? 'col-span-2 md:col-span-1' : ''
+                } ${
                   isActive 
                     ? 'bg-white dark:bg-gray-800 text-vanta-blue shadow-sm' 
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200/50 dark:hover:bg-gray-800/50'
