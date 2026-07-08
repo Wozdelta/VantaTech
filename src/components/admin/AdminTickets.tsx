@@ -27,6 +27,7 @@ export default function AdminTickets() {
   const [tableExists, setTableExists] = useState(true);
   const [ticketToDelete, setTicketToDelete] = useState<string | null>(null);
   const [otherTyping, setOtherTyping] = useState(false);
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const channelRef = useRef<any>(null);
@@ -342,17 +343,36 @@ export default function AdminTickets() {
           
           <div className="flex items-center gap-2 justify-end w-full md:w-auto mt-2 md:mt-0 pt-3 md:pt-0 border-t border-gray-200 dark:border-gray-700 md:border-none">
             <span className="text-xs font-bold text-gray-500 uppercase">Alterar Status:</span>
-            <select
-              value={selectedTicket.status}
-              onChange={(e) => handleUpdateStatus(selectedTicket.id, e.target.value, selectedTicket.user_id, selectedTicket.assunto)}
-              className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-vanta-blue dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600 transition-colors"
-            >
-              {['Aberto', 'Em análise', 'Aguardando cliente', 'Respondido', 'Resolvido', 'Fechado'].map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <button
+                onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-vanta-blue dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600 transition-colors"
+              >
+                {selectedTicket.status}
+                <ChevronRight className={`w-4 h-4 transition-transform ${isStatusDropdownOpen ? 'rotate-90' : 'rotate-0'}`} />
+              </button>
+              
+              {isStatusDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden z-50 animate-scale-in origin-top-right">
+                  {['Aberto', 'Em análise', 'Aguardando cliente', 'Respondido', 'Resolvido', 'Fechado'].map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => {
+                        handleUpdateStatus(selectedTicket.id, status, selectedTicket.user_id, selectedTicket.assunto);
+                        setIsStatusDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                        selectedTicket.status === status 
+                          ? 'bg-vanta-blue/10 text-vanta-blue font-bold' 
+                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-vanta-blue dark:hover:text-vanta-blue'
+                      }`}
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button
               onClick={() => handleDeleteTicket(selectedTicket.id)}
               className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-colors border border-transparent hover:border-red-200 dark:hover:border-red-800/50"
