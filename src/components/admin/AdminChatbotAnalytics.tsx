@@ -239,13 +239,13 @@ export default function AdminChatbotAnalytics() {
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Últimas Interações (Log em Tempo Real)</h3>
+        <div className="p-4 sm:p-6 border-b border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">Últimas Interações (Log em Tempo Real)</h3>
             {(filterIntent || filterEmotion) && (
               <button 
                 onClick={() => { setFilterIntent(null); setFilterEmotion(null); }}
-                className="text-xs px-2 py-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors font-medium flex items-center gap-1"
+                className="w-max text-xs px-2 py-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors font-medium flex items-center gap-1"
               >
                 <XCircle className="w-3 h-3" /> Limpar Filtro
               </button>
@@ -255,7 +255,53 @@ export default function AdminChatbotAnalytics() {
             {filterIntent || filterEmotion ? 'Mostrando resultados filtrados' : 'Mostrando últimas 50 mensagens'}
           </span>
         </div>
-        <div className="overflow-x-auto">
+        {/* Mobile View (Cards) */}
+        <div className="grid grid-cols-1 gap-4 p-4 md:hidden">
+          {analytics.recentLogs
+            .filter((log: ChatLog) => !filterIntent || log.intencao === filterIntent)
+            .filter((log: ChatLog) => !filterEmotion || log.emocao === filterEmotion).length === 0 ? (
+            <div className="py-8 text-center text-gray-500 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-800">
+              Nenhuma interação encontrada para os filtros selecionados.
+            </div>
+          ) : (
+            analytics.recentLogs
+              .filter((log: ChatLog) => !filterIntent || log.intencao === filterIntent)
+              .filter((log: ChatLog) => !filterEmotion || log.emocao === filterEmotion)
+              .map((log: ChatLog) => (
+                <div key={log.id} className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 flex flex-col gap-3">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-gray-500 font-medium">
+                        {log.data_hora ? new Date(log.data_hora).toLocaleString('pt-BR') : '-'}
+                      </span>
+                      <p className="font-medium text-gray-900 dark:text-white mt-1">"{log.pergunta}"</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-vanta-blue rounded-lg text-[10px] font-bold uppercase">
+                        {log.intencao}
+                      </span>
+                      {log.emocao === 'happy' ? <Smile className="w-4 h-4 text-green-500" /> : 
+                       log.emocao === 'angry' ? <Frown className="w-4 h-4 text-red-500" /> : null}
+                    </div>
+                    {log.resolvido ? (
+                      <span className="flex items-center gap-1 text-green-600 dark:text-green-400 text-xs font-bold">
+                        <CheckCircle className="w-3.5 h-3.5" /> Resolvido
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-red-600 dark:text-red-400 text-xs font-bold">
+                        <XCircle className="w-3.5 h-3.5" /> Fallback
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))
+          )}
+        </div>
+
+        {/* Desktop View (Table) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-gray-900/50 dark:text-gray-400">
               <tr>
