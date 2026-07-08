@@ -69,6 +69,19 @@ export default function AjudaMeusTickets({ user, perfil }: { user: any, perfil: 
             }
           }
         )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'tickets',
+            filter: `id=eq.${selectedTicket.id}`
+          },
+          (payload) => {
+            setSelectedTicket((prev: any) => prev?.id === payload.new.id ? { ...prev, ...payload.new } : prev);
+            setTickets((prev) => prev.map(t => t.id === payload.new.id ? { ...t, ...payload.new } : t));
+          }
+        )
         .subscribe();
 
       channelRef.current = channel;
