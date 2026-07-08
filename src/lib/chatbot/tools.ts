@@ -37,58 +37,61 @@ export async function executeTool(intent: string, entities: Entities): Promise<T
   // Tool: Compras e Preços
   if (intent === 'comprar' || intent === 'pagamento') {
     if (entities.produto) {
+      const isGeneric = ['celular', 'smartphone', 'aparelho', 'telefone', 'eletrônico', 'produto'].includes(entities.produto.toLowerCase());
       const searchTerm = `${entities.produto} ${entities.modelo || ''}`.trim();
 
-      try {
-        const { data: grupos } = await supabase
-          .from('tabela_precos_grupos')
-          .select('*')
-          .ilike('nome', `%${searchTerm}%`)
-          .limit(3);
+      // Só busca no banco se tiver modelo especificado ou se a palavra não for totalmente genérica
+      if (!isGeneric || entities.modelo) {
+        try {
+          const { data: grupos } = await supabase
+            .from('tabela_precos_grupos')
+            .select('*')
+            .ilike('nome', `%${searchTerm}%`)
+            .limit(3);
 
-        if (grupos && grupos.length > 0) {
-          let responseText = `Aqui estão os valores para ${searchTerm}:\n\n`;
-          let hasVariations = false;
+          if (grupos && grupos.length > 0) {
+            let responseText = `Aqui estão os valores encontrados para "${searchTerm}":\n\n`;
+            let hasVariations = false;
 
-          for (const grupo of grupos) {
-            const { data: variacoes } = await supabase
-              .from('tabela_precos_variacoes')
-              .select('*')
-              .eq('grupo_id', grupo.id)
-              .order('ordem', { ascending: true, nullsFirst: false })
-              .order('valor_venda', { ascending: true });
+            for (const grupo of grupos) {
+              const { data: variacoes } = await supabase
+                .from('tabela_precos_variacoes')
+                .select('*')
+                .eq('grupo_id', grupo.id)
+                .order('ordem', { ascending: true, nullsFirst: false })
+                .order('valor_venda', { ascending: true });
 
-            if (variacoes && variacoes.length > 0) {
-              hasVariations = true;
-              variacoes.forEach(v => {
-                const formatPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v.valor_venda);
-                const groupNameUpper = grupo.nome.toUpperCase();
-                const varNameUpper = v.nome.toUpperCase();
+              if (variacoes && variacoes.length > 0) {
+                hasVariations = true;
+                variacoes.forEach(v => {
+                  const formatPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v.valor_venda);
+                  const groupNameUpper = grupo.nome.toUpperCase();
+                  const varNameUpper = v.nome.toUpperCase();
 
-                // Evita repetir "Iphone 15 Iphone 15 Pro Max" e apenas junta
-                const fullName = varNameUpper.includes(groupNameUpper)
-                  ? v.nome
-                  : `${grupo.nome} ${v.nome}`;
+                  const fullName = varNameUpper.includes(groupNameUpper)
+                    ? v.nome
+                    : `${grupo.nome} ${v.nome}`;
 
-                responseText += `${fullName} - ${formatPrice}\n`;
-              });
-              responseText += '\n';
+                  responseText += `${fullName} - ${formatPrice}\n`;
+                });
+                responseText += '\n';
+              }
+            }
+
+            if (hasVariations) {
+              return {
+                text: responseText.trim() + '\n\nEstes são nossos valores atuais de venda! Para fechar a compra, basta adicionar ao carrinho ou falar com nossos especialistas.',
+              };
             }
           }
-
-          if (hasVariations) {
-            return {
-              text: responseText.trim() + '\n\nEstes são nossos valores atuais de venda! Para fechar a compra, basta acessar a aba Produtos ou falar com nossos especialistas.',
-            };
-          }
+        } catch (err) {
+          console.error('Erro ao buscar precos:', err);
         }
-      } catch (err) {
-        console.error('Erro ao buscar precos:', err);
-      }
 
-      return {
-        text: `O valor para o modelo ${searchTerm} ainda não foi definido no nosso sistema. Posso te ajudar em algo mais?`,
-      };
+        return {
+          text: `No momento não encontrei valores definidos para "${searchTerm}" no meu sistema. Você gostaria de verificar outro modelo ou falar com um especialista?`,
+        };
+      }
     }
   }
 

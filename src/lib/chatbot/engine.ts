@@ -66,7 +66,27 @@ export async function processMessage(
         responseText = getRandomResponse(GREETINGS);
         suggestions = ['Comprar Produto', 'Rastrear Pedido', 'Abrir Ticket'];
         break;
+
+      case 'comprar':
+        responseText = 'Para comprar, basta navegar pela nossa aba de "Produtos", escolher o aparelho desejado e adicionar ao carrinho! Trabalhamos com diversas marcas (Apple, Samsung, Xiaomi). Qual modelo você procura hoje?';
+        suggestions = ['Ver Iphones', 'Formas de Pagamento'];
+        break;
       
+      case 'garantia':
+        responseText = 'Nossos produtos têm garantia de loja! Se você estiver com problemas, me diga qual é o modelo do aparelho e o defeito para que eu possa te ajudar, ou abra um Ticket de Suporte.';
+        suggestions = ['Abrir Ticket'];
+        break;
+
+      case 'suporte':
+        responseText = 'Entendi! Para que você tenha o melhor atendimento, vou sugerir abrir um Ticket de Suporte. Assim, nossa equipe especializada humana vai te responder rapidamente.';
+        action = 'OPEN_TICKET';
+        break;
+
+      case 'rastreamento':
+        responseText = 'Para rastrear, preciso que você me informe o código de rastreamento do correio/transportadora. Você também pode consultar o status acessando a aba "Meus Pedidos".';
+        suggestions = ['Ver Pedidos', 'Abrir Ticket'];
+        break;
+
       case 'despedida':
         responseText = 'Por nada! Estou sempre aqui se precisar. Tenha um excelente dia!';
         break;
