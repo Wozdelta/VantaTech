@@ -311,7 +311,7 @@ export default function AdminFidelidade() {
   return (
     <div className="space-y-6">
       {/* Abas Superiores */}
-      <div className="flex gap-4 mb-6">
+      <div className="flex overflow-x-auto pb-2 -mx-2 px-2 sm:mx-0 sm:px-0 sm:pb-0 sm:flex-wrap gap-2 sm:gap-4 mb-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <button
           onClick={() => setActiveTab('geral')}
           className={`px-4 py-2 rounded-lg font-bold transition-colors ${activeTab === 'geral' ? 'bg-vanta-blue text-white' : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
@@ -366,7 +366,7 @@ export default function AdminFidelidade() {
                    </div>
                    
                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Pontos Mínimos</label>
-                   <div className="flex gap-2">
+                   <div className="flex flex-col sm:flex-row gap-2">
                      <input 
                         type="number"
                         id={`input-nivel-${nivel.id}`}
@@ -377,8 +377,8 @@ export default function AdminFidelidade() {
                         onClick={() => {
                           const input = document.getElementById(`input-nivel-${nivel.id}`) as HTMLInputElement;
                           if (input) handleSaveNivel(nivel, parseInt(input.value));
-                        }}
-                        className="px-3 py-2 bg-vanta-blue text-white rounded-lg hover:bg-blue-600"
+                         }}
+                        className="w-full sm:w-auto px-3 py-2 bg-vanta-blue text-white rounded-lg hover:bg-blue-600 font-medium"
                      >
                        Salvar
                      </button>
@@ -391,9 +391,9 @@ export default function AdminFidelidade() {
       )}
 
       {activeTab === 'geral' && (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
         {/* Coluna Esquerda: Ranking de Usuários */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft overflow-hidden flex flex-col h-[800px]">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft overflow-hidden flex flex-col h-[500px] sm:h-[600px] lg:h-[800px]">
         <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Users className="w-6 h-6 text-vanta-blue" />
@@ -442,7 +442,7 @@ export default function AdminFidelidade() {
       </div>
 
       {/* Coluna Direita: Recompensas */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft overflow-hidden flex flex-col h-[800px]">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft overflow-hidden flex flex-col h-[500px] sm:h-[600px] lg:h-[800px]">
         <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50">
           <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Gift className="w-6 h-6 text-vanta-orange" />
