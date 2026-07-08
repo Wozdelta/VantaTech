@@ -23,8 +23,12 @@ export default function AjudaMeusTickets({ user, perfil }: { user: any, perfil: 
   const [sendingMsg, setSendingMsg] = useState(false);
   const [isOpeningNew, setIsOpeningNew] = useState(false);
   const [tableExists, setTableExists] = useState(true);
+  const [otherTyping, setOtherTyping] = useState(false);
   
   const scrollRef = useRef<HTMLDivElement>(null);
+  const channelRef = useRef<any>(null);
+  const typingTimeoutRef = useRef<any>(null);
+  const lastTypingTime = useRef(0);
 
   useEffect(() => {
     fetchTickets();
@@ -33,6 +37,46 @@ export default function AjudaMeusTickets({ user, perfil }: { user: any, perfil: 
   useEffect(() => {
     if (selectedTicket) {
       fetchMessages(selectedTicket.id);
+      
+      const channel = supabase
+        .channel(`ticket_messages_${selectedTicket.id}`, {
+          config: { broadcast: { ack: false } }
+        })
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'ticket_messages',
+            filter: `ticket_id=eq.${selectedTicket.id}`
+          },
+          (payload) => {
+            setMessages((prev) => {
+              if (prev.find(m => m.id === payload.new.id)) return prev;
+              return [...prev, payload.new as any];
+            });
+            setOtherTyping(false);
+          }
+        )
+        .on(
+          'broadcast',
+          { event: 'typing' },
+          (payload) => {
+            if (payload.payload.user_id !== user?.id) {
+              setOtherTyping(true);
+              if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+              typingTimeoutRef.current = setTimeout(() => setOtherTyping(false), 3000);
+            }
+          }
+        )
+        .subscribe();
+
+      channelRef.current = channel;
+
+      return () => {
+        supabase.removeChannel(channel);
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      };
     }
   }, [selectedTicket]);
 
@@ -40,7 +84,21 @@ export default function AjudaMeusTickets({ user, perfil }: { user: any, perfil: 
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, sendingMsg]);
+  }, [messages, sendingMsg, otherTyping]);
+
+  const handleTyping = () => {
+    const now = Date.now();
+    if (now - lastTypingTime.current > 2000) {
+      if (channelRef.current) {
+        channelRef.current.send({
+          type: 'broadcast',
+          event: 'typing',
+          payload: { user_id: user?.id }
+        }).catch(console.error);
+      }
+      lastTypingTime.current = now;
+    }
+  };
 
   const fetchTickets = async () => {
     if (!user) {
@@ -253,6 +311,22 @@ export default function AjudaMeusTickets({ user, perfil }: { user: any, perfil: 
             </div>
           ))}
 
+          {otherTyping && (
+            <div className="flex gap-3 max-w-[85%] items-start">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm bg-vanta-blue">
+                  V
+                </div>
+              </div>
+              <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-2xl rounded-tl-sm text-gray-500 text-sm flex gap-1 items-center">
+                 <span className="text-xs font-bold mr-1">Suporte digitando</span>
+                 <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                 <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                 <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+              </div>
+            </div>
+          )}
+
           {sendingMsg && (
             <div className="flex gap-3 max-w-[85%] ml-auto flex-row-reverse">
               <div className="w-8 h-8 bg-gray-200 dark:bg-gray-600 rounded-full animate-pulse" />
@@ -291,7 +365,10 @@ export default function AjudaMeusTickets({ user, perfil }: { user: any, perfil: 
             <div className="relative flex items-end gap-2">
               <textarea
                 value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
+                onChange={(e) => {
+                  setNewMessage(e.target.value);
+                  handleTyping();
+                }}
                 placeholder="Escreva sua resposta..."
                 rows={1}
                 className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-4 text-sm focus:outline-none focus:ring-2 focus:ring-vanta-blue dark:text-white transition-all resize-none max-h-32 min-h-[56px]"
