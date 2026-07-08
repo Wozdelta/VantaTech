@@ -204,12 +204,12 @@ export default function AdminEncomendas() {
         </div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto no-scrollbar">
+      <div className="flex flex-wrap gap-2">
         {(['Pendentes', 'Em Andamento', 'Histórico'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-5 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap ${
+            className={`flex-1 sm:flex-none flex items-center justify-center px-4 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap min-w-[140px] ${
               activeTab === tab 
                 ? 'bg-vanta-blue text-white shadow-md shadow-blue-500/20' 
                 : 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
