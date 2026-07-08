@@ -22,7 +22,7 @@ export default function Ajuda() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-8 animate-fade-in pb-20">
+    <div className={`max-w-6xl mx-auto px-4 py-8 animate-fade-in ${activeTab === 'chat' ? 'pb-4 space-y-4' : 'space-y-8 pb-20'}`}>
       
       {/* Header Premium */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700">
@@ -80,7 +80,7 @@ export default function Ajuda() {
         )}
 
         {activeTab === 'chat' && (
-          <div className="animate-fade-in h-[75vh] md:h-[600px] min-h-[500px] max-h-[800px] bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col">
+          <div className="animate-fade-in h-[calc(100vh-190px)] md:h-[600px] bg-white dark:bg-gray-800 md:rounded-3xl shadow-sm border-y md:border-x border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col -mx-4 md:mx-0 mt-4">
             <AjudaChatBot onOpenTicket={handleOpenTicketForm} />
           </div>
         )}
