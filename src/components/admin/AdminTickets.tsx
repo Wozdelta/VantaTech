@@ -36,6 +36,30 @@ export default function AdminTickets() {
   useEffect(() => {
     if (selectedTicket) {
       fetchMessages(selectedTicket.id);
+      
+      const channel = supabase
+        .channel(`ticket_messages_${selectedTicket.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'ticket_messages',
+            filter: `ticket_id=eq.${selectedTicket.id}`
+          },
+          (payload) => {
+            // Apenas adiciona se a mensagem já não estiver lá (pode acontecer se o próprio admin enviou e o state já atualizou via fetchMessages ou manualmente no handleSendMessage)
+            setMessages((prev) => {
+              if (prev.find(m => m.id === payload.new.id)) return prev;
+              return [...prev, payload.new as any];
+            });
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [selectedTicket]);
 
