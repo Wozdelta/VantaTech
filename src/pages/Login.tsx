@@ -109,7 +109,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-4 sm:py-12 sm:px-6 lg:px-8 relative overflow-hidden transition-colors duration-300">
+    <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 py-2 sm:py-12 sm:px-6 lg:px-8 relative overflow-hidden transition-colors duration-300">
       
       {/* Background Decor */}
       <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] dark:opacity-[0.05] pointer-events-none" 
@@ -121,7 +121,7 @@ export default function Login() {
         
         {/* Back Link */}
         {view === 'login' || view === 'register' ? (
-          <Link to="/" className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-vanta-blue dark:text-gray-400 transition-colors mb-4 sm:mb-8 group">
+          <Link to="/" className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-vanta-blue dark:text-gray-400 transition-colors mb-2 sm:mb-8 group">
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Voltar para loja
           </Link>
@@ -132,7 +132,7 @@ export default function Login() {
               setError('');
               setSuccess('');
             }}
-            className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-vanta-blue dark:text-gray-400 transition-colors mb-4 sm:mb-8 group"
+            className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-vanta-blue dark:text-gray-400 transition-colors mb-2 sm:mb-8 group"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Voltar para o Login
@@ -140,10 +140,10 @@ export default function Login() {
         )}
 
         {/* Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-[32px] shadow-2xl border border-gray-100 dark:border-gray-700 p-6 sm:p-10 animate-slide-up">
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl border border-gray-100 dark:border-gray-700 p-5 sm:p-10 animate-slide-up w-full">
           
-          <div className="text-center mb-6 sm:mb-8">
-            <h2 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">
+          <div className="text-center mb-4 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white tracking-tight">
               {view === 'login' && <span>Bem-vindo de volta</span>}
               {view === 'register' && <span>Criar Conta</span>}
               {view === 'forgot_email' && <span>Recuperar Senha</span>}
@@ -159,7 +159,7 @@ export default function Login() {
             </p>
           </div>
 
-          <form className="space-y-4 sm:space-y-5" onSubmit={handleSubmit} noValidate>
+          <form className="space-y-3 sm:space-y-5" onSubmit={handleSubmit} noValidate>
             {error && (
               <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm font-medium rounded-lg text-center">
                 {error}
@@ -206,7 +206,7 @@ export default function Login() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full pl-11 pr-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-vanta-blue focus:border-transparent transition-all outline-none" 
+                    className="w-full pl-11 pr-4 py-2.5 sm:py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-vanta-blue focus:border-transparent transition-all outline-none" 
                     placeholder="voce@exemplo.com" 
                   />
                 </div>
@@ -262,7 +262,7 @@ export default function Login() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="w-full pl-11 pr-12 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-vanta-blue focus:border-transparent transition-all outline-none" 
+                    className="w-full pl-11 pr-12 py-2.5 sm:py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-900 dark:text-white focus:ring-2 focus:ring-vanta-blue focus:border-transparent transition-all outline-none" 
                     placeholder="••••••••" 
                   />
                   <button
@@ -283,7 +283,7 @@ export default function Login() {
             <button 
               type="submit" 
               disabled={loading || (view === 'forgot_new_password' && success.includes('alterada'))}
-              className="w-full py-3.5 bg-vanta-blue text-white font-bold text-lg rounded-xl hover:bg-vanta-darkblue hover:-translate-y-0.5 shadow-[0_8px_20px_rgba(29,142,255,0.3)] transition-all duration-300 mt-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full py-3 sm:py-3.5 bg-vanta-blue text-white font-bold text-base sm:text-lg rounded-xl hover:bg-vanta-darkblue hover:-translate-y-0.5 shadow-[0_8px_20px_rgba(29,142,255,0.3)] transition-all duration-300 mt-2 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
             >
               {loading ? (
                 <Loader2 className="w-6 h-6 animate-spin mx-auto" />
@@ -302,7 +302,7 @@ export default function Login() {
           {/* Opções Alternativas só aparecem no Login/Register */}
           {(view === 'login' || view === 'register') && (
             <>
-              <div className="mt-6 sm:mt-8">
+              <div className="mt-4 sm:mt-8">
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
@@ -321,7 +321,7 @@ export default function Login() {
                         redirectTo: window.location.origin
                       }
                     })}
-                    className="w-full flex items-center justify-center py-3 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                    className="w-full flex items-center justify-center py-2.5 sm:py-3 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                   >
                     <FcGoogle className="w-5 h-5 mr-2" />
                     <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">Continuar com Google</span>
@@ -329,8 +329,8 @@ export default function Login() {
                 </div>
               </div>
 
-              <div className="mt-6 sm:mt-8 text-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+              <div className="mt-4 sm:mt-8 text-center">
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                   <span>{view === 'login' ? 'Ainda não tem uma conta?' : 'Já possui uma conta?'}</span>
                   <button 
                     onClick={() => {
