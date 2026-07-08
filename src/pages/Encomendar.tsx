@@ -397,8 +397,8 @@ export default function Encomendar() {
             className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
             onClick={() => setShowNovaEncomenda(false)}
           />
-          <div className="relative bg-white dark:bg-gray-800 rounded-3xl w-full max-w-xl flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+          <div className="relative bg-white dark:bg-gray-800 rounded-3xl w-full max-w-xl flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden max-h-[90vh]">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 shrink-0">
               <div className="flex items-center gap-3">
                 <PackageSearch className="w-6 h-6 text-vanta-blue" />
                 <h2 className="text-xl font-black text-gray-900 dark:text-white">Detalhes da Encomenda</h2>
@@ -484,7 +484,7 @@ export default function Encomendar() {
               </div>
             </div>
             
-            <div className="p-6 bg-blue-50/50 dark:bg-blue-900/10 border-t border-gray-100 dark:border-gray-700">
+            <div className="p-6 bg-blue-50/50 dark:bg-blue-900/10 border-t border-gray-100 dark:border-gray-700 shrink-0">
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center shrink-0">
                   <ShieldCheck className="w-4 h-4 text-vanta-blue" />
@@ -495,7 +495,7 @@ export default function Encomendar() {
               </div>
             </div>
             
-            <div className="p-6 pt-0 bg-blue-50/50 dark:bg-blue-900/10">
+            <div className="p-6 pt-0 bg-blue-50/50 dark:bg-blue-900/10 shrink-0">
               <button 
                 onClick={handleSubmitEncomenda}
                 disabled={submitting}
