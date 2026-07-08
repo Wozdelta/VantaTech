@@ -401,40 +401,42 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
       </div>
 
       <div className="p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
-        <div className="relative max-w-md">
-          <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Pesquisar por ID do pedido (ex: 123)..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-vanta-blue/20 focus:border-vanta-blue transition-all text-gray-900 dark:text-white"
-          />
-        </div>
-        
-                <div className="lg:hidden inline-flex w-fit bg-gray-100 dark:bg-gray-900 p-1.5 rounded-xl mt-4">
-          <button
-            onClick={() => setViewMode('table')}
-            className={`flex items-center justify-center px-3 py-2 rounded-lg transition-all ${viewMode === 'table' ? 'bg-white dark:bg-gray-800 text-vanta-blue shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
-            title="Visão Minimalista (Tabela)"
-          >
-            <List className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => setViewMode('cards')}
-            className={`flex items-center justify-center px-3 py-2 rounded-lg transition-all ${viewMode === 'cards' ? 'bg-white dark:bg-gray-800 text-vanta-blue shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
-            title="Visão Detalhada (Cards)"
-          >
-            <LayoutGrid className="w-5 h-5" />
-          </button>
+        <div className="flex flex-col sm:flex-row justify-between gap-4">
+          <div className="relative w-full max-w-md">
+            <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Pesquisar por ID do pedido (ex: 123)..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-vanta-blue/20 focus:border-vanta-blue transition-all text-gray-900 dark:text-white"
+            />
+          </div>
+          
+          <div className="lg:hidden flex w-full sm:w-fit bg-gray-100 dark:bg-gray-900 p-1.5 rounded-xl shrink-0">
+            <button
+              onClick={() => setViewMode('table')}
+              className={`flex-1 sm:flex-none flex items-center justify-center px-4 py-2 rounded-lg transition-all ${viewMode === 'table' ? 'bg-white dark:bg-gray-800 text-vanta-blue shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+              title="Visão Minimalista (Tabela)"
+            >
+              <List className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setViewMode('cards')}
+              className={`flex-1 sm:flex-none flex items-center justify-center px-4 py-2 rounded-lg transition-all ${viewMode === 'cards' ? 'bg-white dark:bg-gray-800 text-vanta-blue shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'}`}
+              title="Visão Detalhada (Cards)"
+            >
+              <LayoutGrid className="w-5 h-5" />
+            </button>
+          </div>
         </div>
         
         {/* Filtros em dropdown para Mobile e Desktop */}
-        <div className="flex lg:hidden flex-wrap gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex lg:hidden flex-col sm:flex-row flex-wrap gap-3 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           <select
             value={filterData}
             onChange={(e) => setFilterData(e.target.value)}
-            className="px-3 py-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-vanta-blue/20 dark:bg-gray-900 dark:border-gray-700 dark:text-white cursor-pointer"
+            className="w-full sm:w-auto flex-1 px-3 py-2.5 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-vanta-blue/20 dark:bg-gray-900 dark:border-gray-700 dark:text-white cursor-pointer"
           >
             <option value="mais_recente">Mais Recente</option>
             <option value="mais_antigo">Mais Antigo</option>
@@ -443,7 +445,7 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
           <select
             value={filterTotal}
             onChange={(e) => setFilterTotal(e.target.value)}
-            className="px-3 py-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-vanta-blue/20 dark:bg-gray-900 dark:border-gray-700 dark:text-white cursor-pointer"
+            className="w-full sm:w-auto flex-1 px-3 py-2.5 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-vanta-blue/20 dark:bg-gray-900 dark:border-gray-700 dark:text-white cursor-pointer"
           >
             <option value="">Total: Padrão</option>
             <option value="maior">Maior Valor</option>
@@ -453,7 +455,7 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-vanta-blue/20 dark:bg-gray-900 dark:border-gray-700 dark:text-white cursor-pointer"
+            className="w-full sm:w-auto flex-1 px-3 py-2.5 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-vanta-blue/20 dark:bg-gray-900 dark:border-gray-700 dark:text-white cursor-pointer"
           >
             <option value="">Status: Todos</option>
             <option value="pendente">Pendente</option>
@@ -721,7 +723,7 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
             <div key={pedido.id} className="bg-white dark:bg-gray-800 rounded-2xl p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)] dark:shadow-none border border-gray-100 dark:border-gray-700 flex flex-col gap-4 relative overflow-hidden group hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
               
               {/* Header */}
-              <div className="flex justify-between items-start border-b border-gray-100 dark:border-gray-700 pb-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-gray-100 dark:border-gray-700 pb-4">
                 <div>
                   <span className="text-sm font-black text-vanta-blue block mb-1 tracking-tight">#{pedido.numero}</span>
                   <span className="text-xs text-gray-500 font-medium flex items-center gap-1.5">
@@ -729,9 +731,9 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
                     {new Date(pedido.criado_em).toLocaleDateString('pt-BR')} às {new Date(pedido.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
-                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] uppercase font-bold tracking-wider ${getStatusColor(pedido.status)}`}>
+                <span className={`inline-flex items-center px-2.5 py-1.5 sm:py-1 rounded-full text-[10px] uppercase font-bold tracking-wider whitespace-nowrap ${getStatusColor(pedido.status)}`}>
                   {getStatusIcon(pedido.status)}
-                  <span className="ml-1">{pedido.status}</span>
+                  <span className="ml-1 text-center">{pedido.status}</span>
                 </span>
               </div>
               
