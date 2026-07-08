@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
 import { Ticket, Search, Filter, MessageCircle, Clock, ShieldAlert, Send, ArrowLeft, CheckCircle2, User, ChevronRight, Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { CustomSelect } from '../ui/CustomSelect';
 
 const formatDate = (dateString: string) => {
   return new Intl.DateTimeFormat('pt-BR', {
@@ -604,19 +605,20 @@ export default function AdminTickets() {
         
         <div className="flex items-center gap-3">
           <Filter className="w-5 h-5 text-gray-400" />
-          <select
+          <CustomSelect
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-vanta-blue dark:text-white transition-all font-medium"
-          >
-            <option value="all">Todos os Status</option>
-            <option value="Aberto">Aberto</option>
-            <option value="Em análise">Em análise</option>
-            <option value="Aguardando cliente">Aguardando cliente</option>
-            <option value="Respondido">Respondido</option>
-            <option value="Resolvido">Resolvido</option>
-            <option value="Fechado">Fechado</option>
-          </select>
+            onChange={(val) => setStatusFilter(val)}
+            className="w-48"
+            options={[
+              { value: 'all', label: 'Todos os Status' },
+              { value: 'Aberto', label: 'Aberto' },
+              { value: 'Em análise', label: 'Em análise' },
+              { value: 'Aguardando cliente', label: 'Aguardando cliente' },
+              { value: 'Respondido', label: 'Respondido' },
+              { value: 'Resolvido', label: 'Resolvido' },
+              { value: 'Fechado', label: 'Fechado' }
+            ]}
+          />
         </div>
       </div>
 
@@ -674,17 +676,19 @@ export default function AdminTickets() {
                       </span>
                     </td>
                     <td className="p-4">
-                      <select
+                      <CustomSelect
                         value={ticket.status}
-                        onChange={(e) => handleUpdateStatus(ticket.id, e.target.value, ticket.user_id, ticket.assunto)}
-                        className={`px-2 py-1 text-xs font-bold rounded-lg focus:outline-none focus:ring-2 focus:ring-vanta-blue transition-colors cursor-pointer ${getStatusColor(ticket.status)}`}
-                      >
-                        {['Aberto', 'Em análise', 'Aguardando cliente', 'Respondido', 'Resolvido', 'Fechado'].map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(val) => handleUpdateStatus(ticket.id, val, ticket.user_id, ticket.assunto)}
+                        className="w-40"
+                        options={[
+                          { value: 'Aberto', label: 'Aberto' },
+                          { value: 'Em análise', label: 'Em análise' },
+                          { value: 'Aguardando cliente', label: 'Aguardando cliente' },
+                          { value: 'Respondido', label: 'Respondido' },
+                          { value: 'Resolvido', label: 'Resolvido' },
+                          { value: 'Fechado', label: 'Fechado' }
+                        ]}
+                      />
                     </td>
                     <td className="p-4">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -735,17 +739,19 @@ export default function AdminTickets() {
                   <div className="font-bold text-gray-900 dark:text-white line-clamp-1">{ticket.assunto}</div>
                   <div className="text-xs text-gray-500">#{ticket.id.split('-')[0].toUpperCase()}</div>
                 </div>
-                <select
+                <CustomSelect
                   value={ticket.status}
-                  onChange={(e) => handleUpdateStatus(ticket.id, e.target.value, ticket.user_id, ticket.assunto)}
-                  className={`px-2 py-1.5 text-[10px] font-bold rounded-lg focus:outline-none focus:ring-2 focus:ring-vanta-blue transition-colors cursor-pointer w-fit shrink-0 ${getStatusColor(ticket.status)}`}
-                >
-                  {['Aberto', 'Em análise', 'Aguardando cliente', 'Respondido', 'Resolvido', 'Fechado'].map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => handleUpdateStatus(ticket.id, val, ticket.user_id, ticket.assunto)}
+                  className="w-36 shrink-0"
+                  options={[
+                    { value: 'Aberto', label: 'Aberto' },
+                    { value: 'Em análise', label: 'Em análise' },
+                    { value: 'Aguardando cliente', label: 'Aguardando cliente' },
+                    { value: 'Respondido', label: 'Respondido' },
+                    { value: 'Resolvido', label: 'Resolvido' },
+                    { value: 'Fechado', label: 'Fechado' }
+                  ]}
+                />
               </div>
               <div className="flex justify-between items-center text-sm">
                 <div className="flex items-center gap-2 min-w-0">

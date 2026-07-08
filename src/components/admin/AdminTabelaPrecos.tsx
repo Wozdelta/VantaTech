@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { DollarSign, Plus, Save, Trash2, Edit2, X, Tag, ChevronDown, ChevronUp, Search, TrendingUp, Layers, GripVertical, Copy } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
+import { CustomSelect } from '../ui/CustomSelect';
 
 interface Marca {
   id: string;
@@ -431,14 +432,12 @@ export default function AdminTabelaPrecos() {
             </div>
             <div>
               <label className="text-[10px] uppercase font-bold text-gray-400 mb-1.5 block">Marca</label>
-              <select
+              <CustomSelect
                 value={newGroup.marca_id}
-                onChange={e => setNewGroup({...newGroup, marca_id: e.target.value})}
-                className="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-vanta-blue text-gray-900 dark:text-white"
-              >
-                <option value="">Selecione uma marca...</option>
-                {marcas.map(m => <option key={m.id} value={m.id}>{m.nome}</option>)}
-              </select>
+                onChange={val => setNewGroup({...newGroup, marca_id: val})}
+                placeholder="Selecione uma marca..."
+                options={marcas.map(m => ({ value: m.id, label: m.nome }))}
+              />
             </div>
           </div>
           <div className="flex items-center justify-end gap-3 mt-6">

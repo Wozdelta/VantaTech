@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
+import { CustomSelect } from '../ui/CustomSelect';
 import { Plus, Trash2, Image as ImageIcon, Loader2, X, Edit, UploadCloud, Award, Medal, Package, Settings, Users, Gift, Star, Ticket } from 'lucide-react';
 import AdminOrders from './AdminOrders';
 
@@ -567,14 +568,14 @@ export default function AdminFidelidade() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Tipo de Recompensa
                   </label>
-                  <select
+                  <CustomSelect
                     value={formData.tipo}
-                    onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-vanta-blue focus:border-transparent outline-none transition-all dark:text-white"
-                  >
-                    <option value="produto">Produto Físico / Brinde</option>
-                    <option value="cupom">Cupom de Desconto Exclusivo</option>
-                  </select>
+                    onChange={(val) => setFormData({ ...formData, tipo: val })}
+                    options={[
+                      { value: 'produto', label: 'Produto Físico / Brinde' },
+                      { value: 'cupom', label: 'Cupom de Desconto Exclusivo' }
+                    ]}
+                  />
                 </div>
 
                 {formData.tipo === 'cupom' && (
@@ -583,14 +584,14 @@ export default function AdminFidelidade() {
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Tipo do Desconto
                       </label>
-                      <select
+                      <CustomSelect
                         value={formData.cupom_tipo}
-                        onChange={(e) => setFormData({ ...formData, cupom_tipo: e.target.value })}
-                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-vanta-blue focus:border-transparent outline-none transition-all dark:text-white"
-                      >
-                        <option value="fixo">Valor Fixo (R$)</option>
-                        <option value="porcentagem">Porcentagem (%)</option>
-                      </select>
+                        onChange={(val) => setFormData({ ...formData, cupom_tipo: val })}
+                        options={[
+                          { value: 'fixo', label: 'Valor Fixo (R$)' },
+                          { value: 'porcentagem', label: 'Porcentagem (%)' }
+                        ]}
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -673,34 +674,30 @@ export default function AdminFidelidade() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Badge (Opcional)
                   </label>
-                  <select
+                  <CustomSelect
                     value={formData.badge}
-                    onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-vanta-blue focus:border-transparent outline-none transition-all dark:text-white appearance-none"
-                  >
-                    <option value="">Sem Badge</option>
-                    <option value="Mais Resgatado">Mais Resgatado</option>
-                    <option value="Exclusivo">Exclusivo</option>
-                    <option value="Novidade">Novidade</option>
-                    <option value="Promoção">Promoção</option>
-                    <option value="Esgotando">Esgotando</option>
-                  </select>
+                    onChange={(val) => setFormData({ ...formData, badge: val })}
+                    placeholder="Sem Badge"
+                    options={[
+                      { value: 'Mais Resgatado', label: 'Mais Resgatado' },
+                      { value: 'Exclusivo', label: 'Exclusivo' },
+                      { value: 'Novidade', label: 'Novidade' },
+                      { value: 'Promoção', label: 'Promoção' },
+                      { value: 'Esgotando', label: 'Esgotando' }
+                    ]}
+                  />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Nível Exclusivo (Opcional)
                   </label>
-                  <select
+                  <CustomSelect
                     value={formData.nivel_id}
-                    onChange={(e) => setFormData({ ...formData, nivel_id: e.target.value })}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-vanta-blue focus:border-transparent outline-none transition-all dark:text-white appearance-none"
-                  >
-                    <option value="">Disponível para Todos</option>
-                    {niveis.map(nivel => (
-                      <option key={nivel.id} value={nivel.id}>Exclusivo {nivel.nome}</option>
-                    ))}
-                  </select>
+                    onChange={(val) => setFormData({ ...formData, nivel_id: val })}
+                    placeholder="Disponível para Todos"
+                    options={niveis.map(nivel => ({ value: nivel.id, label: `Exclusivo ${nivel.nome}` }))}
+                  />
                   <p className="text-xs text-gray-500 mt-1">Apenas usuários deste nível ou superior poderão resgatar.</p>
                 </div>
               </div>

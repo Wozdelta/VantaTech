@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
 import { Send, Loader2, FileUp } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { CustomSelect } from '../ui/CustomSelect';
 
 export default function AjudaTicketForm({ onSuccess }: { onSuccess: () => void }) {
   const { user } = useAuth();
@@ -111,33 +112,29 @@ export default function AjudaTicketForm({ onSuccess }: { onSuccess: () => void }
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <label className="text-sm font-bold text-gray-700 dark:text-gray-300">Categoria *</label>
-            <select
+            <CustomSelect
               value={formData.categoria}
-              onChange={e => setFormData({ ...formData, categoria: e.target.value })}
-              className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-vanta-blue dark:text-white transition-all"
-            >
-              <option value="">Selecione uma categoria...</option>
-              <option value="Pedido">Pedido ou Entrega</option>
-              <option value="Pagamento">Pagamento ou Reembolso</option>
-              <option value="Produto">Dúvida sobre Produto</option>
-              <option value="Garantia">Acionar Garantia</option>
-              <option value="Conta">Problema na Conta</option>
-              <option value="Outro">Outro assunto</option>
-            </select>
+              onChange={val => setFormData({ ...formData, categoria: val })}
+              placeholder="Selecione uma categoria..."
+              options={[
+                { value: 'Pedido', label: 'Pedido ou Entrega' },
+                { value: 'Pagamento', label: 'Pagamento ou Reembolso' },
+                { value: 'Produto', label: 'Dúvida sobre Produto' },
+                { value: 'Garantia', label: 'Acionar Garantia' },
+                { value: 'Conta', label: 'Problema na Conta' },
+                { value: 'Outro', label: 'Outro assunto' }
+              ]}
+            />
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-bold text-gray-700 dark:text-gray-300">Número do Pedido (Opcional)</label>
-            <select
+            <CustomSelect
               value={formData.pedido_id}
-              onChange={e => setFormData({ ...formData, pedido_id: e.target.value })}
-              className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-vanta-blue dark:text-white transition-all"
-            >
-              <option value="">Selecione um pedido...</option>
-              {pedidos.map(p => (
-                <option key={p.id} value={p.id}>Pedido #{p.code}</option>
-              ))}
-            </select>
+              onChange={val => setFormData({ ...formData, pedido_id: val })}
+              placeholder="Selecione um pedido..."
+              options={pedidos.map(p => ({ value: p.id, label: `Pedido #${p.code}` }))}
+            />
           </div>
         </div>
 

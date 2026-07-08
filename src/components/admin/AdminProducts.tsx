@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
+import { CustomSelect } from '../ui/CustomSelect';
 import { Plus, Trash2, Loader2, X, Edit, UploadCloud, Palette, Smartphone, Package, Search, ChevronDown, Check, Undo2, LayoutGrid, List } from 'lucide-react';
 import { Reorder } from 'framer-motion';
 import RichTextEditor from '../ui/RichTextEditor';
@@ -1094,16 +1095,12 @@ export default function AdminProducts() {
 
                           {productType === 'aparelho' && img.isVariant && (
                             <>
-                              <select
+                              <CustomSelect
                                 value={img.color}
-                                onChange={(e) => handleUpdateImageColor(img.id, e.target.value)}
-                                className="text-xs w-full p-2 border border-gray-200 dark:border-gray-700 rounded-lg dark:bg-gray-800 outline-none focus:border-vanta-blue transition-all font-medium appearance-none"
-                              >
-                                <option value="">Sem Cor</option>
-                                {productColors.map(c => (
-                                  <option key={c.id} value={c.nome}>{c.nome}</option>
-                                ))}
-                              </select>
+                                onChange={(val) => handleUpdateImageColor(img.id, val)}
+                                placeholder="Sem Cor"
+                                options={productColors.map(c => ({ value: c.nome, label: c.nome }))}
+                              />
                               <input
                                 type="text"
                                 placeholder="Armazenamento (ex: 256GB)"
@@ -1175,32 +1172,40 @@ export default function AdminProducts() {
                     </div>
                     <div>
                       <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Marca</label>
-                      <select required value={formData.marca} onChange={e => setFormData({ ...formData, marca: e.target.value })} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-sm font-medium appearance-none">
-                        <option value="">Selecione...</option>
-                        {marcas.map(m => (
-                          <option key={m.id} value={m.nome}>{m.nome}</option>
-                        ))}
-                      </select>
+                      <CustomSelect
+                        required
+                        value={formData.marca}
+                        onChange={val => setFormData({ ...formData, marca: val })}
+                        placeholder="Selecione..."
+                        options={marcas.map(m => ({ value: m.nome, label: m.nome }))}
+                      />
                     </div>
                     <div>
                       <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Categoria</label>
-                      <select required value={formData.categoria} onChange={e => setFormData({ ...formData, categoria: e.target.value })} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-sm font-medium appearance-none">
-                        <option value="">Selecione...</option>
-                        {categorias.map(c => (
-                          <option key={c.id} value={c.nome}>{c.nome}</option>
-                        ))}
-                      </select>
+                      <CustomSelect
+                        required
+                        value={formData.categoria}
+                        onChange={val => setFormData({ ...formData, categoria: val })}
+                        placeholder="Selecione..."
+                        options={categorias.map(c => ({ value: c.nome, label: c.nome }))}
+                      />
                     </div>
 
                     {productType === 'aparelho' && (
                       <div>
                         <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Condição</label>
-                        <select required value={formData.condicao} onChange={e => setFormData({ ...formData, condicao: e.target.value })} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-sm font-medium appearance-none">
-                          <option value="Novo">Novo</option>
-                          <option value="Lacrado">Lacrado</option>
-                          <option value="Seminovo">Seminovo</option>
-                          <option value="Usado">Usado</option>
-                        </select>
+                        <CustomSelect
+                          required
+                          value={formData.condicao}
+                          onChange={val => setFormData({ ...formData, condicao: val })}
+                          placeholder="Selecione a condição"
+                          options={[
+                            { value: 'Novo', label: 'Novo' },
+                            { value: 'Lacrado', label: 'Lacrado' },
+                            { value: 'Seminovo', label: 'Seminovo' },
+                            { value: 'Usado', label: 'Usado' }
+                          ]}
+                        />
                       </div>
                     )}
 
@@ -1213,12 +1218,16 @@ export default function AdminProducts() {
 
                     <div>
                       <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Etiqueta (Badge)</label>
-                      <select value={formData.badge} onChange={e => setFormData({ ...formData, badge: e.target.value })} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-sm font-medium appearance-none">
-                        <option value="">Nenhuma</option>
-                        <option value="Novo">Novo</option>
-                        <option value="Oferta">Oferta</option>
-                        <option value="Mais Vendido">Mais Vendido</option>
-                      </select>
+                      <CustomSelect
+                        value={formData.badge}
+                        onChange={val => setFormData({ ...formData, badge: val })}
+                        placeholder="Nenhuma"
+                        options={[
+                          { value: 'Novo', label: 'Novo' },
+                          { value: 'Oferta', label: 'Oferta' },
+                          { value: 'Mais Vendido', label: 'Mais Vendido' }
+                        ]}
+                      />
                     </div>
                   </div>
                 </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
+import { CustomSelect } from '../ui/CustomSelect';
 import { Plus, Trash2, Edit, CheckCircle, XCircle, Tag, Loader2, Save, X, Users, Box, Clock, DollarSign } from 'lucide-react';
 
 type Cupom = {
@@ -286,11 +287,15 @@ export default function AdminCupons() {
                   <input required type="text" value={formData.codigo} onChange={e => setFormData({ ...formData, codigo: e.target.value.toUpperCase() })} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-sm font-medium uppercase" placeholder="Ex: PROMO10" />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Tipo de Desconto *</label>
-                  <select required value={formData.tipo_desconto} onChange={e => setFormData({ ...formData, tipo_desconto: e.target.value as any })} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-sm font-medium">
-                    <option value="porcentagem">Porcentagem (%)</option>
-                    <option value="fixo">Valor Fixo (R$)</option>
-                  </select>
+                  <CustomSelect 
+                    required 
+                    value={formData.tipo_desconto} 
+                    onChange={val => setFormData({ ...formData, tipo_desconto: val as any })} 
+                    options={[
+                      { value: 'porcentagem', label: 'Porcentagem (%)' },
+                      { value: 'fixo', label: 'Valor Fixo (R$)' }
+                    ]}
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">Valor do Desconto *</label>
@@ -310,24 +315,24 @@ export default function AdminCupons() {
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5 flex items-center gap-1.5">
                     <Users className="w-3.5 h-3.5" /> Cliente Específico
                   </label>
-                  <select value={formData.user_id} onChange={e => setFormData({ ...formData, user_id: e.target.value })} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-sm font-medium">
-                    <option value="">Todos os Clientes</option>
-                    {perfis.map(p => (
-                      <option key={p.id} value={p.id}>{p.nome_completo || 'Cliente sem nome'}</option>
-                    ))}
-                  </select>
+                  <CustomSelect 
+                    value={formData.user_id} 
+                    onChange={val => setFormData({ ...formData, user_id: val })} 
+                    placeholder="Todos os Clientes"
+                    options={perfis.map(p => ({ value: p.id, label: p.nome_completo || 'Cliente sem nome' }))}
+                  />
                 </div>
 
                 <div>
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5 flex items-center gap-1.5">
                     <Box className="w-3.5 h-3.5" /> Apenas para Categoria
                   </label>
-                  <select value={formData.categoria_nome} onChange={e => setFormData({ ...formData, categoria_nome: e.target.value })} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-sm font-medium">
-                    <option value="">Todas as Categorias</option>
-                    {categorias.map(c => (
-                      <option key={c.nome} value={c.nome}>{c.nome}</option>
-                    ))}
-                  </select>
+                  <CustomSelect 
+                    value={formData.categoria_nome} 
+                    onChange={val => setFormData({ ...formData, categoria_nome: val })} 
+                    placeholder="Todas as Categorias"
+                    options={categorias.map(c => ({ value: c.nome, label: c.nome }))}
+                  />
                 </div>
 
                 <div>
@@ -341,12 +346,12 @@ export default function AdminCupons() {
                   <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5 flex items-center gap-1.5">
                     <Tag className="w-3.5 h-3.5" /> Apenas para Nível (Clube)
                   </label>
-                  <select value={formData.nivel_id} onChange={e => setFormData({ ...formData, nivel_id: e.target.value })} className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3 outline-none focus:border-vanta-blue focus:ring-2 focus:ring-vanta-blue/20 transition-all text-sm font-medium">
-                    <option value="">Qualquer Nível</option>
-                    {niveis.map(n => (
-                      <option key={n.id} value={n.id}>{n.nome} (ou superior)</option>
-                    ))}
-                  </select>
+                  <CustomSelect 
+                    value={formData.nivel_id} 
+                    onChange={val => setFormData({ ...formData, nivel_id: val })} 
+                    placeholder="Qualquer Nível"
+                    options={niveis.map(n => ({ value: n.id, label: `${n.nome} (ou superior)` }))}
+                  />
                 </div>
               </div>
             </div>

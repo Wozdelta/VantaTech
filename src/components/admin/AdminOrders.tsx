@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
+import { CustomSelect } from '../ui/CustomSelect';
 import { Package, ChevronDown, CheckCircle, Truck, XCircle, Clock, Loader2, ExternalLink, Trash2, Check, Search, FileText, X, DollarSign, CreditCard, Tag, ChevronLeft, ChevronRight, LayoutGrid, List } from 'lucide-react';
 
 interface ItemPedido {
@@ -433,37 +434,40 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
         
         {/* Filtros em dropdown para Mobile e Desktop */}
         <div className="flex lg:hidden flex-col sm:flex-row flex-wrap gap-3 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <select
+          <CustomSelect
             value={filterData}
-            onChange={(e) => setFilterData(e.target.value)}
-            className="w-full sm:w-auto flex-1 px-3 py-2.5 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-vanta-blue/20 dark:bg-gray-900 dark:border-gray-700 dark:text-white cursor-pointer"
-          >
-            <option value="mais_recente">Mais Recente</option>
-            <option value="mais_antigo">Mais Antigo</option>
-          </select>
+            onChange={(val) => setFilterData(val)}
+            className="w-full sm:w-auto flex-1"
+            options={[
+              { value: 'mais_recente', label: 'Mais Recente' },
+              { value: 'mais_antigo', label: 'Mais Antigo' }
+            ]}
+          />
           
-          <select
+          <CustomSelect
             value={filterTotal}
-            onChange={(e) => setFilterTotal(e.target.value)}
-            className="w-full sm:w-auto flex-1 px-3 py-2.5 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-vanta-blue/20 dark:bg-gray-900 dark:border-gray-700 dark:text-white cursor-pointer"
-          >
-            <option value="">Total: Padrão</option>
-            <option value="maior">Maior Valor</option>
-            <option value="menor">Menor Valor</option>
-          </select>
+            onChange={(val) => setFilterTotal(val)}
+            className="w-full sm:w-auto flex-1"
+            placeholder="Total: Padrão"
+            options={[
+              { value: 'maior', label: 'Maior Valor' },
+              { value: 'menor', label: 'Menor Valor' }
+            ]}
+          />
 
-          <select
+          <CustomSelect
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-full sm:w-auto flex-1 px-3 py-2.5 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-vanta-blue/20 dark:bg-gray-900 dark:border-gray-700 dark:text-white cursor-pointer"
-          >
-            <option value="">Status: Todos</option>
-            <option value="pendente">Pendente</option>
-            <option value="pago">Pago</option>
-            <option value="enviado">Enviado</option>
-            <option value="entregue">Entregue</option>
-            <option value="cancelado">Cancelado</option>
-          </select>
+            onChange={(val) => setFilterStatus(val)}
+            className="w-full sm:w-auto flex-1"
+            placeholder="Status: Todos"
+            options={[
+              { value: 'pendente', label: 'Pendente' },
+              { value: 'pago', label: 'Pago' },
+              { value: 'enviado', label: 'Enviado' },
+              { value: 'entregue', label: 'Entregue' },
+              { value: 'cancelado', label: 'Cancelado' }
+            ]}
+          />
         </div>
       </div>
 
