@@ -176,27 +176,33 @@ export default function Pedidos() {
         <div className="space-y-6">
           {pedidos.map(pedido => (
             <div key={pedido.id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft border border-gray-100 dark:border-gray-700 p-6 transition-all hover:shadow-md">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 dark:border-gray-700 pb-4 mb-4">
-                <div>
-                  <p className="text-sm text-gray-500">Pedido <span className="font-bold text-gray-900 dark:text-white">#{String(pedido.numero).padStart(4, '0')}</span></p>
-                  <p className="text-xs text-gray-400">
-                    Realizado em {new Date(pedido.criado_em).toLocaleDateString('pt-BR')} às {new Date(pedido.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
-                <div className="flex flex-col items-end">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(pedido.status)}`}>
+              <div className="flex flex-col border-b border-gray-100 dark:border-gray-700 pb-4 mb-4 gap-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm text-gray-500">Pedido <span className="font-bold text-gray-900 dark:text-white text-base">#{String(pedido.numero).padStart(4, '0')}</span></p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {new Date(pedido.criado_em).toLocaleDateString('pt-BR')} às {new Date(pedido.criado_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold shrink-0 ${getStatusColor(pedido.status)}`}>
                     {pedido.status === 'Cancelado pelo cliente' ? 'Cancelado' : pedido.status}
                   </span>
-                  <span className="text-sm font-bold text-vanta-blue mt-2">
-                    Total: {Number(pedido.total) === 0 && pedido.itens_pedido?.some(i => i.produto_nome.includes('[Vanta Club]')) ? `${pedido.itens_pedido.filter(i => i.produto_nome.includes('[Vanta Club]')).reduce((acc, i) => acc + (Number(i.produto_preco) * i.quantidade), 0)} pontos` : `R$ ${Number(pedido.total).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                  </span>
+                </div>
+                
+                <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-900/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700/50">
+                  <div className="flex flex-col">
+                    <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Total do Pedido</span>
+                    <span className="text-base font-bold text-vanta-blue">
+                      {Number(pedido.total) === 0 && pedido.itens_pedido?.some(i => i.produto_nome.includes('[Vanta Club]')) ? `${pedido.itens_pedido.filter(i => i.produto_nome.includes('[Vanta Club]')).reduce((acc, i) => acc + (Number(i.produto_preco) * i.quantidade), 0)} pts` : `R$ ${Number(pedido.total).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    </span>
+                  </div>
                   {(pedido.status === 'Pendente' || pedido.status === 'Pago') && (
                     <button 
                       onClick={() => handleCancelarPedido(pedido.id)}
-                      className="mt-3 text-xs flex items-center text-red-500 hover:text-red-600 transition-colors font-medium border border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-900/20 px-3 py-1.5 rounded-lg"
+                      className="text-xs flex items-center text-red-500 hover:text-white hover:bg-red-500 transition-all font-bold border border-red-200 dark:border-red-900 px-3 py-2 rounded-lg bg-white dark:bg-transparent"
                     >
-                      <XCircle className="w-3.5 h-3.5 mr-1" />
-                      Cancelar Pedido
+                      <XCircle className="w-4 h-4 mr-1.5" />
+                      Cancelar
                     </button>
                   )}
                 </div>
