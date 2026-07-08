@@ -23,6 +23,10 @@ export default function EncomendaChat({ encomenda, onClose }: EncomendaChatProps
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [otherTyping, setOtherTyping] = useState(false);
+  const typingTimeoutRef = useRef<any>(null);
+  const lastTypingTime = useRef(0);
+  const channelRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Formatador de tempo para o timer (HH:MM:SS)
@@ -56,12 +60,15 @@ export default function EncomendaChat({ encomenda, onClose }: EncomendaChatProps
     fetchMessages();
 
     const channel = supabase
-      .channel(`chat_${encomenda.id}`)
+      .channel(`chat_${encomenda.id}`, {
+        config: { broadcast: { ack: false } }
+      })
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'encomendas_mensagens', filter: `encomenda_id=eq.${encomenda.id}` },
         () => {
           fetchMessages();
+          setOtherTyping(false);
         }
       )
       .on(
@@ -71,12 +78,40 @@ export default function EncomendaChat({ encomenda, onClose }: EncomendaChatProps
           setEncomendaDetails(payload.new as any);
         }
       )
+      .on(
+        'broadcast',
+        { event: 'typing' },
+        (payload) => {
+          if (payload.payload.user_id !== user?.id) {
+            setOtherTyping(true);
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = setTimeout(() => setOtherTyping(false), 3000);
+          }
+        }
+      )
       .subscribe();
+
+    channelRef.current = channel;
 
     return () => {
       supabase.removeChannel(channel);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
   }, [encomenda.id]);
+
+  const handleTyping = () => {
+    const now = Date.now();
+    if (now - lastTypingTime.current > 2000) {
+      if (channelRef.current) {
+        channelRef.current.send({
+          type: 'broadcast',
+          event: 'typing',
+          payload: { user_id: user?.id }
+        }).catch(console.error);
+      }
+      lastTypingTime.current = now;
+    }
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -589,6 +624,21 @@ export default function EncomendaChat({ encomenda, onClose }: EncomendaChatProps
                   );
                 })
               )}
+              {otherTyping && (
+                <div className="flex gap-3 max-w-[85%] items-start mb-2">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm bg-gray-400">
+                      ...
+                    </div>
+                  </div>
+                  <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl rounded-tl-sm text-gray-500 text-sm flex gap-1 items-center shadow-sm">
+                     <span className="text-xs font-bold mr-1">Digitando</span>
+                     <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                     <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                     <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                  </div>
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
 
@@ -598,7 +648,10 @@ export default function EncomendaChat({ encomenda, onClose }: EncomendaChatProps
                 <input
                   type="text"
                   value={newMessage}
-                  onChange={e => setNewMessage(e.target.value)}
+                  onChange={e => {
+                    setNewMessage(e.target.value);
+                    handleTyping();
+                  }}
                   placeholder="Digite sua mensagem..."
                   className="flex-1 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-full px-5 py-3 text-sm text-gray-900 dark:text-white outline-none focus:border-vanta-blue transition-colors"
                 />
