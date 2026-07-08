@@ -80,7 +80,7 @@ export default function Ajuda() {
         )}
 
         {activeTab === 'chat' && (
-          <div className="animate-fade-in h-[600px] bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <div className="animate-fade-in h-[75vh] md:h-[600px] min-h-[500px] max-h-[800px] bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col">
             <AjudaChatBot onOpenTicket={handleOpenTicketForm} />
           </div>
         )}
