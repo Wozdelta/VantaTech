@@ -66,23 +66,23 @@ export default function AdminChatbotAnalytics() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <Bot className="w-8 h-8 text-vanta-blue" />
-          Desempenho do Chatbot (IA)
+          <span className="leading-tight">Desempenho do Chatbot (IA)</span>
         </h2>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
           <button 
             onClick={() => setShowConfirm(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-xl font-medium transition-colors"
+            className="flex justify-center items-center gap-2 px-4 py-2.5 sm:py-2 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-xl font-medium transition-colors"
           >
             <Trash2 className="w-4 h-4" />
             Limpar Logs
           </button>
           <button 
             onClick={exportData}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium transition-colors"
+            className="flex justify-center items-center gap-2 px-4 py-2.5 sm:py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-xl font-medium transition-colors"
           >
             <Download className="w-4 h-4" />
             Exportar Logs
@@ -90,48 +90,48 @@ export default function AdminChatbotAnalytics() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Total Conversas */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center gap-4">
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 text-vanta-blue rounded-2xl">
-            <MessageSquare className="w-6 h-6" />
+        <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+          <div className="p-2.5 sm:p-4 bg-blue-50 dark:bg-blue-900/20 text-vanta-blue rounded-xl sm:rounded-2xl shrink-0">
+            <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total de Mensagens</p>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.total}</h3>
+            <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 line-clamp-1" title="Total de Mensagens">Total de Mensagens</p>
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-0.5">{analytics.total}</h3>
           </div>
         </div>
 
         {/* Taxa de Resolução */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center gap-4">
-          <div className="p-4 bg-green-50 dark:bg-green-900/20 text-green-500 rounded-2xl">
-            <Activity className="w-6 h-6" />
+        <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+          <div className="p-2.5 sm:p-4 bg-green-50 dark:bg-green-900/20 text-green-500 rounded-xl sm:rounded-2xl shrink-0">
+            <Activity className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Taxa de Resolução</p>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.resolutionRate.toFixed(1)}%</h3>
+            <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 line-clamp-1" title="Taxa de Resolução">Taxa de Resolução</p>
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-0.5">{analytics.resolutionRate.toFixed(1)}%</h3>
           </div>
         </div>
 
         {/* Resolvidos (Evitou Tickets) */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center gap-4">
-          <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 rounded-2xl">
-            <CheckCircle className="w-6 h-6" />
+        <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+          <div className="p-2.5 sm:p-4 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 rounded-xl sm:rounded-2xl shrink-0">
+            <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Sucessos (Evitou Ticket)</p>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.resolved}</h3>
+            <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 line-clamp-1" title="Sucessos (Evitou Ticket)">Sucessos (Evitou Ticket)</p>
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-0.5">{analytics.resolved}</h3>
           </div>
         </div>
 
         {/* Não Resolvidos (Gerou Ticket) */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex items-center gap-4">
-          <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-2xl">
-            <XCircle className="w-6 h-6" />
+        <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+          <div className="p-2.5 sm:p-4 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-xl sm:rounded-2xl shrink-0">
+            <XCircle className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Fallback (Ticket)</p>
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.unresolved}</h3>
+            <p className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 line-clamp-1" title="Fallback (Ticket)">Fallback (Ticket)</p>
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mt-0.5">{analytics.unresolved}</h3>
           </div>
         </div>
       </div>
