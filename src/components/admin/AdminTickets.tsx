@@ -443,50 +443,7 @@ export default function AdminTickets() {
           </div>
         </div>
       </div>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-2xl flex items-center justify-center">
-              <Ticket className="w-6 h-6 text-gray-500 dark:text-gray-400" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total</p>
-              <h3 className="text-2xl font-black text-gray-900 dark:text-white">{tickets.length}</h3>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-yellow-100 dark:border-yellow-900/30">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-2xl flex items-center justify-center">
-              <ShieldAlert className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Abertos</p>
-              <h3 className="text-2xl font-black text-gray-900 dark:text-white">{abertos}</h3>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-blue-100 dark:border-blue-900/30">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center">
-              <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Em Análise/Resp.</p>
-              <h3 className="text-2xl font-black text-gray-900 dark:text-white">{emAnalise}</h3>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-green-100 dark:border-green-900/30">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center">
-              <CheckCircle2 className="w-6 h-6 text-green-600 dark:text-green-400" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Resolvidos/Fechados</p>
-              <h3 className="text-2xl font-black text-gray-900 dark:text-white">{fechados}</h3>
-            </div>
-          </div>
-        </div>
-      </div>
+
 
       {/* Modal de Confirmação de Exclusão */}
       {ticketToDelete && (
