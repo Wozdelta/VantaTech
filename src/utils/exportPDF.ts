@@ -95,6 +95,13 @@ export function generatePDFCatalog(grupos: Grupo[]) {
   // Montando as tabelas
   let startY = 35; // Posição inicial após o header
 
+  // Observação Geral no topo da primeira página
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
+  doc.text("* Observação Geral: Os valores podem mudar dependendo da condição do aparelho.", 15, startY);
+  startY += 15;
+
   marcasOrdenadas.forEach((marca, index) => {
     // Ordenar grupos (aparelhos) alfabeticamente dentro da marca
     const gruposDaMarca = catalogoPorMarca[marca].sort((a, b) => a.nome.localeCompare(b.nome));
@@ -119,19 +126,10 @@ export function generatePDFCatalog(grupos: Grupo[]) {
       const variacoesOrdenadas = [...grupo.variacoes].sort((a, b) => a.nome.localeCompare(b.nome));
       
       variacoesOrdenadas.forEach(variacao => {
-        // Montar a observação com os valores da IA se existirem
-        let observacao = '';
-        if (variacao.venda_excelente && variacao.venda_bom && variacao.venda_regular) {
-          observacao = `Exc: ${formatCurrency(variacao.venda_excelente)} | Bom: ${formatCurrency(variacao.venda_bom)} | Reg: ${formatCurrency(variacao.venda_regular)}`;
-        } else {
-          observacao = '-';
-        }
-
         tableBody.push([
           `${grupo.nome} ${variacao.nome}`, // Aparelho
           formatCurrency(variacao.valor_venda), // Preço de Venda
-          formatDate(variacao.ia_atualizado_em), // Atualização
-          observacao // Observações com os valores Excelente/Bom/Regular
+          formatDate(variacao.ia_atualizado_em) // Atualização
         ]);
       });
     });
@@ -139,7 +137,7 @@ export function generatePDFCatalog(grupos: Grupo[]) {
     // Gerar tabela para esta marca
     autoTable(doc, {
       startY: startY,
-      head: [['Aparelho', 'Venda', 'Atualizado', 'Observações (Tabela de Estado)']],
+      head: [['Aparelho', 'Venda', 'Atualizado']],
       body: tableBody,
       theme: 'striped',
       headStyles: {
@@ -157,10 +155,9 @@ export function generatePDFCatalog(grupos: Grupo[]) {
         fillColor: [248, 250, 252] // Slate 50
       },
       columnStyles: {
-        0: { cellWidth: 50, fontStyle: 'bold' },
-        1: { cellWidth: 25, halign: 'right', textColor: [21, 128, 61], fontStyle: 'bold' }, // Verde no preço principal
-        2: { cellWidth: 20, halign: 'center' },
-        3: { cellWidth: 'auto', fontSize: 8 }
+        0: { cellWidth: 80, fontStyle: 'bold' },
+        1: { cellWidth: 50, halign: 'right', textColor: [21, 128, 61], fontStyle: 'bold' }, // Verde no preço principal
+        2: { cellWidth: 'auto', halign: 'center' }
       },
       margin: { top: 30, left: 15, right: 15 },
       didDrawPage: (data) => {
