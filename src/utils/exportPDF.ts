@@ -69,28 +69,32 @@ export function generatePDFCatalog(grupos: Grupo[]) {
     }
   };
 
-  // Header Global que aparece em todas as páginas
-  const addHeader = () => {
-    doc.setFillColor(...primaryColor);
-    doc.rect(0, 0, pageWidth, 25, 'F');
-    
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(22);
-    doc.text("Catálogo de Preços", 15, 15);
-    
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(`Atualizado em: ${dataAtual}`, pageWidth - 15, 15, { align: 'right' });
-  };
+  // Header e Footer serão adicionados no final iterando por todas as páginas
+  const addHeaderAndFooter = () => {
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      
+      // Header
+      doc.setFillColor(...primaryColor);
+      doc.rect(0, 0, pageWidth, 25, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(22);
+      doc.text("Catálogo de Preços", 15, 15);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text(`Atualizado em: ${dataAtual}`, pageWidth - 15, 15, { align: 'right' });
 
-  // Rodapé Global que aparece em todas as páginas
-  const addFooter = (data: any) => {
-    const str = `Página ${data.pageNumber} de ${data.pageCount}`;
-    doc.setFontSize(8);
-    doc.setTextColor(150, 150, 150);
-    doc.text(str, pageWidth / 2, pageHeight - 10, { align: 'center' });
-    doc.text("Gerado por VantaTech", 15, pageHeight - 10);
+      // Footer
+      const str = `Página ${i} de ${pageCount}`;
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text(str, pageWidth / 2, pageHeight - 10, { align: 'center' });
+      doc.text("Gerado por VantaTech", 15, pageHeight - 10);
+    }
   };
 
   // Montando as tabelas
@@ -119,78 +123,70 @@ export function generatePDFCatalog(grupos: Grupo[]) {
     doc.text(marca.toUpperCase(), 15, startY);
     startY += 5;
 
-    // Preparar dados da tabela
-    const tableBody: any[] = [];
-    
     gruposDaMarca.forEach(grupo => {
-      // Adicionar linha de divisória para o Aparelho Base
-      tableBody.push([
-        { 
-          content: grupo.nome, 
-          colSpan: 3, 
-          styles: { 
-            fillColor: [241, 245, 249], // Slate 100
-            textColor: [30, 41, 59], // Slate 800
-            fontStyle: 'bold', 
-            halign: 'left',
-            fontSize: 10
-          } 
-        }
-      ]);
-
-      // Ordenar variações (ex: 128GB, 256GB)
       const variacoesOrdenadas = [...grupo.variacoes].sort((a, b) => a.nome.localeCompare(b.nome));
+      if (variacoesOrdenadas.length === 0) return; // Ignora grupos vazios
       
+      const tableBody: any[] = [];
       variacoesOrdenadas.forEach(variacao => {
         tableBody.push([
-          `• ${variacao.nome}`, // Apenas o nome da variação (com bullet)
+          variacao.nome, // Apenas o nome da variação (128GB, Pro 256GB, etc)
           formatCurrency(variacao.valor_venda), // Preço de Venda
           formatDate(variacao.ia_atualizado_em || variacao.criado_em) // Atualização
         ]);
       });
-    });
 
-    // Gerar tabela para esta marca
-    autoTable(doc, {
-      startY: startY,
-      head: [['Aparelho', 'Venda', 'Atualizado']],
-      body: tableBody,
-      theme: 'striped',
-      headStyles: {
-        fillColor: headerBgColor,
-        textColor: 255,
-        fontSize: 10,
-        fontStyle: 'bold',
-        halign: 'left'
-      },
-      bodyStyles: {
-        fontSize: 9,
-        textColor: textColor
-      },
-      alternateRowStyles: {
-        fillColor: [248, 250, 252] // Slate 50
-      },
-      columnStyles: {
-        0: { cellWidth: 90, fontStyle: 'bold' },
-        1: { cellWidth: 50, textColor: [21, 128, 61], fontStyle: 'bold' }, // Verde no preço principal
-        2: { cellWidth: 'auto' }
-      },
-      margin: { top: 30, left: 15, right: 15 },
-      didDrawPage: (data) => {
-        addHeader();
-        addFooter(data);
+      // Se estourar a página antes de iniciar a tabela
+      if (startY > pageHeight - 30) {
+        doc.addPage();
+        startY = 35;
       }
+
+      // Tabela separada para cada Aparelho Base
+      autoTable(doc, {
+        startY: startY,
+        head: [[grupo.nome, 'Preço de Venda', 'Atualizado']], // Título do aparelho no cabeçalho
+        body: tableBody,
+        theme: 'striped',
+        headStyles: {
+          fillColor: [241, 245, 249], // Slate 100 - muito suave para diferenciar do azul principal
+          textColor: [30, 41, 59], // Slate 800
+          fontSize: 11,
+          fontStyle: 'bold',
+          halign: 'left'
+        },
+        bodyStyles: {
+          fontSize: 9,
+          textColor: textColor
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252] // Slate 50
+        },
+        columnStyles: {
+          0: { cellWidth: 90, fontStyle: 'bold' },
+          1: { cellWidth: 50, textColor: [21, 128, 61], fontStyle: 'bold' }, // Verde no preço
+          2: { cellWidth: 'auto' }
+        },
+        margin: { top: 30, left: 15, right: 15 },
+        didDrawPage: (data) => {
+          // Apenas atualiza o cursor se houver quebra
+          if (data.cursor) {
+            startY = data.cursor.y;
+          }
+        }
+      });
+
+      // Pula espaço para a próxima tabela
+      startY = (doc as any).lastAutoTable.finalY + 8;
     });
 
-    // Atualizar o Y para a próxima categoria (com base no final desta tabela)
-    startY = (doc as any).lastAutoTable.finalY + 15;
+    startY += 10; // Espaço extra após finalizar a marca
   });
 
   // Resumo Final (última página)
   if (startY > pageHeight - 50) {
     doc.addPage();
     startY = 35;
-    // O didDrawPage já cuidou do header/footer
   }
 
   doc.setFillColor(241, 245, 249); // Slate 100
@@ -206,6 +202,9 @@ export function generatePDFCatalog(grupos: Grupo[]) {
   doc.text(`Total de Categorias: ${marcasOrdenadas.length}`, 20, startY + 16);
   doc.text(`Total de Aparelhos: ${totalAparelhos}`, 20, startY + 22);
 
-  // Baixar o arquivo
-  doc.save(`Catalogo_Precos_${new Date().getTime()}.pdf`);
+  // --- APLICA HEADER E FOOTER EM TODAS AS PÁGINAS ---
+  addHeaderAndFooter();
+
+  // Salvar
+  doc.save(`Catalogo_Precos_${dataAtual.replace(/\//g, '-')}.pdf`);
 }
