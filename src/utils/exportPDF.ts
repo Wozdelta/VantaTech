@@ -42,7 +42,7 @@ export function generatePDFCatalog(grupos: Grupo[]) {
 
   // Organizar e processar dados
   const catalogoPorMarca: Record<string, typeof grupos> = {};
-  
+
   grupos.forEach(grupo => {
     const marca = grupo.marcas?.nome || 'Outros';
     if (!catalogoPorMarca[marca]) catalogoPorMarca[marca] = [];
@@ -74,16 +74,16 @@ export function generatePDFCatalog(grupos: Grupo[]) {
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
-      
+
       // Header
       doc.setFillColor(...primaryColor);
       doc.rect(0, 0, pageWidth, 25, 'F');
-      
+
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(22);
       doc.text("Catálogo de Preços", 15, 15);
-      
+
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
       doc.text(`Atualizado em: ${dataAtual}`, pageWidth - 15, 15, { align: 'right' });
@@ -105,16 +105,16 @@ export function generatePDFCatalog(grupos: Grupo[]) {
   doc.setDrawColor(252, 165, 165); // Borda vermelha suave
   doc.setLineWidth(0.2);
   doc.rect(15, startY, pageWidth - 30, 10, 'FD');
-  
+
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
   doc.setTextColor(220, 38, 38); // Vermelho escuro
   doc.text("Atenção:", 20, startY + 6.5);
-  
+
   doc.setFont("helvetica", "normal");
   doc.setTextColor(153, 27, 27); // Vermelho mais escuro para o texto
   doc.text("Os preços são estimativas e podem variar conforme a condição física e saúde da bateria do aparelho.", 35, startY + 6.5);
-  
+
   startY += 18;
 
   marcasOrdenadas.forEach((marca, index) => {
@@ -136,7 +136,7 @@ export function generatePDFCatalog(grupos: Grupo[]) {
     gruposDaMarca.forEach(grupo => {
       const variacoesOrdenadas = [...grupo.variacoes].sort((a, b) => a.nome.localeCompare(b.nome));
       if (variacoesOrdenadas.length === 0) return; // Ignora grupos vazios
-      
+
       const tableBody: any[] = [];
       variacoesOrdenadas.forEach(variacao => {
         tableBody.push([
@@ -201,12 +201,12 @@ export function generatePDFCatalog(grupos: Grupo[]) {
 
   doc.setFillColor(241, 245, 249); // Slate 100
   doc.rect(15, startY, pageWidth - 30, 30, 'F');
-  
+
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
   doc.setTextColor(...headerBgColor);
   doc.text("Resumo do Catálogo", 20, startY + 8);
-  
+
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
   doc.text(`Total de Categorias: ${marcasOrdenadas.length}`, 20, startY + 16);
