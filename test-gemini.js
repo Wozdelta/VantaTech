@@ -5,7 +5,7 @@ import fs from 'fs';
 const envFile = fs.readFileSync('.env', 'utf-8');
 const env = {};
 envFile.split('\n').forEach(line => {
-  let cleanLine = line.trim(); // Remove \r
+  let cleanLine = line.trim();
   const match = cleanLine.match(/^([^=]+)=(.*)$/);
   if (match) {
     let val = match[2].trim();
@@ -14,8 +14,12 @@ envFile.split('\n').forEach(line => {
   }
 });
 
+const keyParts = env.VITE_GEMINI_API_KEY.split('.');
+const realKey = keyParts[0]; // just take the 39 char part
+console.log("Using key:", realKey, "length:", realKey.length);
+
 const supabase = createClient(env.VITE_SUPABASE_URL || '', env.VITE_SUPABASE_ANON_KEY || '');
-const genAI = new GoogleGenerativeAI(env.VITE_GEMINI_API_KEY || '');
+const genAI = new GoogleGenerativeAI(realKey || '');
 
 async function test() {
   console.log("Buscando grupos no Supabase...");
@@ -66,7 +70,6 @@ Retorne SOMENTE o objeto JSON, sem markdown e sem crases.`;
       }
     }
   }
-  console.log("Total variações:", totalVariacoes);
 }
 
 test();
