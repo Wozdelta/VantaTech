@@ -130,7 +130,7 @@ export function generatePDFCatalog(grupos: Grupo[]) {
       const tableBody: any[] = [];
       variacoesOrdenadas.forEach(variacao => {
         tableBody.push([
-          variacao.nome, // Apenas o nome da variação (128GB, Pro 256GB, etc)
+          `${grupo.nome} ${variacao.nome}`, // Nome completo (Base + Variação)
           formatCurrency(variacao.valor_venda), // Preço de Venda
           formatDate(variacao.ia_atualizado_em || variacao.criado_em) // Atualização
         ]);
