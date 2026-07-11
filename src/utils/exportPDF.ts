@@ -113,7 +113,7 @@ export function generatePDFCatalog(grupos: Grupo[]) {
   
   doc.setFont("helvetica", "normal");
   doc.setTextColor(153, 27, 27); // Vermelho mais escuro para o texto
-  doc.text("Os preços tabelados são estimativas e podem sofrer variações de acordo com o estado de conservação do aparelho.", 35, startY + 6.5);
+  doc.text("Os preços são estimativas e podem variar conforme a condição física e saúde da bateria do aparelho.", 35, startY + 6.5);
   
   startY += 18;
 
