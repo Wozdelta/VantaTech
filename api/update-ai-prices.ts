@@ -50,23 +50,102 @@ export default async function handler(req: any, res: any) {
         const modeloCompleto = `${aparelhoNome} ${variacao.nome}`;
         
         try {
-          const prompt = `Você é um avaliador de smartphones usados no mercado brasileiro atualizado.
-Você precisa avaliar o valor de COMPRA/REVENDA de um aparelho específico.
-O modelo exato do aparelho é: "${modeloCompleto}".
+          const prompt = `
+Você é um especialista em avaliação de smartphones usados no mercado brasileiro.
 
-Baseado nos preços atuais de mercado no Brasil para compras de pessoas físicas (usados), estime os valores de revenda reais para esse aparelho.
-Forneça apenas os 3 valores em reais (apenas números sem R$ ou pontos de milhar) em formato JSON para as categorias:
-- "excelente": O aparelho está em estado impecável, sem arranhões, bateria acima de 90%.
-- "bom": Aparelho tem marcas leves de uso, bateria aceitável (80-89%).
-- "regular": Aparelho com marcas visíveis de uso ou arranhões mais severos.
+Seu objetivo é retornar o valor REAL de compra/revenda entre pessoas físicas.
 
-O JSON deve seguir esse formato estrito:
+Modelo:
+"${modeloCompleto}"
+
+Antes de responder, faça uma pesquisa utilizando anúncios REAIS e RECENTES.
+
+Priorize as seguintes fontes:
+
+1. Facebook Marketplace
+2. OLX
+3. Mercado Livre (Produtos usados)
+4. eBay (somente para comparação internacional quando não houver dados suficientes no Brasil)
+5. Enjoei
+6. Grupos de compra e venda de celulares
+
+A prioridade de localização deve ser:
+
+1º Araraquara - SP
+2º São Carlos - SP
+3º Matão - SP
+4º Região DDD 016
+5º Interior de São Paulo
+6º Brasil
+
+Durante a análise:
+
+- Considere apenas anúncios publicados recentemente.
+- Ignore anúncios antigos.
+- Ignore celulares novos.
+- Ignore aparelhos lacrados.
+- Ignore preços absurdamente acima da média.
+- Ignore preços extremamente baixos que aparentem golpe.
+- Considere apenas aparelhos funcionando normalmente.
+- Utilize a MEDIANA ou MÉDIA dos anúncios válidos encontrados.
+- Caso existam poucos anúncios na região, amplie a pesquisa para todo o estado de São Paulo e depois para o Brasil.
+
+Considere também:
+
+- versão exata do aparelho;
+- armazenamento;
+- cor (apenas se impactar o preço);
+- oferta e demanda atual;
+- liquidez do modelo;
+- tempo médio de venda;
+- ano de lançamento;
+- desvalorização do modelo.
+
+Definições:
+
+EXCELENTE
+- Sem riscos
+- Sem marcas
+- Bateria acima de 90%
+- Tudo original
+- Nunca aberto
+
+BOM
+- Pequenas marcas
+- Funcionamento perfeito
+- Bateria entre 80% e 89%
+
+REGULAR
+- Marcas visíveis
+- Arranhões
+- Pequenos amassados
+- Bateria abaixo de 80%
+
+IMPORTANTE
+
+Os valores retornados devem representar quanto um vendedor conseguiria anunciar hoje para vender relativamente rápido (até cerca de 15 dias), e não o maior preço anunciado.
+
+Nunca utilize apenas um anúncio para definir o preço.
+
+Sempre elimine valores fora da curva antes de calcular a média.
+
+Retorne SOMENTE um JSON válido.
+
 {
-  "excelente": 2500,
-  "bom": 2200,
-  "regular": 1900
+  "excelente": 0,
+  "bom": 0,
+  "regular": 0
 }
-Retorne SOMENTE o objeto JSON válido, sem nenhum texto adicional.`;
+
+Regras:
+
+- Apenas números inteiros.
+- Sem R$.
+- Sem texto.
+- Sem markdown.
+- Sem comentários.
+- Sem explicações.
+`;
 
           const chatCompletion = await groq.chat.completions.create({
             messages: [{ role: "user", content: prompt }],
