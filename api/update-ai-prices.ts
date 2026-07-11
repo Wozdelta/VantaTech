@@ -27,7 +27,7 @@ export default async function handler(req: any, res: any) {
 
     const { data: grupos, error } = await supabase
       .from('tabela_precos_grupos')
-      .select('id, nome, marcas(nome), tabela_precos_variacoes(id, nome, valor_venda)');
+      .select('id, nome, marcas(nome), tabela_precos_variacoes(id, nome, valor_venda, venda_excelente, venda_bom, venda_regular)');
 
     if (error) {
       console.error('Erro ao buscar grupos:', error);
@@ -83,6 +83,10 @@ export default async function handler(req: any, res: any) {
             }
           }
 
+          const currentPrices = (variacao.venda_excelente && variacao.venda_bom && variacao.venda_regular) 
+            ? `\nPREÇOS ATUAIS NO SISTEMA (Sua última avaliação):\n- Excelente: ${variacao.venda_excelente}\n- Bom: ${variacao.venda_bom}\n- Regular: ${variacao.venda_regular}\n\nCRÍTICO: O usuário reclamou que os preços flutuam muito a cada vez que clica em gerar. Para resolver isso, utilize estes "Preços Atuais" como ÂNCORA. Você só deve alterá-reajustar os valores se a sua nova pesquisa na web mostrar uma variação significativa (maior que 5-10%). Caso contrário, repita os preços atuais para manter a estabilidade no catálogo.`
+            : `\nValor base aproximado atual do usuário: ${variacao.valor_venda}`;
+
           const prompt = `
 Você é um especialista em avaliação de smartphones usados no mercado brasileiro.
 
@@ -90,10 +94,11 @@ Seu objetivo é retornar o valor REAL de compra/revenda entre pessoas físicas.
 
 Modelo:
 "${modeloCompleto}"
+${currentPrices}
 ${searchContext ? `\nPara te ajudar, eu fiz uma pesquisa em tempo real agora mesmo na internet e encontrei os seguintes anúncios de usados (OLX, Mercado Livre, etc):
 ${searchContext}
 
-Baseie sua avaliação matemática fortemente nestes anúncios acima, filtrando preços absurdos e aplicando o desconto de acordo com a condição (Excelente, Bom, Regular).` : `\nAntes de responder, faça uma pesquisa utilizando anúncios REAIS e RECENTES.`}
+Baseie sua avaliação matemática fortemente nestes anúncios acima e na sua âncora de preços atuais, filtrando preços absurdos e aplicando o desconto de acordo com a condição.` : `\nAntes de responder, faça uma pesquisa utilizando anúncios REAIS e RECENTES.`}
 
 Priorize as seguintes fontes:
 
