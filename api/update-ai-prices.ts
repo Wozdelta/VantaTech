@@ -34,6 +34,7 @@ export default async function handler(req: any, res: any) {
       return res.status(500).json({ message: 'Erro ao buscar dados no Supabase' });
     }
 
+    let analyzedCount = 0;
     let updatedCount = 0;
     const errors: string[] = [];
     const groq = new Groq({ apiKey: groqKey });
@@ -202,12 +203,27 @@ Regras:
           const aiPrices = JSON.parse(jsonStr);
 
           if (aiPrices.excelente && aiPrices.bom && aiPrices.regular) {
+            analyzedCount++;
+            
+            const novoExcelente = Number(aiPrices.excelente);
+            const novoBom = Number(aiPrices.bom);
+            const novoRegular = Number(aiPrices.regular);
+
+            // Se os valores sugeridos pela IA forem exatamente iguais aos atuais, não faz o update no banco
+            if (
+              novoExcelente === variacao.venda_excelente &&
+              novoBom === variacao.venda_bom &&
+              novoRegular === variacao.venda_regular
+            ) {
+              continue;
+            }
+
             const { error: updateError } = await supabase
               .from('tabela_precos_variacoes')
               .update({
-                venda_excelente: Number(aiPrices.excelente),
-                venda_bom: Number(aiPrices.bom),
-                venda_regular: Number(aiPrices.regular),
+                venda_excelente: novoExcelente,
+                venda_bom: novoBom,
+                venda_regular: novoRegular,
                 ia_atualizado_em: new Date().toISOString()
               })
               .eq('id', variacao.id);
@@ -226,9 +242,9 @@ Regras:
       }
     }
 
-    let finalMessage = `Atualização concluída via IA (Groq). ${updatedCount} variações atualizadas.`;
+    let finalMessage = `Concluído: ${analyzedCount} analisados, ${updatedCount} tiveram os preços alterados.`;
     if (errors.length > 0) {
-      finalMessage += ` Erros encontrados: ${errors[0]}`;
+      finalMessage += ` Erros: ${errors[0]}`;
     }
 
     return res.status(200).json({ message: finalMessage });
