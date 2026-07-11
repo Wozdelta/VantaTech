@@ -53,83 +53,39 @@ export default async function handler(req: any, res: any) {
           const prompt = `
 Você é um especialista em avaliação de smartphones usados no mercado brasileiro.
 
-Seu objetivo é retornar o valor REAL de compra/revenda entre pessoas físicas.
+Seu objetivo é retornar o valor de revenda entre pessoas físicas, dividindo-o em 3 categorias de conservação.
 
-Modelo:
-"${modeloCompleto}"
+Modelo: "${modeloCompleto}"
+Preço Base de Referência (Mercado Atual): R$ ${variacao.valor_venda}
 
-Antes de responder, faça uma pesquisa utilizando anúncios REAIS e RECENTES.
+Atenção: Você deve utilizar o PREÇO BASE DE REFERÊNCIA (R$ ${variacao.valor_venda}) como a sua principal âncora para o aparelho em EXCELENTE estado (ou muito próximo dele). 
+A partir desse valor base, calcule a desvalorização realista para os estados BOM e REGULAR, considerando o modelo específico.
 
-Priorize as seguintes fontes:
+Definições de conservação para aplicar os descontos:
 
-1. Facebook Marketplace
-2. OLX
-3. Mercado Livre (Produtos usados)
-4. eBay (somente para comparação internacional quando não houver dados suficientes no Brasil)
-5. Enjoei
-6. Grupos de compra e venda de celulares
-
-A prioridade de localização deve ser:
-
-1º Araraquara - SP
-2º São Carlos - SP
-3º Matão - SP
-4º Região DDD 016
-5º Interior de São Paulo
-6º Brasil
-
-Durante a análise:
-
-- Considere apenas anúncios publicados recentemente.
-- Ignore anúncios antigos.
-- Ignore celulares novos.
-- Ignore aparelhos lacrados.
-- Ignore preços absurdamente acima da média.
-- Ignore preços extremamente baixos que aparentem golpe.
-- Considere apenas aparelhos funcionando normalmente.
-- Utilize a MEDIANA ou MÉDIA dos anúncios válidos encontrados.
-- Caso existam poucos anúncios na região, amplie a pesquisa para todo o estado de São Paulo e depois para o Brasil.
-
-Considere também:
-
-- versão exata do aparelho;
-- armazenamento;
-- cor (apenas se impactar o preço);
-- oferta e demanda atual;
-- liquidez do modelo;
-- tempo médio de venda;
-- ano de lançamento;
-- desvalorização do modelo.
-
-Definições:
-
-EXCELENTE
+EXCELENTE (Valor igual ou muito próximo ao Preço Base de Referência)
 - Sem riscos
 - Sem marcas
 - Bateria acima de 90%
 - Tudo original
 - Nunca aberto
 
-BOM
+BOM (Desconto leve a moderado sobre o valor Excelente)
 - Pequenas marcas
 - Funcionamento perfeito
 - Bateria entre 80% e 89%
 
-REGULAR
+REGULAR (Desconto maior sobre o valor Excelente)
 - Marcas visíveis
 - Arranhões
 - Pequenos amassados
 - Bateria abaixo de 80%
 
-IMPORTANTE
+IMPORTANTE:
+Os valores retornados devem fazer sentido comercialmente na lógica de revenda de usados no Brasil. 
+O valor do estado "excelente" NUNCA deve ser um valor absurdo de lançamento (use o Preço Base como guia), e os estados "bom" e "regular" devem ser proporcionalmente mais baratos.
 
-Os valores retornados devem representar quanto um vendedor conseguiria anunciar hoje para vender relativamente rápido (até cerca de 15 dias), e não o maior preço anunciado.
-
-Nunca utilize apenas um anúncio para definir o preço.
-
-Sempre elimine valores fora da curva antes de calcular a média.
-
-Retorne SOMENTE um JSON válido.
+Retorne SOMENTE um JSON válido e NADA MAIS.
 
 {
   "excelente": 0,
@@ -137,12 +93,11 @@ Retorne SOMENTE um JSON válido.
   "regular": 0
 }
 
-Regras:
-
+Regras obrigatórias:
 - Apenas números inteiros.
-- Sem R$.
-- Sem texto.
-- Sem markdown.
+- Sem a sigla R$.
+- Sem nenhum texto de introdução ou conclusão.
+- Sem formatação markdown (sem \`\`\`json).
 - Sem comentários.
 - Sem explicações.
 `;
