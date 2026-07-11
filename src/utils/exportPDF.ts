@@ -100,12 +100,22 @@ export function generatePDFCatalog(grupos: Grupo[]) {
   // Montando as tabelas
   let startY = 35; // Posição inicial após o header
 
-  // Observação Geral no topo da primeira página
-  doc.setFont("helvetica", "italic");
-  doc.setFontSize(10);
-  doc.setTextColor(100, 100, 100);
-  doc.text("* Observação Geral: Os valores podem mudar dependendo da condição do aparelho.", 15, startY);
-  startY += 15;
+  // Observação em destaque no topo da primeira página
+  doc.setFillColor(254, 242, 242); // Fundo vermelho bem claro
+  doc.setDrawColor(252, 165, 165); // Borda vermelha suave
+  doc.setLineWidth(0.2);
+  doc.rect(15, startY, pageWidth - 30, 10, 'FD');
+  
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(220, 38, 38); // Vermelho escuro
+  doc.text("Atenção:", 20, startY + 6.5);
+  
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(153, 27, 27); // Vermelho mais escuro para o texto
+  doc.text("Os preços tabelados são estimativas e podem sofrer variações de acordo com o estado de conservação do aparelho.", 35, startY + 6.5);
+  
+  startY += 18;
 
   marcasOrdenadas.forEach((marca, index) => {
     // Ordenar grupos (aparelhos) alfabeticamente dentro da marca
