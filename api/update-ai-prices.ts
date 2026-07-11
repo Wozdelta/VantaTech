@@ -1,20 +1,18 @@
 /// <reference types="node" />
 import { createClient } from '@supabase/supabase-js';
-import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.VITE_SUPABASE_ANON_KEY || ''; // Using anon key for simplicity if service key isn't available, though service key is better for server actions.
+const supabaseServiceKey = process.env.VITE_SUPABASE_ANON_KEY || ''; 
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-const openai = new OpenAI({
-  apiKey: process.env.VITE_CHAT_GPT_API || process.env.OPENAI_API_KEY,
-});
+const genAI = new GoogleGenerativeAI(process.env.VITE_GEMINI_API_KEY || '');
 
 export default async function handler(req: any, res: any) {
   try {
-    console.log('Iniciando atualização de preços via IA...');
-
+    console.log('Iniciando atualização de preços via IA (Gemini)...');
+    
     // Busca os grupos com suas variações
     const { data: grupos, error: gruposError } = await supabase
       .from('tabela_precos_grupos')
@@ -32,6 +30,7 @@ export default async function handler(req: any, res: any) {
     }
 
     let updatedCount = 0;
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     for (const grupo of grupos) {
       const marcaNome = (grupo.marcas as any)?.nome || '';
@@ -60,13 +59,10 @@ O JSON deve seguir esse formato estrito:
 }
 Retorne SOMENTE o objeto JSON, sem markdown.`;
 
-          const response = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
-            messages: [{ role: "user", content: prompt }],
-            temperature: 0.2,
-          });
-
-          const content = response.choices[0].message.content?.trim();
+          const result = await model.generateContent(prompt);
+          const response = await result.response;
+          const content = response.text().trim();
+          
           if (!content) continue;
 
           const jsonStr = content.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -95,7 +91,7 @@ Retorne SOMENTE o objeto JSON, sem markdown.`;
       }
     }
 
-    return res.status(200).json({ message: `Atualização concluída. ${updatedCount} variações atualizadas.` });
+    return res.status(200).json({ message: `Atualização concluída via Gemini. ${updatedCount} variações atualizadas.` });
 
   } catch (err: any) {
     console.error('Erro geral no update-ai-prices:', err);
