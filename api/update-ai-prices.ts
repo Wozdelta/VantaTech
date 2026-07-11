@@ -4,14 +4,21 @@ import Groq from 'groq-sdk';
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST' && req.method !== 'GET') {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
   try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader ? authHeader.split(' ')[1] : '';
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      global: {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      }
+    });
+
     const groqKey = process.env.VITE_GROQ_API_KEY || process.env.VITE_GEMINI_API_KEY; 
     
     if (!groqKey || groqKey.length < 10) {

@@ -73,9 +73,15 @@ export default function AdminTabelaPrecos() {
     setIsUpdatingAI(true);
     try {
       showAlert({ type: 'success', message: 'Iniciando atualização pela Inteligência Artificial... Isso pode demorar alguns segundos.' });
+      const { data: { session } } = await supabase.auth.getSession();
       
-      const res = await fetch('/api/update-ai-prices');
-      if (!res.ok) throw new Error('Falha na API da OpenAI');
+      const res = await fetch('/api/update-ai-prices', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`
+        }
+      });
+      if (!res.ok) throw new Error('Falha na API da Inteligência Artificial');
       
       const data = await res.json();
       showAlert({ type: 'success', message: data.message || 'Atualização concluída com sucesso!' });
