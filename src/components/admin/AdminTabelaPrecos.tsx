@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { DollarSign, Plus, Save, Trash2, Edit2, X, Tag, ChevronDown, ChevronUp, Search, TrendingUp, Layers, GripVertical, Copy, Sparkles, Loader2 } from 'lucide-react';
+import { DollarSign, Plus, Save, Trash2, Edit2, X, Tag, ChevronDown, ChevronUp, Search, TrendingUp, Layers, GripVertical, Copy, Sparkles, Loader2, FileText } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
 import { CustomSelect } from '../ui/CustomSelect';
+import { generatePDFCatalog } from '../../utils/exportPDF';
 
 interface Marca {
   id: string;
@@ -394,6 +395,16 @@ export default function AdminTabelaPrecos() {
           </p>
         </div>
         <div className="flex gap-3">
+          <button
+            onClick={() => {
+              showAlert({ type: 'success', message: 'Gerando PDF... Aguarde.' });
+              setTimeout(() => generatePDFCatalog(grupos), 100);
+            }}
+            className="bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 px-6 py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm hover:-translate-y-1"
+          >
+            <FileText className="w-5 h-5 text-red-500" />
+            <span className="hidden sm:inline">Exportar PDF</span>
+          </button>
           <button
             onClick={handleUpdateAIPrices}
             disabled={isUpdatingAI}
