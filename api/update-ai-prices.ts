@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
 
