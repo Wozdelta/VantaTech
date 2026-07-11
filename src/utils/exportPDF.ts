@@ -123,12 +123,27 @@ export function generatePDFCatalog(grupos: Grupo[]) {
     const tableBody: any[] = [];
     
     gruposDaMarca.forEach(grupo => {
+      // Adicionar linha de divisória para o Aparelho Base
+      tableBody.push([
+        { 
+          content: grupo.nome, 
+          colSpan: 3, 
+          styles: { 
+            fillColor: [241, 245, 249], // Slate 100
+            textColor: [30, 41, 59], // Slate 800
+            fontStyle: 'bold', 
+            halign: 'left',
+            fontSize: 10
+          } 
+        }
+      ]);
+
       // Ordenar variações (ex: 128GB, 256GB)
       const variacoesOrdenadas = [...grupo.variacoes].sort((a, b) => a.nome.localeCompare(b.nome));
       
       variacoesOrdenadas.forEach(variacao => {
         tableBody.push([
-          `${grupo.nome} ${variacao.nome}`, // Aparelho
+          `• ${variacao.nome}`, // Apenas o nome da variação (com bullet)
           formatCurrency(variacao.valor_venda), // Preço de Venda
           formatDate(variacao.ia_atualizado_em || variacao.criado_em) // Atualização
         ]);
