@@ -396,13 +396,13 @@ export default function AdminTabelaPrecos() {
             Gerencie os valores de custo e venda dos aparelhos. Crie aparelhos base e adicione variações de cor ou capacidade.
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={() => {
               showAlert({ type: 'success', message: 'Gerando PDF... Aguarde.' });
               setTimeout(() => generatePDFCatalog(grupos), 100);
             }}
-            className="bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 px-6 py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm hover:-translate-y-1"
+            className="bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 px-6 py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm hover:-translate-y-1 whitespace-nowrap"
           >
             <FileText className="w-5 h-5 text-red-500" />
             <span className="hidden sm:inline">Exportar PDF</span>
@@ -410,7 +410,7 @@ export default function AdminTabelaPrecos() {
           <button
             onClick={handleUpdateAIPrices}
             disabled={isUpdatingAI}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-indigo-200 dark:shadow-none hover:-translate-y-1"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-indigo-200 dark:shadow-none hover:-translate-y-1 whitespace-nowrap"
           >
             {isUpdatingAI ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5 text-yellow-300" />}
             <span className="hidden sm:inline">Gerar Preços com IA</span>
@@ -418,7 +418,7 @@ export default function AdminTabelaPrecos() {
           <button
             onClick={() => setIsAddingGroup(true)}
             disabled={isAddingGroup}
-            className="bg-gray-900 hover:bg-black dark:bg-vanta-blue dark:hover:bg-vanta-darkblue text-white px-6 py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-lg shadow-gray-200 dark:shadow-none hover:-translate-y-1"
+            className="bg-gray-900 hover:bg-black dark:bg-vanta-blue dark:hover:bg-vanta-darkblue text-white px-6 py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-lg shadow-gray-200 dark:shadow-none hover:-translate-y-1 whitespace-nowrap"
           >
             <Plus className="w-5 h-5" />
             <span className="hidden sm:inline">Novo Aparelho Base</span>
