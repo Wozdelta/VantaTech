@@ -30,7 +30,7 @@ export default async function handler(req: any, res: any) {
     }
 
     let updatedCount = 0;
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
     for (const grupo of grupos) {
       const marcaNome = (grupo.marcas as any)?.nome || '';
