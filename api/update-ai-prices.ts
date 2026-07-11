@@ -50,18 +50,21 @@ export default async function handler(req: any, res: any) {
         const modeloCompleto = `${aparelhoNome} ${variacao.nome}`;
         
         try {
-          const prompt = `Você é um avaliador de smartphones usados no mercado brasileiro.
-O aparelho é um "${modeloCompleto}". O preço de referência de venda médio (Aparelho em excelente estado) é R$ ${variacao.valor_venda}.
-Baseado nesse modelo e valor base, forneça apenas os 3 valores em reais (apenas números sem R$ ou pontos de milhar) em formato JSON para as categorias:
-- "excelente": O aparelho está em estado impecável, sem arranhões, bateria boa (geralmente igual ao valor base).
-- "bom": Aparelho tem marcas leves de uso, bateria aceitável.
-- "regular": Aparelho com marcas visíveis de uso ou arranhões severos.
+          const prompt = `Você é um avaliador de smartphones usados no mercado brasileiro atualizado.
+Você precisa avaliar o valor de COMPRA/REVENDA de um aparelho específico.
+O modelo exato do aparelho é: "${modeloCompleto}".
+
+Baseado nos preços atuais de mercado no Brasil para compras de pessoas físicas (usados), estime os valores de revenda reais para esse aparelho.
+Forneça apenas os 3 valores em reais (apenas números sem R$ ou pontos de milhar) em formato JSON para as categorias:
+- "excelente": O aparelho está em estado impecável, sem arranhões, bateria acima de 90%.
+- "bom": Aparelho tem marcas leves de uso, bateria aceitável (80-89%).
+- "regular": Aparelho com marcas visíveis de uso ou arranhões mais severos.
 
 O JSON deve seguir esse formato estrito:
 {
-  "excelente": 1500,
-  "bom": 1350,
-  "regular": 1200
+  "excelente": 2500,
+  "bom": 2200,
+  "regular": 1900
 }
 Retorne SOMENTE o objeto JSON válido, sem nenhum texto adicional.`;
 
