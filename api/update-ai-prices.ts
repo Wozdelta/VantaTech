@@ -1,37 +1,35 @@
 /// <reference types="node" />
 import { createClient } from '@supabase/supabase-js';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Groq from 'groq-sdk';
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
-const supabaseServiceKey = process.env.VITE_SUPABASE_ANON_KEY || ''; 
-
+const supabaseServiceKey = process.env.VITE_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-const genAI = new GoogleGenerativeAI(process.env.VITE_GEMINI_API_KEY || '');
-
 export default async function handler(req: any, res: any) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Method Not Allowed' });
+  }
+
   try {
-    console.log('Iniciando atualização de preços via IA (Gemini)...');
+    const groqKey = process.env.VITE_GROQ_API_KEY || process.env.VITE_GEMINI_API_KEY; 
     
-    // Busca os grupos com suas variações
-    const { data: grupos, error: gruposError } = await supabase
+    if (!groqKey || groqKey.length < 10) {
+      return res.status(400).json({ message: 'Chave da API do Groq não configurada no servidor Vercel. Erro: Chave inválida ou ausente.' });
+    }
+
+    const { data: grupos, error } = await supabase
       .from('tabela_precos_grupos')
-      .select(`
-        id,
-        nome,
-        marcas ( nome ),
-        tabela_precos_variacoes ( id, nome, valor_venda )
-      `);
+      .select('id, nome, marcas(nome), tabela_precos_variacoes(id, nome, valor_venda)');
 
-    if (gruposError) throw gruposError;
-
-    if (!grupos || grupos.length === 0) {
-      return res.status(200).json({ message: 'Nenhum aparelho encontrado para atualizar.' });
+    if (error) {
+      console.error('Erro ao buscar grupos:', error);
+      return res.status(500).json({ message: 'Erro ao buscar dados no Supabase' });
     }
 
     let updatedCount = 0;
     const errors: string[] = [];
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+    const groq = new Groq({ apiKey: groqKey });
 
     for (const grupo of grupos) {
       const marcaNome = (grupo.marcas as any)?.nome || '';
@@ -58,11 +56,16 @@ O JSON deve seguir esse formato estrito:
   "bom": 1350,
   "regular": 1200
 }
-Retorne SOMENTE o objeto JSON, sem markdown.`;
+Retorne SOMENTE o objeto JSON válido, sem nenhum texto adicional.`;
 
-          const result = await model.generateContent(prompt);
-          const response = await result.response;
-          const content = response.text().trim();
+          const chatCompletion = await groq.chat.completions.create({
+            messages: [{ role: "user", content: prompt }],
+            model: "llama-3.3-70b-versatile",
+            temperature: 0.2,
+            response_format: { type: "json_object" },
+          });
+          
+          const content = chatCompletion.choices[0]?.message?.content || "";
           
           if (!content) continue;
 
@@ -94,15 +97,15 @@ Retorne SOMENTE o objeto JSON, sem markdown.`;
       }
     }
 
-    let finalMessage = `Atualização concluída via Gemini. ${updatedCount} variações atualizadas.`;
+    let finalMessage = `Atualização concluída via IA (Groq). ${updatedCount} variações atualizadas.`;
     if (errors.length > 0) {
-      finalMessage += ` Erro do Google: ${errors[0]}`;
+      finalMessage += ` Erros encontrados: ${errors[0]}`;
     }
 
     return res.status(200).json({ message: finalMessage });
 
   } catch (err: any) {
     console.error('Erro geral no update-ai-prices:', err);
-    return res.status(500).json({ error: err.message || 'Erro interno do servidor' });
+    return res.status(500).json({ message: 'Erro interno no servidor: ' + String(err) });
   }
 }
