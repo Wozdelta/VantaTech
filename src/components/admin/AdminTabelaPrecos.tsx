@@ -252,7 +252,8 @@ export default function AdminTabelaPrecos() {
           grupo_id,
           nome: newVariant.nome,
           valor_pago: Number(newVariant.valor_pago) || 0,
-          valor_venda: Number(newVariant.valor_venda) || 0
+          valor_venda: Number(newVariant.valor_venda) || 0,
+          ia_atualizado_em: new Date().toISOString()
         }])
         .select()
         .single();
@@ -285,7 +286,8 @@ export default function AdminTabelaPrecos() {
       const payload = {
         nome: editingVariantData.nome,
         valor_pago: parseFloat(editingVariantData.valor_pago),
-        valor_venda: parseFloat(editingVariantData.valor_venda)
+        valor_venda: parseFloat(editingVariantData.valor_venda),
+        ia_atualizado_em: new Date().toISOString()
       };
 
       const { data, error } = await supabase

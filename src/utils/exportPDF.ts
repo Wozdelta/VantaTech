@@ -11,6 +11,7 @@ interface Variacao {
   venda_bom?: number | null;
   venda_regular?: number | null;
   ia_atualizado_em?: string | null;
+  criado_em?: string | null;
 }
 
 interface Grupo {
@@ -129,7 +130,7 @@ export function generatePDFCatalog(grupos: Grupo[]) {
         tableBody.push([
           `${grupo.nome} ${variacao.nome}`, // Aparelho
           formatCurrency(variacao.valor_venda), // Preço de Venda
-          formatDate(variacao.ia_atualizado_em) // Atualização
+          formatDate(variacao.ia_atualizado_em || variacao.criado_em) // Atualização
         ]);
       });
     });
@@ -155,9 +156,9 @@ export function generatePDFCatalog(grupos: Grupo[]) {
         fillColor: [248, 250, 252] // Slate 50
       },
       columnStyles: {
-        0: { cellWidth: 80, fontStyle: 'bold' },
-        1: { cellWidth: 50, halign: 'right', textColor: [21, 128, 61], fontStyle: 'bold' }, // Verde no preço principal
-        2: { cellWidth: 'auto', halign: 'center' }
+        0: { cellWidth: 90, fontStyle: 'bold' },
+        1: { cellWidth: 50, textColor: [21, 128, 61], fontStyle: 'bold' }, // Verde no preço principal
+        2: { cellWidth: 'auto' }
       },
       margin: { top: 30, left: 15, right: 15 },
       didDrawPage: (data) => {
