@@ -98,8 +98,11 @@ export default function AdminDashboard() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, fetchCounts)
       .subscribe();
 
+    window.addEventListener('update_counts', fetchCounts);
+
     return () => {
       supabase.removeChannel(channel);
+      window.removeEventListener('update_counts', fetchCounts);
     };
   }, [perfil]);
 

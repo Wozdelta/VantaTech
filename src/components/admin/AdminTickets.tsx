@@ -191,6 +191,7 @@ export default function AdminTickets() {
       if (error) throw error;
 
       showAlert({ type: 'success', message: `Status alterado para ${newStatus}` });
+      window.dispatchEvent(new Event('update_counts'));
       
       // Update local state
       setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status: newStatus } : t));

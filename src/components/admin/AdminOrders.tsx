@@ -98,6 +98,7 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
         .eq('id', pedidoId);
 
       if (error) throw error;
+      window.dispatchEvent(new Event('update_counts'));
 
       // Se virou Pago e antes não era, damos os pontos para o afiliado (se existir)
       const wasAlreadyPaid = ['Pago', 'Enviado', 'Entregue'].includes(oldStatus);

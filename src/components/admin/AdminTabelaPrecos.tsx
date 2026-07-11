@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { DollarSign, Plus, Save, Trash2, Edit2, X, Tag, ChevronDown, ChevronUp, Search, TrendingUp, Layers, GripVertical, Copy } from 'lucide-react';
+import { DollarSign, Plus, Save, Trash2, Edit2, X, Tag, ChevronDown, ChevronUp, Search, TrendingUp, Layers, GripVertical, Copy, Sparkles, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
 import { CustomSelect } from '../ui/CustomSelect';
@@ -16,6 +16,10 @@ interface Variacao {
   valor_pago: number;
   valor_venda: number;
   ordem?: number;
+  venda_excelente?: number | null;
+  venda_bom?: number | null;
+  venda_regular?: number | null;
+  ia_atualizado_em?: string | null;
 }
 
 interface Grupo {
@@ -59,9 +63,31 @@ export default function AdminTabelaPrecos() {
   const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
   const [editingVariantData, setEditingVariantData] = useState({ nome: '', valor_pago: '', valor_venda: '' });
 
+  const [isUpdatingAI, setIsUpdatingAI] = useState(false);
+
   useEffect(() => {
     fetchData();
   }, []);
+
+  const handleUpdateAIPrices = async () => {
+    setIsUpdatingAI(true);
+    try {
+      showAlert({ type: 'success', message: 'Iniciando atualização pela Inteligência Artificial... Isso pode demorar alguns segundos.' });
+      
+      const res = await fetch('/api/update-ai-prices');
+      if (!res.ok) throw new Error('Falha na API da OpenAI');
+      
+      const data = await res.json();
+      showAlert({ type: 'success', message: data.message || 'Atualização concluída com sucesso!' });
+      
+      fetchData(); // recarrega a tabela
+    } catch (err) {
+      console.error(err);
+      showAlert({ type: 'error', message: 'Ocorreu um erro ao atualizar os preços via IA.' });
+    } finally {
+      setIsUpdatingAI(false);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -361,14 +387,24 @@ export default function AdminTabelaPrecos() {
             Gerencie os valores de custo e venda dos aparelhos. Crie aparelhos base e adicione variações de cor ou capacidade.
           </p>
         </div>
-        <button
-          onClick={() => setIsAddingGroup(true)}
-          disabled={isAddingGroup}
-          className="bg-gray-900 hover:bg-black dark:bg-vanta-blue dark:hover:bg-vanta-darkblue text-white px-6 py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-lg shadow-gray-200 dark:shadow-none hover:-translate-y-1"
-        >
-          <Plus className="w-5 h-5" />
-          Novo Aparelho Base
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={handleUpdateAIPrices}
+            disabled={isUpdatingAI}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-indigo-200 dark:shadow-none hover:-translate-y-1"
+          >
+            {isUpdatingAI ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles className="w-5 h-5 text-yellow-300" />}
+            <span className="hidden sm:inline">Gerar Preços com IA</span>
+          </button>
+          <button
+            onClick={() => setIsAddingGroup(true)}
+            disabled={isAddingGroup}
+            className="bg-gray-900 hover:bg-black dark:bg-vanta-blue dark:hover:bg-vanta-darkblue text-white px-6 py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-lg shadow-gray-200 dark:shadow-none hover:-translate-y-1"
+          >
+            <Plus className="w-5 h-5" />
+            <span className="hidden sm:inline">Novo Aparelho Base</span>
+          </button>
+        </div>
       </div>
 
       {/* Toolbar: Search and Filters */}
@@ -537,6 +573,9 @@ export default function AdminTabelaPrecos() {
                               <th className="pb-3 px-2 sm:px-4">Modelo / Variedade</th>
                               <th className="pb-3 px-2 sm:px-4">Custo</th>
                               <th className="pb-3 px-2 sm:px-4">Venda</th>
+                              <th className="pb-3 px-2 sm:px-4 text-emerald-500">Excelente Estado</th>
+                              <th className="pb-3 px-2 sm:px-4 text-blue-500">Bom Estado</th>
+                              <th className="pb-3 px-2 sm:px-4 text-orange-500">Estado Regular</th>
                               <th className="pb-3 px-4 hidden sm:table-cell">Lucro</th>
                               <th className="pb-3 px-2 sm:px-4 text-right">Ação</th>
                             </tr>
@@ -573,6 +612,9 @@ export default function AdminTabelaPrecos() {
                                       className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1 text-sm outline-none focus:ring-1 focus:ring-vanta-blue" 
                                     />
                                   </td>
+                                  <td className="py-2 px-4"><span className="text-gray-400 text-xs italic opacity-50">Auto</span></td>
+                                  <td className="py-2 px-4"><span className="text-gray-400 text-xs italic opacity-50">Auto</span></td>
+                                  <td className="py-2 px-4"><span className="text-gray-400 text-xs italic opacity-50">Auto</span></td>
                                   <td className="py-2 px-4">
                                     <div className="text-gray-400 text-xs italic opacity-50">Auto</div>
                                   </td>
@@ -616,6 +658,21 @@ export default function AdminTabelaPrecos() {
                                   </td>
                                   <td className="py-3 px-2 sm:px-4 font-black text-gray-900 dark:text-white text-xs sm:text-sm">
                                     {Number(variacao.valor_venda).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                  </td>
+                                  <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm">
+                                    <span className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 py-1 px-2 rounded-md font-bold">
+                                      {variacao.venda_excelente ? Number(variacao.venda_excelente).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm">
+                                    <span className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 py-1 px-2 rounded-md font-bold">
+                                      {variacao.venda_bom ? Number(variacao.venda_bom).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
+                                    </span>
+                                  </td>
+                                  <td className="py-3 px-2 sm:px-4 text-xs sm:text-sm">
+                                    <span className="bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 py-1 px-2 rounded-md font-bold">
+                                      {variacao.venda_regular ? Number(variacao.venda_regular).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
+                                    </span>
                                   </td>
                                   <td className="py-3 px-4 hidden sm:table-cell">
                                     <div className="flex flex-col">

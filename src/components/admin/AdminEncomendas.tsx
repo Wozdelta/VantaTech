@@ -97,6 +97,7 @@ export default function AdminEncomendas() {
       }
       
       showAlert({ type: 'success', message: 'Status atualizado com sucesso!' });
+      window.dispatchEvent(new Event('update_counts'));
       fetchEncomendas();
     } catch (err) {
       console.error('Erro ao atualizar status:', err);

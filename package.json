@@ -19,6 +19,7 @@
     "framer-motion": "^12.42.0",
     "fuse.js": "^7.4.2",
     "lucide-react": "^1.21.0",
+    "openai": "^6.46.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-easy-crop": "^6.1.0",

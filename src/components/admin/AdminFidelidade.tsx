@@ -64,6 +64,9 @@ export default function AdminFidelidade() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
   
+  const [recompensasSearch, setRecompensasSearch] = useState('');
+  const [recompensasNivelFilter, setRecompensasNivelFilter] = useState('');
+
   const [pendingResgatesCount, setPendingResgatesCount] = useState(0);
 
   useEffect(() => {
@@ -444,21 +447,40 @@ export default function AdminFidelidade() {
 
       {/* Coluna Direita: Recompensas */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft overflow-hidden flex flex-col h-[500px] sm:h-[600px] lg:h-[800px]">
-        <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+        <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-gray-50 dark:bg-gray-900/50">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2 shrink-0">
             <Gift className="w-6 h-6 text-vanta-orange" />
             Recompensas
           </h2>
-          <button
-            onClick={() => {
-              resetForm();
-              setIsModalOpen(true);
-            }}
-            className="px-4 py-2 bg-vanta-blue text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 font-medium"
-          >
-            <Plus className="w-4 h-4" />
-            Nova
-          </button>
+          <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto justify-start xl:justify-end">
+            <input 
+              type="text" 
+              placeholder="Buscar..." 
+              value={recompensasSearch}
+              onChange={(e) => setRecompensasSearch(e.target.value)}
+              className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 focus:outline-none focus:border-vanta-blue flex-1 min-w-[120px]"
+            />
+            <div className="w-[180px]">
+              <CustomSelect 
+                value={recompensasNivelFilter}
+                onChange={(val) => setRecompensasNivelFilter(val)}
+                options={[
+                  { value: '', label: 'Todos os Níveis' },
+                  ...niveis.map(n => ({ value: n.id, label: n.nome }))
+                ]}
+              />
+            </div>
+            <button
+              onClick={() => {
+                resetForm();
+                setIsModalOpen(true);
+              }}
+              className="px-4 py-2 bg-vanta-blue text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2 font-medium shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Nova</span>
+            </button>
+          </div>
         </div>
         
         <div className="flex-1 overflow-y-auto p-6">
@@ -475,7 +497,10 @@ export default function AdminFidelidade() {
             </div>
           ) : (
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-              {recompensas.map((rec) => {
+              {recompensas
+                .filter(r => !recompensasSearch || r.nome.toLowerCase().includes(recompensasSearch.toLowerCase()))
+                .filter(r => !recompensasNivelFilter || r.nivel_id === recompensasNivelFilter)
+                .map((rec) => {
                 const nivel = rec.nivel_id ? niveis.find(n => n.id === rec.nivel_id) : null;
                 const bgCor = nivel?.cor_hex || '#f97316'; // vanta-orange default
                 
