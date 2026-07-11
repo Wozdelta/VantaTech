@@ -50,7 +50,7 @@ export default async function handler(req: any, res: any) {
         
         try {
           let searchContext = "";
-          const tavilyKey = process.env.VITE_TAVILY_API_KEY;
+          const tavilyKey = process.env.VITE_TAVILY_API_KEY || process.env.VITE_TAVILY;
           
           if (tavilyKey) {
             try {
