@@ -576,7 +576,7 @@ export default function AdminTabelaPrecos() {
                         <table className="w-full text-left border-collapse">
                           <thead>
                             <tr className="text-[10px] sm:text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                              <th className="pb-3 px-2 sm:px-4">Modelo / Variedade</th>
+                              <th className="pb-3 px-2 sm:px-4 max-sm:sticky max-sm:left-0 max-sm:z-20 max-sm:bg-gray-50 max-sm:dark:bg-[#13151a] max-sm:shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">Modelo / Variedade</th>
                               <th className="pb-3 px-2 sm:px-4">Custo</th>
                               <th className="pb-3 px-2 sm:px-4">Venda</th>
                               <th className="pb-3 px-2 sm:px-4 text-emerald-500">Excelente Estado</th>
@@ -593,7 +593,7 @@ export default function AdminTabelaPrecos() {
                               
                               return editingVariantId === variacao.id ? (
                                 <tr key={variacao.id} className="bg-gray-50 dark:bg-gray-800/50">
-                                  <td className="py-2 px-4">
+                                  <td className="py-2 px-4 max-sm:sticky max-sm:left-0 max-sm:z-10 max-sm:bg-gray-50 max-sm:dark:bg-[#1d222b]">
                                     <input 
                                       type="text" 
                                       value={editingVariantData.nome} 
@@ -653,7 +653,7 @@ export default function AdminTabelaPrecos() {
                                   onDragEnd={() => handleVariantDragEnd(grupo.id)}
                                   onDragOver={(e) => e.preventDefault()}
                                 >
-                                  <td className="py-3 px-2 sm:px-4 font-bold text-gray-900 dark:text-white text-xs sm:text-sm flex items-center gap-1 sm:gap-2">
+                                  <td className="py-3 px-2 sm:px-4 font-bold text-gray-900 dark:text-white text-xs sm:text-sm flex items-center gap-1 sm:gap-2 max-sm:sticky max-sm:left-0 max-sm:z-10 max-sm:bg-gray-50 max-sm:dark:bg-[#13151a] max-sm:shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] max-sm:group-hover/row:bg-white max-sm:dark:group-hover/row:bg-gray-800">
                                     <div className="text-gray-300 dark:text-gray-600 cursor-grab hover:text-gray-500">
                                       <GripVertical className="w-3 h-3 sm:w-4 sm:h-4" />
                                     </div>
