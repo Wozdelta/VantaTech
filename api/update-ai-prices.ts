@@ -30,6 +30,7 @@ export default async function handler(req: any, res: any) {
     }
 
     let updatedCount = 0;
+    const errors: string[] = [];
     const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
     for (const grupo of grupos) {
@@ -81,17 +82,24 @@ Retorne SOMENTE o objeto JSON, sem markdown.`;
 
             if (updateError) {
               console.error(`Erro ao atualizar variação ${variacao.id}:`, updateError);
+              errors.push(updateError.message);
             } else {
               updatedCount++;
             }
           }
-        } catch (aiError) {
+        } catch (aiError: any) {
           console.error(`Erro na requisição IA para ${modeloCompleto}:`, aiError);
+          errors.push(aiError.message || String(aiError));
         }
       }
     }
 
-    return res.status(200).json({ message: `Atualização concluída via Gemini. ${updatedCount} variações atualizadas.` });
+    let finalMessage = `Atualização concluída via Gemini. ${updatedCount} variações atualizadas.`;
+    if (errors.length > 0) {
+      finalMessage += ` Erro do Google: ${errors[0]}`;
+    }
+
+    return res.status(200).json({ message: finalMessage });
 
   } catch (err: any) {
     console.error('Erro geral no update-ai-prices:', err);
