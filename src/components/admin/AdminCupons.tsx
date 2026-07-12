@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
+import { useRealtimeUpdate } from '../../hooks/useRealtimeUpdate';
 import { CustomSelect } from '../ui/CustomSelect';
 import { Trash2, Edit, CheckCircle, XCircle, Tag, Loader2, Save, X, Users, Box, Clock, DollarSign } from 'lucide-react';
 
@@ -68,6 +69,8 @@ export default function AdminCupons() {
     
     return () => clearInterval(interval);
   }, []);
+
+  useRealtimeUpdate(['cupons'], fetchData);
 
   async function fetchData() {
     try {

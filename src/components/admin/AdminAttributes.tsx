@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
+import { useRealtimeUpdate } from '../../hooks/useRealtimeUpdate';
 import { Plus, Trash2, Loader2, Tags, Layers } from 'lucide-react';
 
 export default function AdminAttributes() {
@@ -19,6 +20,9 @@ export default function AdminAttributes() {
     fetchMarcas();
     fetchCategorias();
   }, []);
+
+  useRealtimeUpdate(['marcas'], fetchMarcas);
+  useRealtimeUpdate(['categorias'], fetchCategorias);
 
   async function fetchMarcas() {
     try {

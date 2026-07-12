@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
+import { useRealtimeUpdate } from '../../hooks/useRealtimeUpdate';
 import { Loader2, Trash2, Search, History, DollarSign, AlertTriangle } from 'lucide-react';
 
 interface SoldItem {
@@ -26,6 +27,8 @@ export default function AdminSalesHistory() {
   useEffect(() => {
     fetchHistory();
   }, []);
+
+  useRealtimeUpdate(['pedidos'], fetchHistory);
 
   async function fetchHistory() {
     try {

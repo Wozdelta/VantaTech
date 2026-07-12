@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
+import { useRealtimeUpdate } from '../../hooks/useRealtimeUpdate';
 import { CustomSelect } from '../ui/CustomSelect';
 import { Plus, Trash2, Loader2, X, Edit, UploadCloud, Palette, Smartphone, Package, Search, ChevronDown, Check, Undo2, LayoutGrid, List } from 'lucide-react';
 import { Reorder } from 'framer-motion';
@@ -103,6 +104,9 @@ export default function AdminProducts() {
     fetchProducts();
     fetchAttributes();
   }, []);
+
+  useRealtimeUpdate(['produtos'], fetchProducts);
+  useRealtimeUpdate(['marcas', 'categorias'], fetchAttributes);
 
   async function fetchAttributes() {
     try {

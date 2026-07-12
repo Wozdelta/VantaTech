@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
+import { useRealtimeUpdate } from '../../hooks/useRealtimeUpdate';
 import { CustomSelect } from '../ui/CustomSelect';
 import { Plus, Trash2, Image as ImageIcon, Loader2, X, Edit, Award, Medal, Package, Settings, Users, Gift, Star, Ticket } from 'lucide-react';
 import AdminOrders from './AdminOrders';
@@ -74,16 +75,12 @@ export default function AdminFidelidade() {
     fetchRecompensas();
     fetchPerfis();
     fetchPendingResgates();
-
-    const channel = supabase
-      .channel('fidelidade-counts')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, fetchPendingResgates)
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
+
+  useRealtimeUpdate(['pedidos'], fetchPendingResgates);
+  useRealtimeUpdate(['niveis_fidelidade'], fetchNiveis);
+  useRealtimeUpdate(['recompensas'], fetchRecompensas);
+  useRealtimeUpdate(['perfis', 'historico_pontos'], fetchPerfis);
 
   async function fetchPendingResgates() {
     try {

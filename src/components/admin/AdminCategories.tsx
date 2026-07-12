@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
+import { useRealtimeUpdate } from '../../hooks/useRealtimeUpdate';
 import { Plus, Trash2, Edit2, Loader2, X, MoveUp, MoveDown } from 'lucide-react';
 
 type Categoria = {
@@ -22,6 +23,8 @@ export default function AdminCategories() {
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  useRealtimeUpdate(['categorias_menu'], fetchCategories);
 
   async function fetchCategories() {
     try {

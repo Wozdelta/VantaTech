@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
+import { useRealtimeUpdate } from '../../hooks/useRealtimeUpdate';
 import { Search, Loader2, MessageCircle, Trash2, Package, Check, X as CloseIcon, User } from 'lucide-react';
 import EncomendaChat from '../encomendas/EncomendaChat';
 
@@ -69,6 +70,8 @@ export default function AdminEncomendas() {
   useEffect(() => {
     fetchEncomendas();
   }, []);
+
+  useRealtimeUpdate(['encomendas_pedidos'], fetchEncomendas);
 
   const handleUpdateStatus = async (id: string, novoStatus: string) => {
     try {

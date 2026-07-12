@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
+import { useRealtimeUpdate } from '../../hooks/useRealtimeUpdate';
 import { CustomSelect } from '../ui/CustomSelect';
 import { Package, ChevronDown, CheckCircle, Truck, XCircle, Clock, Loader2, Trash2, Check, Search, FileText, X, DollarSign, CreditCard, Tag, ChevronLeft, ChevronRight, LayoutGrid, List } from 'lucide-react';
 
@@ -51,6 +52,8 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  useRealtimeUpdate(['pedidos'], fetchOrders);
 
   async function fetchOrders() {
     try {

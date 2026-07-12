@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { DollarSign, Plus, Save, Trash2, Edit2, X, Tag, ChevronDown, ChevronUp, Search, TrendingUp, Layers, GripVertical, Copy, Sparkles, Loader2, FileText } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
+import { useRealtimeUpdate } from '../../hooks/useRealtimeUpdate';
 import { CustomSelect } from '../ui/CustomSelect';
 import { generatePDFCatalog } from '../../utils/exportPDF';
 
@@ -69,6 +70,8 @@ export default function AdminTabelaPrecos() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useRealtimeUpdate(['tabela_precos_grupos', 'tabela_precos_variacoes', 'marcas'], fetchData);
 
   const handleUpdateAIPrices = async () => {
     setIsUpdatingAI(true);

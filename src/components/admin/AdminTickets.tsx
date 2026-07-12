@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
 import { Ticket, Search, Filter, MessageCircle, Clock, ShieldAlert, Send, ArrowLeft, CheckCircle2, User, ChevronRight, Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRealtimeUpdate } from '../../hooks/useRealtimeUpdate';
 import { CustomSelect } from '../ui/CustomSelect';
 
 const formatDate = (dateString: string) => {
@@ -38,6 +39,8 @@ export default function AdminTickets() {
   useEffect(() => {
     fetchTickets();
   }, []);
+
+  useRealtimeUpdate(['tickets'], fetchTickets);
 
   useEffect(() => {
     if (selectedTicket) {
