@@ -460,6 +460,7 @@ export default function Navbar() {
               label="Menu" 
               badge={unreadCount > 99 ? '99+' : unreadCount}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              iconClassName="w-7 h-7"
             />
           </div>
         </div>
@@ -502,7 +503,7 @@ export default function Navbar() {
   );
 }
 
-function ActionIcon({ icon: Icon, badge, label, onClick, children, isOpen, align = 'right', avatarUrl }: { icon: any, badge?: number | string, label: string, onClick?: () => void, children?: React.ReactNode, isOpen?: boolean, align?: 'left' | 'right' | 'center', avatarUrl?: string }) {
+function ActionIcon({ icon: Icon, badge, label, onClick, children, isOpen, align = 'right', avatarUrl, iconClassName }: { icon: any, badge?: number | string, label: string, onClick?: () => void, children?: React.ReactNode, isOpen?: boolean, align?: 'left' | 'right' | 'center', avatarUrl?: string, iconClassName?: string }) {
   return (
     <div className="relative">
       <button 
@@ -514,7 +515,7 @@ function ActionIcon({ icon: Icon, badge, label, onClick, children, isOpen, align
         {avatarUrl ? (
           <img src={avatarUrl} alt={label} className="w-8 h-8 rounded-full object-cover border-2 border-transparent group-hover:border-vanta-blue transition-all group-hover:drop-shadow-[0_0_8px_rgba(29,142,255,0.4)]" />
         ) : (
-          <Icon className="w-6 h-6 transition-transform duration-300 group-hover:scale-110 group-hover:text-vanta-blue group-hover:drop-shadow-[0_0_8px_rgba(29,142,255,0.4)]" />
+          <Icon className={cn("transition-transform duration-300 group-hover:scale-110 group-hover:text-vanta-blue group-hover:drop-shadow-[0_0_8px_rgba(29,142,255,0.4)]", iconClassName || "w-6 h-6")} />
         )}
         {badge !== undefined && (typeof badge === 'number' ? badge > 0 : badge !== '0' && badge !== '') && (
           <span className="absolute -top-1.5 -right-1.5 inline-flex items-center justify-center min-w-[20px] w-auto h-5 px-1.5 text-[11px] font-bold text-white bg-vanta-orange rounded-full border-[2.5px] border-white dark:border-gray-900 shadow-sm leading-none whitespace-nowrap z-10">
