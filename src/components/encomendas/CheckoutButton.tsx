@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { DollarSign, Loader2 } from 'lucide-react';
-import { createInfinitePayCheckout, convertToCents } from '../../services/infinitepay';
+import { createStripeCheckout, convertToCents } from '../../services/stripe';
 
 interface CheckoutButtonProps {
   encomendaId: string;
@@ -21,7 +21,7 @@ export default function CheckoutButton({
   clienteEmail,
   onSuccess,
   onError,
-  label = 'Gerar Link InfinitePay'
+  label = 'Gerar Link Stripe'
 }: CheckoutButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -39,23 +39,17 @@ export default function CheckoutButton({
             description: `Sinal: ${nomeProduto}`
           }
         ],
-        // Usando window.location.origin o link sempre vai voltar para o site correto:
-        // Se estiver testando no PC, volta pro PC. Se estiver no ar, volta pro ar.
-        redirect_url: window.location.origin + '/perfil',
-        webhook_url: window.location.origin + '/api/webhook'
+        redirect_url: window.location.origin + '/perfil?tab=encomendas',
+        customer: {
+          name: clienteNome || 'Cliente'
+        }
       };
 
-      // Sempre enviamos o nome do cliente se existir
-      payload.customer = {
-        name: clienteNome || 'Cliente'
-      };
-
-      // Só enviamos o email se ele for válido
       if (clienteEmail && clienteEmail.includes('@')) {
         payload.customer.email = clienteEmail;
       }
 
-      const response = await createInfinitePayCheckout(payload);
+      const response = await createStripeCheckout(payload);
 
       if (onSuccess) {
         onSuccess(response.url);
