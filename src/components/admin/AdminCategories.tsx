@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
 import { useRealtimeUpdate } from '../../hooks/useRealtimeUpdate';
-import { Plus, Trash2, Edit2, Loader2, X, MoveUp, MoveDown } from 'lucide-react';
+import { Plus, Trash2, Edit2, Loader2, X, MoveUp, MoveDown, ChevronDown, Check, Lock } from 'lucide-react';
 
 type Categoria = {
   id: string;
@@ -17,6 +17,7 @@ export default function AdminCategories() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [isOrderDropdownOpen, setIsOrderDropdownOpen] = useState(false);
   
   const [formData, setFormData] = useState({ id: '', nome: '', ordem: '', ativo: true });
 
@@ -84,7 +85,7 @@ export default function AdminCategories() {
         const { error } = await supabase.from('categorias_menu')
           .insert([{
             nome: formData.nome,
-            ordem: parseInt(formData.ordem) || (categories.length > 0 ? Math.max(...categories.map(c => c.ordem)) + 1 : 1),
+            ordem: parseInt(formData.ordem),
             ativo: formData.ativo
           }]);
         if (error) throw error;
@@ -103,7 +104,14 @@ export default function AdminCategories() {
   }
 
   function resetForm() {
-    setFormData({ id: '', nome: '', ordem: '', ativo: true });
+    let available = '';
+    for (let i = 1; i <= 7; i++) {
+      if (!categories.some(c => c.ordem === i)) {
+        available = i.toString();
+        break;
+      }
+    }
+    setFormData({ id: '', nome: '', ordem: available, ativo: true });
   }
 
   function editCategory(cat: Categoria) {
@@ -125,7 +133,13 @@ export default function AdminCategories() {
         </div>
         <button 
           onClick={() => { resetForm(); setIsModalOpen(true); }}
-          className="w-full sm:w-auto flex justify-center items-center gap-2 px-4 py-2.5 sm:py-2 bg-vanta-blue text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+          disabled={categories.length >= 7}
+          title={categories.length >= 7 ? "Limite máximo de 7 categorias atingido" : ""}
+          className={`w-full sm:w-auto flex justify-center items-center gap-2 px-4 py-2.5 sm:py-2 rounded-lg font-medium transition-colors ${
+            categories.length >= 7 
+              ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed' 
+              : 'bg-vanta-blue text-white hover:bg-blue-600'
+          }`}
         >
           <Plus className="w-5 h-5 sm:w-4 sm:h-4" /> Nova Categoria
         </button>
@@ -230,9 +244,74 @@ export default function AdminCategories() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome no Menu</label>
                   <input required type="text" value={formData.nome} onChange={e => setFormData({...formData, nome: e.target.value})} className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-2.5 outline-none focus:border-vanta-blue" placeholder="Ex: Acessórios" />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ordem (Posição)</label>
-                  <input required type="number" value={formData.ordem} onChange={e => setFormData({...formData, ordem: e.target.value})} className="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-2.5 outline-none focus:border-vanta-blue" placeholder="Ex: 1, 2, 3..." />
+                <div className="relative">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ordem (Posição)</label>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setIsOrderDropdownOpen(!isOrderDropdownOpen)}
+                    className="w-full flex items-center justify-between rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3.5 text-left shadow-sm hover:border-vanta-blue/50 focus:border-vanta-blue focus:ring-4 focus:ring-vanta-blue/10 transition-all outline-none group"
+                  >
+                    <span className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm transition-colors ${formData.ordem ? 'bg-vanta-blue text-white shadow-md shadow-blue-500/20' : 'bg-gray-100 dark:bg-gray-700 text-gray-400'}`}>
+                        {formData.ordem || '-'}
+                      </div>
+                      <span className={formData.ordem ? 'text-gray-900 dark:text-white font-bold' : 'text-gray-400 font-medium'}>
+                        {formData.ordem ? `Posição ${formData.ordem}` : 'Selecione uma posição'}
+                      </span>
+                    </span>
+                    <ChevronDown className={`w-5 h-5 text-gray-400 group-hover:text-vanta-blue transition-transform duration-300 ${isOrderDropdownOpen ? 'rotate-180 text-vanta-blue' : ''}`} />
+                  </button>
+
+                  {isOrderDropdownOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setIsOrderDropdownOpen(false)} />
+                      <div className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl shadow-2xl overflow-hidden py-2 animate-in fade-in slide-in-from-top-2 max-h-60 overflow-y-auto custom-scrollbar">
+                        <div className="px-3 pb-2 mb-2 border-b border-gray-100 dark:border-gray-700">
+                          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Disponíveis (Máx: 7)</span>
+                        </div>
+                        {[1, 2, 3, 4, 5, 6, 7].map(num => {
+                          const isTaken = categories.some(c => c.ordem === num && c.id !== formData.id);
+                          const isSelected = formData.ordem === num.toString();
+                          
+                          return (
+                            <button
+                              key={num}
+                              type="button"
+                              disabled={isTaken}
+                              onClick={() => {
+                                setFormData({...formData, ordem: num.toString()});
+                                setIsOrderDropdownOpen(false);
+                              }}
+                              className={`w-full flex items-center justify-between px-4 py-2.5 text-left transition-colors ${
+                                isTaken 
+                                  ? 'opacity-50 cursor-not-allowed bg-gray-50 dark:bg-gray-900/30' 
+                                  : isSelected
+                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-vanta-blue'
+                                    : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-200'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold ${
+                                  isTaken ? 'bg-gray-200 dark:bg-gray-700 text-gray-500' :
+                                  isSelected ? 'bg-vanta-blue text-white shadow-sm' :
+                                  'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                                }`}>
+                                  {num}
+                                </div>
+                                <span className="font-medium">
+                                  {isTaken ? 'Em uso' : `Posição ${num}`}
+                                </span>
+                              </div>
+                              
+                              {isTaken && <Lock className="w-4 h-4 text-gray-400" />}
+                              {isSelected && <Check className="w-5 h-5 text-vanta-blue" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
                 </div>
                 <div className="flex items-center mt-2">
                   <input type="checkbox" id="ativo" checked={formData.ativo} onChange={e => setFormData({...formData, ativo: e.target.checked})} className="w-4 h-4 text-vanta-blue bg-gray-100 border-gray-300 rounded focus:ring-vanta-blue" />

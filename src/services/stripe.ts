@@ -14,9 +14,10 @@ export async function createStripeCheckout(payload: CheckoutPayload): Promise<{ 
 
     const params = new URLSearchParams();
     
-    // Configura os métodos de pagamento (Pix e Cartão)
-    params.append('payment_method_types[0]', 'pix');
-    params.append('payment_method_types[1]', 'card');
+    // Deixamos a Stripe usar os métodos de pagamento ativos no painel do usuário (Cartão, Pix, etc)
+    // Se o usuário não tiver PIX ativo no painel da Stripe, ele vai cobrar apenas no cartão.
+    // params.append('payment_method_types[0]', 'pix');
+    // params.append('payment_method_types[1]', 'card');
 
     // Configura os itens
     payload.items.forEach((item, index) => {

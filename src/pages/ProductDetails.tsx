@@ -418,7 +418,7 @@ export default function ProductDetails() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 pt-6 lg:pt-24 pb-20">
+    <div className="min-h-screen bg-white dark:bg-gray-950 pt-6 lg:pt-8 pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <button onClick={() => navigate(-1)} className="flex items-center text-gray-500 dark:text-gray-400 hover:text-vanta-blue transition-colors mb-8 group">
