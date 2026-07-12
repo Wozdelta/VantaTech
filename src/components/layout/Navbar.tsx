@@ -84,6 +84,59 @@ export default function Navbar() {
   useEffect(() => {
     if (user) {
       fetchNotifications();
+
+      const channel = supabase
+        .channel('realtime-notificacoes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notificacoes',
+            filter: `usuario_id=eq.${user.id}`,
+          },
+          (payload) => {
+            const newNotif = payload.new as Notificacao;
+            setNotifications((prev) => [newNotif, ...prev]);
+            
+            showAlert({
+              title: newNotif.titulo,
+              message: newNotif.mensagem,
+              type: 'info'
+            });
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'notificacoes',
+            filter: `usuario_id=eq.${user.id}`,
+          },
+          (payload) => {
+            setNotifications((prev) => 
+              prev.map((n) => n.id === payload.new.id ? (payload.new as Notificacao) : n)
+            );
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'DELETE',
+            schema: 'public',
+            table: 'notificacoes',
+            filter: `usuario_id=eq.${user.id}`,
+          },
+          (payload) => {
+            setNotifications((prev) => prev.filter((n) => n.id !== payload.old.id));
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     } else {
       setNotifications([]);
     }
