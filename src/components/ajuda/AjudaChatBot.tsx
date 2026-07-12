@@ -37,8 +37,7 @@ export default function AjudaChatBot({ onOpenTicket }: { onOpenTicket: () => voi
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { settings } = useSettings();
-  const { perfil } = useAuth();
-  const showChatbot = settings.acesso_chatbot === 'todos' || perfil?.cargo === 'Admin';
+  const showChatbot = settings.acesso_chatbot === 'todos';
 
   useEffect(() => {
     if (scrollRef.current) {
