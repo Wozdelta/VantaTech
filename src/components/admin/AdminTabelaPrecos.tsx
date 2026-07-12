@@ -99,7 +99,7 @@ export default function AdminTabelaPrecos() {
     }
   };
 
-  const fetchData = async () => {
+  async function fetchData() {
     try {
       const [marcasRes, gruposRes, variacoesRes] = await Promise.all([
         supabase.from('marcas').select('*').order('nome'),

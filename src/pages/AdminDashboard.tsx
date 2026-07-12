@@ -91,11 +91,16 @@ export default function AdminDashboard() {
 
     fetchCounts();
 
+    const uniqueChannelId = Math.random().toString(36).substring(7);
     const channel = supabase
-      .channel('counts-updates')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, fetchCounts)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'encomendas_pedidos' }, fetchCounts)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, fetchCounts)
+      .channel(`global-admin-${uniqueChannelId}`)
+      .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
+        const table = payload.table;
+        if (['pedidos', 'encomendas_pedidos', 'tickets'].includes(table)) {
+          fetchCounts();
+        }
+        window.dispatchEvent(new CustomEvent('app_realtime_update', { detail: { table } }));
+      })
       .subscribe();
 
     window.addEventListener('update_counts', fetchCounts);
@@ -225,31 +230,18 @@ export default function AdminDashboard() {
       fetchReceita();
     }
 
-    // Assinar mudanças no banco de dados para atualizar em tempo real
-    const channel = supabase
-      .channel('dashboard-updates')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'pedidos' },
-        () => {
-          if (activeTab === 'overview') {
-            fetchReceita();
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'perfis' },
-        () => {
-          if (activeTab === 'overview') {
-            fetchReceita();
-          }
-        }
-      )
-      .subscribe();
+    // Ouvir o evento global para evitar conflito de multiplos canais no Supabase
+    const handleGlobalUpdate = (e: any) => {
+      const table = e.detail?.table;
+      if (activeTab === 'overview' && ['pedidos', 'perfis'].includes(table)) {
+        fetchReceita();
+      }
+    };
+    
+    window.addEventListener('app_realtime_update', handleGlobalUpdate);
 
     return () => {
-      supabase.removeChannel(channel);
+      window.removeEventListener('app_realtime_update', handleGlobalUpdate);
     };
   }, [activeTab]);
 

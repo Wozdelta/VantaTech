@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
 import { useRealtimeUpdate } from '../../hooks/useRealtimeUpdate';
@@ -40,6 +40,7 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
   const [openStatusMenu, setOpenStatusMenu] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Pedido | null>(null);
+  const isUpdatingRef = useRef<string | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
@@ -93,6 +94,8 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
   }
 
   const updateOrderStatus = async (pedidoId: string, newStatus: string, oldStatus: string, itens: ItemPedido[], userId: string, afiliadoId?: string, total?: number) => {
+    if (isUpdatingRef.current === pedidoId) return;
+    isUpdatingRef.current = pedidoId;
     setUpdating(pedidoId);
     try {
       const { error } = await supabase
@@ -194,7 +197,7 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
         });
       }
 
-      // Automação do Estoque para Itens
+      // Automação do Estoque e Variantes
       const wasAlreadyDelivered = oldStatus === 'Entregue';
       const isNowDelivered = newStatus === 'Entregue';
 
@@ -203,24 +206,109 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
           if (item.produto_id) {
             const { data: prod } = await supabase
               .from('produtos')
-              .select('estoque, ativo')
+              .select('estoque, ativo, galeria, cor')
               .eq('id', item.produto_id)
               .single();
 
-            // Se o produto tiver estoque (é um Item/Acessório e não um Aparelho)
-            if (prod && prod.estoque !== null && prod.estoque !== undefined) {
-              const novoEstoque = Math.max(0, prod.estoque - (item.quantidade || 1));
-              const updates: any = { estoque: novoEstoque };
-              
-              // Se o estoque zerou, oculta o produto automaticamente
-              if (novoEstoque === 0) {
-                updates.ativo = false;
-              }
+            if (prod) {
+              // 1. Lógica para Itens/Acessórios (com controle de estoque numérico)
+              if (prod.estoque !== null && prod.estoque !== undefined) {
+                const novoEstoque = Math.max(0, prod.estoque - (item.quantidade || 1));
+                const updates: any = { estoque: novoEstoque };
+                
+                // Se o estoque zerou, oculta o produto automaticamente
+                if (novoEstoque === 0) {
+                  updates.ativo = false;
+                }
 
-              await supabase
-                .from('produtos')
-                .update(updates)
-                .eq('id', item.produto_id);
+                await supabase
+                  .from('produtos')
+                  .update(updates)
+                  .eq('id', item.produto_id);
+              } 
+              // 2. Lógica para Aparelhos (sem estoque numérico, usa galeria de cores)
+              else if (prod.galeria && Array.isArray(prod.galeria)) {
+                // Não deletamos da galeria fisicamente para não perder cor_valor e outras props.
+                // A página do produto (ProductDetails) já esconde dinamicamente as cores vendidas.
+                // Precisamos apenas checar se TODAS as cores foram vendidas para inativar o anúncio.
+
+                const { data: itemsSold } = await supabase
+                  .from('itens_pedido')
+                  .select('produto_nome, pedidos!inner(status)')
+                  .eq('produto_id', item.produto_id)
+                  .eq('pedidos.status', 'Entregue');
+
+                if (itemsSold) {
+                  const soldVariants = itemsSold.map(is => {
+                    const cMatch = is.produto_nome.match(/Cor:\s*([^-]+)/i);
+                    const sMatch = is.produto_nome.match(/Cor:\s*[^-]+\s*-\s*(.+)$/i);
+                    return {
+                      cor: cMatch ? cMatch[1].trim().toLowerCase() : '',
+                      storage: sMatch ? sMatch[1].trim().toLowerCase() : ''
+                    };
+                  });
+
+                  // Verifica se sobrou alguma variante que não foi vendida
+                  const hasAvailableVariant = prod.galeria.some((g: any) => {
+                    const gCor = g.cor ? g.cor.trim().toLowerCase() : '';
+                    const gMem = g.memoria ? g.memoria.trim().toLowerCase() : '';
+
+                    if (!gCor) return true; // Se não tem cor definida, consideramos disponível (ou não controlável)
+
+                    // Se a variante tem cor (e talvez memória), verifica se ELA NÃO ESTÁ nos vendidos
+                    const isSold = soldVariants.some(sv => {
+                      if (sv.cor === gCor) {
+                        if (gMem && sv.storage) {
+                          return gMem === sv.storage;
+                        }
+                        return true;
+                      }
+                      return false;
+                    });
+
+                    return !isSold;
+                  });
+
+                  if (!hasAvailableVariant) {
+                    await supabase
+                      .from('produtos')
+                      .update({ ativo: false })
+                      .eq('id', item.produto_id);
+                  }
+                }
+              }
+            }
+          }
+        }
+      } else if (wasAlreadyDelivered && !isNowDelivered) {
+        // Reverter Automação: Restaura o estoque e as variantes se o pedido sair de "Entregue"
+        for (const item of itens) {
+          if (item.produto_id) {
+            const { data: prod } = await supabase
+              .from('produtos')
+              .select('estoque, ativo, galeria, cor')
+              .eq('id', item.produto_id)
+              .single();
+
+            if (prod) {
+              // 1. Restaura Acessórios (estoque numérico)
+              if (prod.estoque !== null && prod.estoque !== undefined) {
+                const novoEstoque = prod.estoque + (item.quantidade || 1);
+                await supabase
+                  .from('produtos')
+                  .update({ estoque: novoEstoque, ativo: true })
+                  .eq('id', item.produto_id);
+              } 
+              // 2. Restaura Aparelhos (galeria)
+              else if (prod.galeria && Array.isArray(prod.galeria)) {
+                // Apenas reativamos o anúncio! Não precisamos recriar a variante na galeria
+                // pois nós não a deletamos mais fisicamente. O frontend já cuida de re-exibi-la
+                // se o status do pedido não for mais "Entregue".
+                await supabase
+                  .from('produtos')
+                  .update({ ativo: true })
+                  .eq('id', item.produto_id);
+              }
             }
           }
         }
@@ -294,6 +382,7 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
       });
     } finally {
       setUpdating(null);
+      isUpdatingRef.current = null;
     }
   };
 
@@ -327,6 +416,7 @@ export default function AdminOrders({ onlyVantaClub = false }: { onlyVantaClub?:
       const { error } = await supabase.from('pedidos').delete().eq('id', pedidoId);
       if (error) throw error;
       
+      window.dispatchEvent(new Event('update_counts'));
       await fetchOrders();
     } catch (error) {
       console.error('Erro ao excluir pedido:', error);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, Trash2, ShoppingBag, MapPin, ChevronDown, AlertCircle, ArrowLeft, CreditCard, Loader2, Tag, CheckCircle, Sparkles } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -74,6 +74,7 @@ export default function CartDrawer() {
   const [, setFreteError] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   // Cupom State
   const [cupomCode, setCupomCode] = useState('');
@@ -304,7 +305,8 @@ export default function CartDrawer() {
   };
 
   const handleCheckout = async () => {
-    if (isSubmitting) return;
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
 
     if (user) {
@@ -398,6 +400,7 @@ export default function CartDrawer() {
               type: 'error'
             });
             setIsSubmitting(false);
+            isSubmittingRef.current = false;
             return;
           }
         }
@@ -539,6 +542,7 @@ export default function CartDrawer() {
     const url = `https://wa.me/5516997700430?text=${encodeURIComponent(message)}`;
 
     setIsSubmitting(false);
+    isSubmittingRef.current = false;
     window.open(url, '_blank');
   };
 

@@ -11,6 +11,7 @@ type Settings = {
   acesso_perfil: AcessoLevel;
   acesso_encomendas: AcessoLevel;
   acesso_ajuda: AcessoLevel;
+  acesso_chatbot: AcessoLevel;
 };
 
 type SettingsContextType = {
@@ -27,6 +28,7 @@ const defaultSettings: Settings = {
   acesso_perfil: 'todos',
   acesso_encomendas: 'todos',
   acesso_ajuda: 'todos',
+  acesso_chatbot: 'todos',
 };
 
 const SettingsContext = createContext<SettingsContextType>({

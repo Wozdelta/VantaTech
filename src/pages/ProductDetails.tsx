@@ -78,6 +78,11 @@ export default function ProductDetails() {
         
       if (error) throw error;
       
+      let fullySold = false;
+      if (!mainProduct.ativo) {
+        fullySold = true;
+      }
+      
       setProduct(mainProduct);
       
       // Busca variantes do mesmo nome (caso seja o sistema legado)
@@ -103,7 +108,6 @@ export default function ProductDetails() {
 
       if (itemsSold) {
         const sold: {cor: string, storage: string, status: string}[] = [];
-        let fullySold = false;
         
         itemsSold.forEach(item => {
           const corMatch = item.produto_nome.match(/Cor:\s*([^-]+)/i);
@@ -154,13 +158,16 @@ export default function ProductDetails() {
           });
           
           // Se esvaziou a galeria por causa de entregas, limpamos o legado também
-          if (mainProduct.galeria.length === 0 && sold.some(sv => sv.status === 'Entregue')) {
+          const hasColors = mainProduct.galeria.some((g: any) => g.cor);
+          if (!hasColors && sold.some(sv => sv.status === 'Entregue')) {
             mainProduct.cor = '';
             mainProduct.memoria = '';
             fullySold = true; // Força como esgotado se não tem mais nada
           }
         }
       }
+      
+      setIsProductCompletelySold(fullySold);
 
       // Parseia as opções do produto (apenas para compatibilidade com sistema legado se precisar,
       // mas não pré-seleciona nada, obrigando o cliente a escolher)

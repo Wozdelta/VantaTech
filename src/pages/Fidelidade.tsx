@@ -170,7 +170,7 @@ export default function Fidelidade() {
 
         // Atualizar lista
         const { data: hData } = await supabase.from('historico_pontos').select('*').eq('user_id', user?.id).order('created_at', { ascending: false }).limit(20);
-        if (hData) setHistorico(hData);
+        setHistorico(hData || []);
         
         await refreshPerfil();
         showAlert({ title: 'Resgate Concluído!', message: `Você ganhou o cupom! Seu código é ${novoCodigo} e já está salvo na sua aba Meus Cupons.`, type: 'success' });
@@ -346,7 +346,9 @@ export default function Fidelidade() {
                 <div key={item.id} className="flex justify-between items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors border border-gray-100 dark:border-gray-700/50">
                   <div className="flex flex-col min-w-0 pr-4">
                     <span className="font-medium text-gray-900 dark:text-white text-sm break-words">{item.descricao}</span>
-                    <span className="text-xs text-gray-500">{new Date(item.created_at).toLocaleDateString('pt-BR')}</span>
+                    <span className="text-xs text-gray-500 font-medium">
+                      {new Date(item.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                    </span>
                   </div>
                   <div className={`font-black whitespace-nowrap ${item.tipo === 'entrada' ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}>
                     {item.tipo === 'entrada' ? '+' : '-'}{item.quantidade} <span className="text-xs font-bold opacity-70">pts</span>

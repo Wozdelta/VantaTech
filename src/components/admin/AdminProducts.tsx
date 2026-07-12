@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
 import { useRealtimeUpdate } from '../../hooks/useRealtimeUpdate';
 import { CustomSelect } from '../ui/CustomSelect';
-import { Plus, Trash2, Loader2, X, Edit, UploadCloud, Palette, Smartphone, Package, Search, ChevronDown, Check, Undo2, LayoutGrid, List } from 'lucide-react';
+import { Plus, Trash2, Loader2, X, Edit, UploadCloud, Palette, Smartphone, Package, Search, ChevronDown, Check, Eye, EyeOff, LayoutGrid, List } from 'lucide-react';
 import { Reorder } from 'framer-motion';
 import RichTextEditor from '../ui/RichTextEditor';
 import ImageCropper from './ImageCropper';
@@ -54,6 +54,7 @@ type ProductColor = {
 export default function AdminProducts() {
   const { showAlert } = useAlert();
   const [products, setProducts] = useState<Product[]>([]);
+  const isSavingRef = useRef(false);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'detailed' | 'minimal'>('detailed');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -332,6 +333,8 @@ export default function AdminProducts() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (isSavingRef.current) return;
+    isSavingRef.current = true;
     setSaving(true);
 
     try {
@@ -416,7 +419,7 @@ export default function AdminProducts() {
         ? parsedPrecoAntigo
         : (firstVariantOldPrice ? parseFloat(firstVariantOldPrice) : null);
 
-      const productData = {
+      const productData: any = {
         nome: formData.nome,
         marca: formData.marca,
         condicao: productType === 'aparelho' ? formData.condicao : 'Novo',
@@ -433,9 +436,17 @@ export default function AdminProducts() {
       };
 
       if (editId) {
+        const oldProduct = products.find(p => p.id === editId);
+        if (oldProduct && !oldProduct.ativo && productData.estoque !== null && productData.estoque > 0) {
+          productData.ativo = true;
+        }
+        
         const { error } = await supabase.from('produtos').update(productData).eq('id', editId);
         if (error) throw error;
       } else {
+        if (productData.estoque !== null && productData.estoque > 0) {
+          productData.ativo = true;
+        }
         const { error } = await supabase.from('produtos').insert([productData]);
         if (error) throw error;
       }
@@ -449,6 +460,7 @@ export default function AdminProducts() {
       showAlert({ title: 'Erro', message: 'Erro ao salvar produto.', type: 'error' });
     } finally {
       setSaving(false);
+      isSavingRef.current = false;
     }
   }
 
@@ -657,22 +669,7 @@ export default function AdminProducts() {
                       .map((product) => (
                         <tr
                           key={product.id}
-                          onContextMenu={async (e) => {
-                            e.preventDefault();
-                            const confirm = await showAlert({
-                              title: 'Alterar Status do Produto',
-                              message: `Deseja ${product.ativo ? 'ocultar' : 'ativar'} o produto "${product.nome}"?`,
-                              type: 'info',
-                              showConfirm: true,
-                              confirmText: product.ativo ? 'Ocultar Produto' : 'Ativar Produto',
-                              cancelText: 'Cancelar'
-                            });
-                            if (confirm) {
-                              handleToggleActive(product.id, product.ativo);
-                            }
-                          }}
-                          className="transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-800/50 cursor-pointer"
-                          title="Clique com o botão direito para alternar entre Ativo e Oculto"
+                          className="transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-800/50"
                         >
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
@@ -714,12 +711,17 @@ export default function AdminProducts() {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button onClick={() => handleEdit(product)} className="text-blue-600 hover:text-blue-900 ml-4 p-1">
-                              <Edit className="w-5 h-5" />
-                            </button>
-                            <button onClick={() => handleDelete(product.id)} className="text-red-600 hover:text-red-900 ml-4 p-1">
-                              <Trash2 className="w-5 h-5" />
-                            </button>
+                            <div className="flex justify-end gap-2">
+                              <button onClick={() => handleToggleActive(product.id, product.ativo)} className={`p-2 rounded-lg transition-colors ${product.ativo ? 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300' : 'text-orange-500 hover:text-orange-600'}`} title={product.ativo ? 'Ocultar Produto' : 'Ativar Produto'}>
+                                {product.ativo ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                              </button>
+                              <button onClick={() => handleEdit(product)} className="text-blue-600 hover:text-blue-900 p-2" title="Editar">
+                                <Edit className="w-5 h-5" />
+                              </button>
+                              <button onClick={() => handleDelete(product.id)} className="text-red-600 hover:text-red-900 p-2" title="Excluir">
+                                <Trash2 className="w-5 h-5" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -780,10 +782,13 @@ export default function AdminProducts() {
                               )}
                             </div>
                             <div className="flex items-center gap-1 shrink-0">
-                              <button onClick={() => handleEdit(product)} className="text-blue-600 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors">
+                              <button onClick={() => handleToggleActive(product.id, product.ativo)} className={`p-2 rounded-lg transition-colors ${product.ativo ? 'text-gray-500 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700' : 'text-orange-600 bg-orange-50 hover:bg-orange-100'}`} title={product.ativo ? 'Ocultar' : 'Ativar'}>
+                                {product.ativo ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </button>
+                              <button onClick={() => handleEdit(product)} className="text-blue-600 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors" title="Editar">
                                 <Edit className="w-4 h-4" />
                               </button>
-                              <button onClick={() => handleDelete(product.id)} className="text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors">
+                              <button onClick={() => handleDelete(product.id)} className="text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors" title="Excluir">
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
@@ -812,11 +817,15 @@ export default function AdminProducts() {
                             </span>
 
                             <div className="flex items-center gap-2">
-                              <button onClick={() => handleEdit(product)} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold transition-colors">
-                                <Edit className="w-3.5 h-3.5" /> Editar
+                              <button onClick={() => handleToggleActive(product.id, product.ativo)} className={`flex items-center justify-center gap-2 flex-1 p-2.5 rounded-xl text-sm font-bold transition-colors ${product.ativo ? 'text-gray-600 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700/50 dark:text-gray-300' : 'text-orange-600 bg-orange-50 hover:bg-orange-100'}`}>
+                                {product.ativo ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                {product.ativo ? 'Ocultar' : 'Ativar'}
                               </button>
-                              <button onClick={() => handleDelete(product.id)} className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-bold transition-colors">
-                                <Trash2 className="w-3.5 h-3.5" /> Excluir
+                              <button onClick={() => handleEdit(product)} className="flex items-center justify-center gap-2 flex-1 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 p-2.5 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors text-sm font-bold">
+                                <Edit className="w-4 h-4" /> Editar
+                              </button>
+                              <button onClick={() => handleDelete(product.id)} className="flex items-center justify-center gap-2 flex-1 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 p-2.5 rounded-xl hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors text-sm font-bold">
+                                <Trash2 className="w-4 h-4" /> Excluir
                               </button>
                             </div>
                           </div>

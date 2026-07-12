@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Ticket, Copy, ThumbsUp, ThumbsDown, Package, Check, RefreshCw } from 'lucide-react';
+import { Send, Bot, User, Ticket, Copy, ThumbsUp, ThumbsDown, Package, Check, RefreshCw, Settings } from 'lucide-react';
 import { processMessage, type ChatResponse } from '../../lib/chatbot/engine';
 import { type ChatContext, createContext } from '../../lib/chatbot/context';
+import { useSettings } from '../../contexts/SettingsContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
@@ -33,6 +35,10 @@ export default function AjudaChatBot({ onOpenTicket }: { onOpenTicket: () => voi
   const [copiedId, setCopiedId] = useState<string | null>(null);
   
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const { settings } = useSettings();
+  const { perfil } = useAuth();
+  const showChatbot = settings.acesso_chatbot === 'todos' || perfil?.cargo === 'Admin';
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -119,6 +125,29 @@ export default function AjudaChatBot({ onOpenTicket }: { onOpenTicket: () => voi
       sendMessage(input);
     }
   };
+
+  if (!showChatbot) {
+    return (
+      <div className="flex flex-col h-full bg-white dark:bg-gray-800 items-center justify-center p-8 text-center border-l border-gray-100 dark:border-gray-700">
+        <div className="w-24 h-24 bg-gray-50 dark:bg-gray-900 rounded-full flex items-center justify-center mb-6 shadow-inner relative">
+          <Bot className="w-10 h-10 text-gray-400 dark:text-gray-600 absolute opacity-30" />
+          <Settings className="w-12 h-12 text-vanta-blue animate-[spin_4s_linear_infinite]" />
+        </div>
+        <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-4 tracking-tight">IA em Manutenção</h3>
+        <p className="text-gray-500 max-w-md mx-auto leading-relaxed text-sm">
+          Nossa Assistente Virtual está passando por uma atualização nos servidores locais para ficar ainda mais inteligente.
+          Por favor, tente novamente mais tarde ou abra um ticket se precisar de ajuda urgente.
+        </p>
+        <button 
+          onClick={onOpenTicket}
+          className="mt-8 px-8 py-3.5 bg-vanta-blue hover:bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:-translate-y-0.5 transition-all flex items-center gap-2"
+        >
+          <Ticket className="w-5 h-5" />
+          Abrir Ticket de Suporte
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-800">

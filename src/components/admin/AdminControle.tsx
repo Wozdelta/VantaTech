@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSettings } from '../../contexts/SettingsContext';
-import { ShieldCheck, Save, Loader2, Store, ShoppingBag, Ticket, Award, UserCircle, Globe, Lock, PackagePlus, HelpCircle } from 'lucide-react';
+import { ShieldCheck, Save, Loader2, Store, ShoppingBag, Ticket, Award, UserCircle, Globe, Lock, PackagePlus, HelpCircle, Bot } from 'lucide-react';
 import { useAlert } from '../../contexts/AlertContext';
 
 export default function AdminControle() {
@@ -233,6 +233,16 @@ export default function AdminControle() {
           bgClass="bg-cyan-100 dark:bg-cyan-900/30"
           value={localSettings.acesso_ajuda}
           onChange={(val: any) => setLocalSettings(prev => ({ ...prev, acesso_ajuda: val }))}
+        />
+
+        <ControlCard 
+          icon={Bot}
+          title="Assistente IA"
+          description="Chatbot inteligente"
+          colorClass="text-indigo-600 dark:text-indigo-400"
+          bgClass="bg-indigo-100 dark:bg-indigo-900/30"
+          value={localSettings.acesso_chatbot}
+          onChange={(val: any) => setLocalSettings(prev => ({ ...prev, acesso_chatbot: val }))}
         />
       </div>
 

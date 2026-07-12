@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAlert } from '../../contexts/AlertContext';
-import { Ticket, Search, Filter, MessageCircle, Clock, ShieldAlert, Send, ArrowLeft, CheckCircle2, User, ChevronRight, Loader2, Trash2 } from 'lucide-react';
+import { Ticket, Search, Filter, MessageCircle, Clock, ShieldAlert, Send, ArrowLeft, CheckCircle2, User, ChevronRight, ChevronDown, Check, Loader2, Trash2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRealtimeUpdate } from '../../hooks/useRealtimeUpdate';
 import { CustomSelect } from '../ui/CustomSelect';
@@ -28,6 +28,9 @@ export default function AdminTickets() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [tableExists, setTableExists] = useState(true);
   const [ticketToDelete, setTicketToDelete] = useState<string | null>(null);
+  const isDeletingRef = useRef(false);
+  const isSendingRef = useRef(false);
+  const [openStatusMenu, setOpenStatusMenu] = useState<string | null>(null);
   const [otherTyping, setOtherTyping] = useState(false);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
 
@@ -122,7 +125,7 @@ export default function AdminTickets() {
     }
   };
 
-  const fetchTickets = async () => {
+  async function fetchTickets() {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -221,15 +224,24 @@ export default function AdminTickets() {
   };
 
   const performDeleteTicket = async () => {
-    if (!ticketToDelete) return;
+    if (!ticketToDelete || isDeletingRef.current) return;
+    isDeletingRef.current = true;
 
     try {
-      const { error } = await supabase
+      // Apaga as mensagens primeiro para evitar erro de Foreign Key (ON DELETE CASCADE)
+      await supabase.from('ticket_messages').delete().eq('ticket_id', ticketToDelete);
+
+      const { data, error } = await supabase
         .from('tickets')
         .delete()
-        .eq('id', ticketToDelete);
+        .eq('id', ticketToDelete)
+        .select('id');
 
       if (error) throw error;
+      
+      if (!data || data.length === 0) {
+        throw new Error('Permissão negada pelo banco de dados (RLS). Você precisa adicionar uma política de DELETE nas tabelas tickets e ticket_messages no Supabase.');
+      }
 
       showAlert({ type: 'success', message: 'Ticket apagado com sucesso' });
       setTickets(prev => prev.filter(t => t.id !== ticketToDelete));
@@ -241,11 +253,13 @@ export default function AdminTickets() {
       showAlert({ type: 'error', message: 'Erro ao apagar ticket' });
     } finally {
       setTicketToDelete(null);
+      isDeletingRef.current = false;
     }
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedTicket || !user) return;
+    if (!newMessage.trim() || !selectedTicket || !user || isSendingRef.current) return;
+    isSendingRef.current = true;
     
     setSendingMsg(true);
     try {
@@ -289,6 +303,7 @@ export default function AdminTickets() {
       showAlert({ type: 'error', message: 'Erro ao enviar mensagem.' });
     } finally {
       setSendingMsg(false);
+      isSendingRef.current = false;
     }
   };
 
@@ -628,7 +643,7 @@ export default function AdminTickets() {
 
       {/* Tabela de Tickets Desktop */}
       <div className="hidden lg:block bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto min-h-[350px]">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700 text-xs uppercase tracking-wider text-gray-500 font-bold">
@@ -680,19 +695,42 @@ export default function AdminTickets() {
                       </span>
                     </td>
                     <td className="p-4">
-                      <CustomSelect
-                        value={ticket.status}
-                        onChange={(val) => handleUpdateStatus(ticket.id, val, ticket.user_id, ticket.assunto)}
-                        className="w-40"
-                        options={[
-                          { value: 'Aberto', label: 'Aberto' },
-                          { value: 'Em análise', label: 'Em análise' },
-                          { value: 'Aguardando cliente', label: 'Aguardando cliente' },
-                          { value: 'Respondido', label: 'Respondido' },
-                          { value: 'Resolvido', label: 'Resolvido' },
-                          { value: 'Fechado', label: 'Fechado' }
-                        ]}
-                      />
+                      <div className="relative">
+                        <button
+                          onClick={() => setOpenStatusMenu(openStatusMenu === ticket.id ? null : ticket.id)}
+                          className={`flex items-center justify-between gap-2 px-3 py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg border shadow-sm transition-all w-[150px] ${
+                            openStatusMenu === ticket.id 
+                              ? 'bg-vanta-blue text-white border-vanta-blue ring-2 ring-vanta-blue/20'
+                              : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          <span className="truncate">{ticket.status}</span>
+                          <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform ${openStatusMenu === ticket.id ? 'rotate-180 text-white/70' : 'text-gray-400'}`} />
+                        </button>
+                        
+                        {openStatusMenu === ticket.id && (
+                          <>
+                            <div className="fixed inset-0 z-40" onClick={() => setOpenStatusMenu(null)}></div>
+                            <div className="absolute left-0 top-full mt-1.5 w-[200px] bg-white dark:bg-gray-800 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 dark:border-gray-700 py-1.5 z-50 overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-200">
+                              {['Aberto', 'Em análise', 'Aguardando cliente', 'Respondido', 'Resolvido', 'Fechado'].map((status) => (
+                                <button 
+                                  key={status}
+                                  onClick={() => {
+                                    handleUpdateStatus(ticket.id, status, ticket.user_id, ticket.assunto);
+                                    setOpenStatusMenu(null);
+                                  }}
+                                  className={`w-full text-left px-3 py-2.5 text-[11px] font-bold uppercase tracking-wider hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between transition-colors ${
+                                    ticket.status === status ? 'text-vanta-blue bg-blue-50/50 dark:bg-blue-900/10' : 'text-gray-700 dark:text-gray-300'
+                                  }`}
+                                >
+                                  <span className="truncate">{status}</span>
+                                  {ticket.status === status && <Check className="w-3.5 h-3.5 text-vanta-blue shrink-0 ml-2" />}
+                                </button>
+                              ))}
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </td>
                     <td className="p-4">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -743,19 +781,42 @@ export default function AdminTickets() {
                   <div className="font-bold text-gray-900 dark:text-white line-clamp-1">{ticket.assunto}</div>
                   <div className="text-xs text-gray-500">#{ticket.id.split('-')[0].toUpperCase()}</div>
                 </div>
-                <CustomSelect
-                  value={ticket.status}
-                  onChange={(val) => handleUpdateStatus(ticket.id, val, ticket.user_id, ticket.assunto)}
-                  className="w-36 shrink-0"
-                  options={[
-                    { value: 'Aberto', label: 'Aberto' },
-                    { value: 'Em análise', label: 'Em análise' },
-                    { value: 'Aguardando cliente', label: 'Aguardando cliente' },
-                    { value: 'Respondido', label: 'Respondido' },
-                    { value: 'Resolvido', label: 'Resolvido' },
-                    { value: 'Fechado', label: 'Fechado' }
-                  ]}
-                />
+                <div className="relative shrink-0">
+                  <button
+                    onClick={() => setOpenStatusMenu(openStatusMenu === ticket.id ? null : ticket.id)}
+                    className={`flex items-center justify-between gap-2 px-3 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg border shadow-sm transition-all w-[130px] ${
+                      openStatusMenu === ticket.id 
+                        ? 'bg-vanta-blue text-white border-vanta-blue ring-2 ring-vanta-blue/20'
+                        : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    <span className="truncate">{ticket.status}</span>
+                    <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform ${openStatusMenu === ticket.id ? 'rotate-180 text-white/70' : 'text-gray-400'}`} />
+                  </button>
+                  
+                  {openStatusMenu === ticket.id && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setOpenStatusMenu(null)}></div>
+                      <div className="absolute right-0 top-full mt-1 w-[180px] bg-white dark:bg-gray-800 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 dark:border-gray-700 py-1.5 z-50 overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-200">
+                        {['Aberto', 'Em análise', 'Aguardando cliente', 'Respondido', 'Resolvido', 'Fechado'].map((status) => (
+                          <button 
+                            key={status}
+                            onClick={() => {
+                              handleUpdateStatus(ticket.id, status, ticket.user_id, ticket.assunto);
+                              setOpenStatusMenu(null);
+                            }}
+                            className={`w-full text-left px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between transition-colors ${
+                              ticket.status === status ? 'text-vanta-blue bg-blue-50/50 dark:bg-blue-900/10' : 'text-gray-700 dark:text-gray-300'
+                            }`}
+                          >
+                            <span className="truncate">{status}</span>
+                            {ticket.status === status && <Check className="w-3.5 h-3.5 text-vanta-blue shrink-0 ml-2" />}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <div className="flex items-center gap-2 min-w-0">

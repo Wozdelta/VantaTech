@@ -20,6 +20,10 @@ export default function App() {
   const location = useLocation();
   const { user } = useAuth();
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   // 1. Captura o ID do link quando acessa o site deslogado
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
