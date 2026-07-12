@@ -14,9 +14,10 @@ export function useRealtimeUpdate(tables: string[], onUpdate: () => void) {
   }, [onUpdate]);
 
   useEffect(() => {
+    const uniqueId = Math.random().toString(36).substring(7);
     const channels = tables.map((table) => {
       return supabase
-        .channel(`realtime-admin-${table}`)
+        .channel(`realtime-admin-${table}-${uniqueId}`)
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: table },
