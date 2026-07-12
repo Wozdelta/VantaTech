@@ -448,24 +448,19 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Actions */}
-          <div className="flex md:hidden items-center gap-1">
+          <div className="flex md:hidden items-center gap-1 text-gray-600 dark:text-gray-300">
             <ActionIcon 
               icon={ShoppingCart} 
               label="Carrinho" 
               badge={cartCount}
               onClick={() => setIsCartOpen(true)}
             />
-            <button 
-              className="p-2 text-gray-600 dark:text-gray-300 hover:text-vanta-blue transition-colors relative"
+            <ActionIcon 
+              icon={mobileMenuOpen ? X : Menu} 
+              label="Menu" 
+              badge={unreadCount > 99 ? '99+' : unreadCount}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-vanta-orange px-1 text-[10px] font-bold text-white border-2 border-white dark:border-gray-900">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
-              )}
-            </button>
+            />
           </div>
         </div>
 
@@ -507,7 +502,7 @@ export default function Navbar() {
   );
 }
 
-function ActionIcon({ icon: Icon, badge, label, onClick, children, isOpen, align = 'right', avatarUrl }: { icon: any, badge?: number, label: string, onClick?: () => void, children?: React.ReactNode, isOpen?: boolean, align?: 'left' | 'right' | 'center', avatarUrl?: string }) {
+function ActionIcon({ icon: Icon, badge, label, onClick, children, isOpen, align = 'right', avatarUrl }: { icon: any, badge?: number | string, label: string, onClick?: () => void, children?: React.ReactNode, isOpen?: boolean, align?: 'left' | 'right' | 'center', avatarUrl?: string }) {
   return (
     <div className="relative">
       <button 
@@ -521,7 +516,7 @@ function ActionIcon({ icon: Icon, badge, label, onClick, children, isOpen, align
         ) : (
           <Icon className="w-6 h-6 transition-transform duration-300 group-hover:scale-110 group-hover:text-vanta-blue group-hover:drop-shadow-[0_0_8px_rgba(29,142,255,0.4)]" />
         )}
-        {badge !== undefined && badge > 0 && (
+        {badge !== undefined && (typeof badge === 'number' ? badge > 0 : badge !== '0' && badge !== '') && (
           <span className="absolute -top-1.5 -right-1.5 inline-flex items-center justify-center min-w-[20px] w-auto h-5 px-1.5 text-[11px] font-bold text-white bg-vanta-orange rounded-full border-[2.5px] border-white dark:border-gray-900 shadow-sm leading-none whitespace-nowrap z-10">
             {badge}
           </span>
