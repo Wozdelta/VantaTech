@@ -19,8 +19,8 @@ export default async function handler(req: any, res: any) {
       }
     });
 
-    const groqKey = process.env.VITE_GROQ_API_KEY || process.env.VITE_GEMINI_API_KEY; 
-    
+    const groqKey = process.env.VITE_GROQ_API_KEY || process.env.VITE_GEMINI_API_KEY;
+
     if (!groqKey || groqKey.length < 10) {
       return res.status(400).json({ message: 'Chave da API do Groq não configurada no servidor Vercel. Erro: Chave inválida ou ausente.' });
     }
@@ -42,20 +42,21 @@ export default async function handler(req: any, res: any) {
     for (const grupo of grupos) {
       const marcaNome = (grupo.marcas as any)?.nome || '';
       const aparelhoNome = `${marcaNome} ${grupo.nome}`.trim();
-      
+
       const variacoes = grupo.tabela_precos_variacoes || [];
 
       for (const variacao of variacoes) {
         if (!variacao.valor_venda) continue;
         const modeloCompleto = `${aparelhoNome} ${variacao.nome}`;
-        
+
         try {
           let searchContext = "";
           const tavilyKey = process.env.VITE_TAVILY_API_KEY || process.env.VITE_TAVILY;
-          
+
           if (tavilyKey) {
             try {
-              const searchQuery = `preço usado celular "${modeloCompleto}" brasil (site:mercadolivre.com.br OR site:olx.com.br)`;
+              const searchQuery = `preço usad
+               brasil (site:mercadolivre.com.br OR site:olx.com.br)`;
               const tavilyRes = await fetch('https://api.tavily.com/search', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -67,7 +68,7 @@ export default async function handler(req: any, res: any) {
                   include_answer: false
                 })
               });
-              
+
               if (tavilyRes.ok) {
                 const tavilyData = await tavilyRes.json();
                 if (tavilyData.results && tavilyData.results.length > 0) {
@@ -84,7 +85,7 @@ export default async function handler(req: any, res: any) {
             }
           }
 
-          const currentPrices = (variacao.venda_excelente && variacao.venda_bom && variacao.venda_regular) 
+          const currentPrices = (variacao.venda_excelente && variacao.venda_bom && variacao.venda_regular)
             ? `\nPREÇOS ATUAIS NO SISTEMA (Sua última avaliação):\n- Excelente: ${variacao.venda_excelente}\n- Bom: ${variacao.venda_bom}\n- Regular: ${variacao.venda_regular}\n\nCRÍTICO: O usuário reclamou que os preços flutuam muito a cada vez que clica em gerar. Para resolver isso, utilize estes "Preços Atuais" como ÂNCORA. Você só deve alterá-reajustar os valores se a sua nova pesquisa na web mostrar uma variação significativa (maior que 5-10%). Caso contrário, repita os preços atuais para manter a estabilidade no catálogo.`
             : `\nValor base aproximado atual do usuário: ${variacao.valor_venda}`;
 
@@ -194,9 +195,9 @@ Regras:
             temperature: 0.2,
             response_format: { type: "json_object" },
           });
-          
+
           const content = chatCompletion.choices[0]?.message?.content || "";
-          
+
           if (!content) continue;
 
           const jsonStr = content.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -204,7 +205,7 @@ Regras:
 
           if (aiPrices.excelente && aiPrices.bom && aiPrices.regular) {
             analyzedCount++;
-            
+
             const novoExcelente = Number(aiPrices.excelente);
             const novoBom = Number(aiPrices.bom);
             const novoRegular = Number(aiPrices.regular);

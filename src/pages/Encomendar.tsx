@@ -13,16 +13,16 @@ const TermsText = () => (
   <div className="prose prose-sm dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 space-y-4 text-justify">
     <h3 className="font-bold text-gray-900 dark:text-white">TERMOS E CONDIÇÕES DE ENCOMENDA DE APARELHOS - VANTATECH</h3>
     <p>Ao solicitar a encomenda de um dispositivo através do site VantaTech, o cliente declara ter lido, compreendido e concordado expressamente com as regras descritas abaixo, que regem a prestação do serviço de busca e encomenda de aparelhos eletrônicos.</p>
-    
+
     <h4 className="font-bold text-gray-900 dark:text-white mt-6">1. OBJETO DA ENCOMENDA</h4>
     <p>Este termo rege a prestação de serviço de busca e/ou encomenda de aparelhos celulares seminovos ou usados, conforme o modelo e especificações expressamente solicitadas pelo cliente por meio da plataforma ou canais oficiais de atendimento da VantaTech.</p>
-    
+
     <h4 className="font-bold text-gray-900 dark:text-white mt-6">2. SINAL (ARRAS) E CONFIRMAÇÃO DO PEDIDO</h4>
     <p>Para que a encomenda seja efetivada e o aparelho seja adquirido junto aos nossos fornecedores, é obrigatório o pagamento de um sinal financeiro ("arras") equivalente a 10% (dez por cento) do valor total negociado para o dispositivo. O processamento do pedido e a contagem dos prazos iniciarão exclusivamente após a compensação deste pagamento.</p>
-    
+
     <h4 className="font-bold text-gray-900 dark:text-white mt-6">3. PRAZO DE ENTREGA E RASTREAMENTO</h4>
     <p>O prazo máximo estipulado para a chegada do aparelho à central da VantaTech é de 60 (sessenta) dias corridos, contados a partir da data de confirmação do pagamento do sinal. A VantaTech compromete-se a vincular o pedido do cliente a um código de rastreamento (via Correios ou transportadora parceira), permitindo o acompanhamento da entrega através do nosso site.</p>
-    
+
     <h4 className="font-bold text-gray-900 dark:text-white mt-6">4. CANCELAMENTO DURANTE O PERÍODO DE ENCOMENDA (MULTA RESCISÓRIA)</h4>
     <p>Caso o cliente decida cancelar a encomenda antes do término do prazo estipulado na Cláusula 3 (ou seja, enquanto o aparelho ainda estiver em trânsito ou em processo de logística para a VantaTech), a VantaTech realizará a devolução do valor pago a título de sinal, deduzida uma multa rescisória compensatória.</p>
     <p><strong>4.1.</strong> A referida multa rescisória será equivalente a 5% (cinco por cento) sobre o valor do sinal pago, e tem a finalidade de cobrir despesas operacionais e logísticas decorrentes da importação/transporte frustrado.</p>
@@ -42,7 +42,7 @@ export default function Encomendar() {
   const { user, perfil, refreshPerfil, loading: authLoading } = useAuth();
   const { settings } = useSettings();
   const { showAlert } = useAlert();
-  
+
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -72,7 +72,7 @@ export default function Encomendar() {
         .select('*')
         .eq('user_id', user.id)
         .order('criado_em', { ascending: false });
-        
+
       if (!error && data) {
         setEncomendas(data);
       }
@@ -88,7 +88,7 @@ export default function Encomendar() {
       showAlert({ type: 'warning', message: 'Preencha a marca e o modelo do aparelho desejado.' });
       return;
     }
-    
+
     setSubmitting(true);
     try {
       // Cria a encomenda no BD
@@ -105,17 +105,17 @@ export default function Encomendar() {
         }])
         .select()
         .single();
-        
+
       if (pedidoError) throw pedidoError;
-      
+
       const text = `*NOVA ENCOMENDA - VANTATECH*\n\n` +
         `*Marca:* ${formData.marca}\n` +
         `*Aparelho:* ${formData.modelo}\n` +
         `*Cor:* ${formData.cor || 'Não especificada'}\n` +
         `*Armazenamento:* ${formData.armazenamento || 'Não especificado'}\n` +
         `*Estado:* ${formData.estado}\n\n` +
-        `Estou ciente de que o prazo de busca e entrega é de até 2 meses e que o pedido só é confirmado mediante o pagamento do sinal de 10%. Aguardo o orçamento!`;
-        
+        `Estou ciente de que o prazo de busca e entrega é de até 3 meses e que o pedido só é confirmado mediante o pagamento do sinal de 10%. Aguardo o orçamento!`;
+
       // Salva a mensagem inicial
       await supabase
         .from('encomendas_mensagens')
@@ -179,7 +179,7 @@ export default function Encomendar() {
         .eq('id', user.id);
 
       if (error) throw error;
-      
+
       showAlert({ type: 'success', message: 'Termos aceitos com sucesso! Agora você pode encomendar aparelhos.' });
       await refreshPerfil(); // Atualiza o perfil localmente para remover a tela de termos
     } catch (err: any) {
@@ -207,7 +207,7 @@ export default function Encomendar() {
                 Para solicitar encomendas personalizadas, leia atentamente e aceite nossas regras de serviço.
               </p>
             </div>
-            
+
             <div className="p-8 h-[400px] overflow-y-auto custom-scrollbar border-b border-gray-100 dark:border-gray-700">
               <TermsText />
             </div>
@@ -215,8 +215,8 @@ export default function Encomendar() {
             <div className="p-8 bg-gray-50/50 dark:bg-gray-800/50">
               <label className="flex items-start gap-3 cursor-pointer group">
                 <div className="relative flex items-center justify-center mt-1">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     checked={accepted}
                     onChange={(e) => setAccepted(e.target.checked)}
                     className="peer sr-only"
@@ -230,7 +230,7 @@ export default function Encomendar() {
                 </span>
               </label>
 
-              <button 
+              <button
                 onClick={handleAcceptTerms}
                 disabled={!accepted || loading}
                 className="w-full mt-6 py-3 bg-vanta-blue text-white font-bold rounded-xl hover:bg-vanta-darkblue transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0"
@@ -259,9 +259,9 @@ export default function Encomendar() {
                 Não encontrou o que procurava? Faça uma encomenda personalizada e nós encontramos para você!
               </p>
             </div>
-            
+
             <div className="flex items-center gap-3 w-full md:w-auto">
-              <button 
+              <button
                 onClick={() => setShowTermsModal(true)}
                 className="flex items-center justify-center gap-2 px-4 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all whitespace-nowrap shadow-sm hover:shadow"
                 title="Ler Termos de Encomenda novamente"
@@ -269,8 +269,8 @@ export default function Encomendar() {
                 <FileText className="w-5 h-5" />
                 <span className="hidden sm:inline">Termos</span>
               </button>
-              
-              <button 
+
+              <button
                 onClick={() => setShowNovaEncomenda(true)}
                 className="flex items-center justify-center gap-2 px-6 py-3 bg-vanta-blue text-white font-bold rounded-xl hover:bg-vanta-darkblue hover:shadow-lg hover:-translate-y-0.5 transition-all w-full md:w-auto whitespace-nowrap"
               >
@@ -301,8 +301,8 @@ export default function Encomendar() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {encomendas.map(enc => (
-                  <div 
-                    key={enc.id} 
+                  <div
+                    key={enc.id}
                     onClick={() => setActiveChat(enc)}
                     className="p-5 border border-gray-100 dark:border-gray-700 rounded-2xl hover:border-vanta-blue/50 hover:shadow-md cursor-pointer transition-all bg-gray-50/50 dark:bg-gray-900/50 group"
                   >
@@ -311,12 +311,11 @@ export default function Encomendar() {
                         <div className="text-xs font-bold text-gray-400 mb-1">{new Date(enc.criado_em).toLocaleDateString('pt-BR')}</div>
                         <h3 className="font-bold text-gray-900 dark:text-white text-lg">{enc.marca} {enc.modelo}</h3>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${
-                        enc.status === 'Concluído' ? 'bg-green-100 text-green-700' :
-                        enc.status === 'Em Andamento' ? 'bg-blue-100 text-blue-700' :
-                        enc.status === 'Cancelado' ? 'bg-red-100 text-red-700' :
-                        'bg-orange-100 text-orange-700'
-                      }`}>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap ${enc.status === 'Concluído' ? 'bg-green-100 text-green-700' :
+                          enc.status === 'Em Andamento' ? 'bg-blue-100 text-blue-700' :
+                            enc.status === 'Cancelado' ? 'bg-red-100 text-red-700' :
+                              'bg-orange-100 text-orange-700'
+                        }`}>
                         {enc.status}
                       </span>
                     </div>
@@ -326,7 +325,7 @@ export default function Encomendar() {
                     </div>
                     <div className="flex flex-col gap-2 mt-auto pt-2">
                       {enc.codigo_rastreio && (
-                        <button 
+                        <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setTrackingCode(enc.codigo_rastreio);
@@ -353,8 +352,8 @@ export default function Encomendar() {
       {/* Modal de Termos */}
       {showTermsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
             onClick={() => setShowTermsModal(false)}
           />
           <div className="relative bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200">
@@ -363,23 +362,23 @@ export default function Encomendar() {
                 <ShieldCheck className="w-6 h-6 text-vanta-blue" />
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">Termos de Encomenda</h2>
               </div>
-              <button 
+              <button
                 onClick={() => setShowTermsModal(false)}
                 className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            
+
             <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
               <TermsText />
             </div>
-            
+
             <div className="p-6 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 rounded-b-2xl">
               <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
                 Você já aceitou estes termos em {perfil?.termos_encomenda_data ? new Date(perfil.termos_encomenda_data).toLocaleString('pt-BR') : 'data desconhecida'}.
               </p>
-              <button 
+              <button
                 onClick={() => setShowTermsModal(false)}
                 className="w-full mt-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
               >
@@ -393,8 +392,8 @@ export default function Encomendar() {
       {/* Modal de Nova Encomenda */}
       {showNovaEncomenda && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
             onClick={() => setShowNovaEncomenda(false)}
           />
           <div className="relative bg-white dark:bg-gray-800 rounded-3xl w-full max-w-xl flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden max-h-[90vh]">
@@ -403,87 +402,85 @@ export default function Encomendar() {
                 <PackageSearch className="w-6 h-6 text-vanta-blue" />
                 <h2 className="text-xl font-black text-gray-900 dark:text-white">Detalhes da Encomenda</h2>
               </div>
-              <button 
+              <button
                 onClick={() => setShowNovaEncomenda(false)}
                 className="p-2 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-full shadow-sm transition-colors"
               >
                 <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
               </button>
             </div>
-            
+
             <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Marca *</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={formData.marca}
-                    onChange={e => setFormData({...formData, marca: e.target.value})}
-                    placeholder="Ex: Apple, Samsung" 
+                    onChange={e => setFormData({ ...formData, marca: e.target.value })}
+                    placeholder="Ex: Apple, Samsung"
                     className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white outline-none focus:border-vanta-blue transition-colors"
                   />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Aparelho *</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={formData.modelo}
-                    onChange={e => setFormData({...formData, modelo: e.target.value})}
-                    placeholder="Ex: iPhone 15 Pro Max" 
+                    onChange={e => setFormData({ ...formData, modelo: e.target.value })}
+                    placeholder="Ex: iPhone 15 Pro Max"
                     className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white outline-none focus:border-vanta-blue transition-colors"
                   />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Cor (Opcional)</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={formData.cor}
-                    onChange={e => setFormData({...formData, cor: e.target.value})}
-                    placeholder="Ex: Titânio Natural" 
+                    onChange={e => setFormData({ ...formData, cor: e.target.value })}
+                    placeholder="Ex: Titânio Natural"
                     className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white outline-none focus:border-vanta-blue transition-colors"
                   />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Armazenamento (Opcional)</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={formData.armazenamento}
-                    onChange={e => setFormData({...formData, armazenamento: e.target.value})}
-                    placeholder="Ex: 256GB" 
+                    onChange={e => setFormData({ ...formData, armazenamento: e.target.value })}
+                    placeholder="Ex: 256GB"
                     className="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white outline-none focus:border-vanta-blue transition-colors"
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 block">Estado do Aparelho *</label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={() => setFormData({...formData, estado: 'Seminovo'})}
-                    className={`py-3 px-4 rounded-xl border text-sm font-bold transition-all ${
-                      formData.estado === 'Seminovo' 
-                        ? 'bg-vanta-blue/10 border-vanta-blue text-vanta-blue shadow-sm' 
+                    onClick={() => setFormData({ ...formData, estado: 'Seminovo' })}
+                    className={`py-3 px-4 rounded-xl border text-sm font-bold transition-all ${formData.estado === 'Seminovo'
+                        ? 'bg-vanta-blue/10 border-vanta-blue text-vanta-blue shadow-sm'
                         : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
-                    }`}
+                      }`}
                   >
                     Seminovo
                   </button>
                   <button
                     type="button"
-                    onClick={() => setFormData({...formData, estado: 'Novo'})}
-                    className={`py-3 px-4 rounded-xl border text-sm font-bold transition-all ${
-                      formData.estado === 'Novo' 
-                        ? 'bg-vanta-blue/10 border-vanta-blue text-vanta-blue shadow-sm' 
+                    onClick={() => setFormData({ ...formData, estado: 'Novo' })}
+                    className={`py-3 px-4 rounded-xl border text-sm font-bold transition-all ${formData.estado === 'Novo'
+                        ? 'bg-vanta-blue/10 border-vanta-blue text-vanta-blue shadow-sm'
                         : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
-                    }`}
+                      }`}
                   >
                     Novo (Lacrado)
                   </button>
                 </div>
               </div>
             </div>
-            
+
             <div className="p-6 bg-blue-50/50 dark:bg-blue-900/10 border-t border-gray-100 dark:border-gray-700 shrink-0">
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center shrink-0">
@@ -494,9 +491,9 @@ export default function Encomendar() {
                 </p>
               </div>
             </div>
-            
+
             <div className="p-6 pt-0 bg-blue-50/50 dark:bg-blue-900/10 shrink-0">
-              <button 
+              <button
                 onClick={handleSubmitEncomenda}
                 disabled={submitting}
                 className="w-full py-4 bg-vanta-blue hover:bg-vanta-darkblue text-white font-bold rounded-xl transition-all shadow-[0_10px_20px_rgba(11,46,243,0.2)] hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -509,24 +506,24 @@ export default function Encomendar() {
                 )}
               </button>
             </div>
-            
+
           </div>
         </div>
       )}
 
       {/* Modal de Chat */}
       {activeChat && (
-        <EncomendaChat 
-          encomenda={activeChat} 
-          onClose={() => setActiveChat(null)} 
+        <EncomendaChat
+          encomenda={activeChat}
+          onClose={() => setActiveChat(null)}
         />
       )}
 
       {/* Modal de Rastreio */}
       {trackingCode && (
-        <TrackingModal 
-          codigo={trackingCode} 
-          onClose={() => setTrackingCode(null)} 
+        <TrackingModal
+          codigo={trackingCode}
+          onClose={() => setTrackingCode(null)}
         />
       )}
     </>
