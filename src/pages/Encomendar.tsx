@@ -490,7 +490,7 @@ export default function Encomendar() {
                   <ShieldCheck className="w-4 h-4 text-vanta-blue" />
                 </div>
                 <p className="text-sm text-blue-900 dark:text-blue-100 font-medium leading-snug">
-                  O prazo para localização e entrega do aparelho é de <span className="font-bold">até 2 meses</span>. A encomenda só é iniciada mediante o pagamento do sinal de <span className="font-bold">10% do valor orçado</span>.
+                  O prazo para localização e entrega do aparelho é de <span className="font-bold">até 3 meses</span>. A encomenda só é iniciada mediante o pagamento do sinal de <span className="font-bold">10% do valor orçado</span>.
                 </p>
               </div>
             </div>
